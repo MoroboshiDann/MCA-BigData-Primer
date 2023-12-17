@@ -370,7 +370,7 @@ switch (value) {
 
 `int[] arr;`  `int arr[];`
 
-如果数组只声明，没有后续操作，相当于没有创建(不会被编译)
+如果数组只声明，没有后续操作，相当于没有创建(不会被编译)。但是赋值为null，还是会在栈空间中开辟空间
 
 ### 创建
 
@@ -412,7 +412,88 @@ switch (value) {
 
 ### 详解main方法
 
+程序的入口，同一个类中如果有多个成员方法，JVM会自动识别main方法，作为程序的入口。
 
+格式是固定的。程序中可以有多个main方法，但是形参不能相同。
+
+**实参**
+
+- JVM默认情况下传入的是`new String[0]`
+- 可以在执行字节码文件时，手动传入参数`java HelloWorld aa bb cc dd`
+
+### 可变参数
+
+允许方法传入数量不固定的参数，参数量可变，解决了方法的重载问题
+
+e.g.
+
+```java
+public void exmple(int a, int b, int...nums) {}
+```
+
+方法内部对可变参数的处理与数组是一样的
+
+注意：
+
+- 可变参数与其他参数一同传入方法时，只能放在最后一个
+- 建议不要使用可变参数
+
+### Arrays工具类
+
+- `static String toString(type[] arr)`
+- `static type binarySearch(type[] arr, type target)`：二分查找。只能对有序数组使用才能得到正确结果。
+- `static type[] copyOf(type[] original, int newLength)`：复制数组，将原数组复制到一个长度指定的新数组中。新长度可以原数组长度。
+- `static type[] copyOfRange(type[] original, int from, int to)`：将指定范围复制到新数组。**包左不包右**
+- `static boolean equals(type[] a, type[] b)`：判断两个数组的值是否相等。判断的不是内存地址，而是数组内的元素的值是否相等。
+  - 如果使用`a == b`便只能判断两个数组是否在堆空间的内存地址是否一致
+- `static void fill(type[] arr, int fromIndex, int toIndex, type val)`：将数组指定位置填充为指定数字。
+
+### 数组的复制
+
+将原数组中指定位置的几个元素，复制到目标数组的指定位置
+
+```java
+static void arraycopy(Object src, int srcPos, Object dest, int destPos, int length);
+```
+
+- src：原数组
+- srcPos：原数组开始复制的位置
+- dest：目标数组
+- destPos：目标数组开始写入的位置
+- length：需要复制的长度
+
+```java
+System.arraycopy(srcArr, 1, destArr, 3, 3);
+```
+
+### 二维数组
+
+定义一个二维数组arr\[a][b]，表示栈中开辟空间命名为arr，存储堆空间的一个数组的内存地址。该数组的每一个元素都存储一个数组的堆空间内存地址。
+
+可以使用arr[a]来访问其中一个一维数组。
+
+- arr.length，表示的是一维数组的个数，即arr所存储的数组长度
+
+```java
+for (int i = 0; i < arr.length; i++) {
+	for (int num : arr[i]) {
+        sout(num);
+    }
+}
+for (int[] a : arr) {
+    for (int num : a) {
+        sout(num);
+    }
+}
+```
+
+#### 二维数组初始化方式
+
+- 静态初始化：声明和赋值同时进行
+  - `int[][] arr = {{1,2}, {1, 2, 3}}`
+  - `int[][] arr = new int[][]{{1, 2}, {1, 2, 3}}`
+- 动态初始化：声明与赋值分开进行
+- 默认初始化：直接按照元素类型进行默认初始化
 
 # JavaSE中阶
 
