@@ -495,6 +495,198 @@ for (int[] a : arr) {
 - 动态初始化：声明与赋值分开进行
 - 默认初始化：直接按照元素类型进行默认初始化
 
+
+
+## 面向对象
+
+### 类和对象
+
+类是对事物的定义，对象是类的实例化。如：人类和一个具体的人之间的关系。
+
+类是抽象的，对象是具体的。
+
+### 面向对象三个阶段
+
+- 面向对象分析OOA：Object Oriented Analysis
+- 面向对象设计OOD：Object Oriented Design
+- 面向对象编程OOP：Object Oriented Programming
+
+### 创建类
+
+新建类，书写类的代码
+
+### 创建对象
+
+第一次使用`new`关键字创建对象是，会使用`ClassLoader`类提供的`loadClass()`方法来加载类文件创建对象。再次创建类时，就不会再加载类文件了。
+
+**类文件只会被加载一次**
+
+### 局部变量和成员变量
+
+- 代码中位置不同：成员变量在类中方法外，局部变量在方法中或代码块中
+- 作用范围不同：成员变量可以在类中的所有方法中访问，局部变量只能在当前方法或代码块中使用
+- 是否有默认值：成员变量有默认值，局部变量没有(不赋值直接使用会报错)
+- 是否要初始化：成员变量不需要初始化，局部变量需要初始化
+- **内存中位置不同**：成员变量在堆内存中，局部变量在栈内存中
+  - 成员方法在类被实例化的时候，在堆中开辟内存
+  - 局部变量随方法的调用而出现在栈中
+- 生命周期不同：成员变量随对象的创建和销毁而存在和消失，局部变量与方法生命周期一致
+
+### 构造器
+
+ 使用new关键字创建对象，是通过调用构造器来初始化对象的。如果没有写构造器，系统会默认分配一个构造方法。
+
+调用构造器之前，对象就已经创建好了，成员属性也已经有初始化的值了，调用构造器只是对属性进行赋值
+
+```java
+public class Person {
+    private int age;
+    private String name;
+    public Person() {}
+    public Persion(String name, int age) {
+        this.name = name;
+        this.age = age;
+    } 
+}
+```
+
+当形参名字和属性名重复时，会根据就近原则，给最近的属性赋值。因此需要使用`this`指定给成员变量赋值
+
+**构造器的重载**
+
+空参构造和全参构造
+
+> 如果构造器已经重载，此时没有写空参构造，系统也不会分配，因此空参创建对象会报错
+
+
+
+### 内存分析(简单)
+
+```java
+public class Person {
+    private String name;
+    private int age;
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public static void main(String[] args) {
+        Person person = new Person("bob", 20);
+    }
+}
+```
+
+上述代码执行过程的内存分析
+
+- 首先在*栈*中加载`main`方法的栈帧
+- 然后因为是第一次创建Person对象，所以通过`ClassLoader`类将`Person.class`字节码文件加载到*方法区*
+- 使用`new`关键字，根据`Person.class`提供的模板，在堆中创建Person对象，然后给成员属性进行默认赋值。并在对象所在空间内使用一个指针记录`Person.class`在方法区的内存地址。将对象地址返回
+- 然后调用了`Person(String name, int age)`构造方法，于是在栈中加载`Person()`方法的栈帧
+- 然后在栈帧中，依次入栈传入参数的副本。因为`name`属性为String类型，因此第一次遇到`"bob"`字符串，会在方法区中的*常量池*中寻找是否存在，不存在于是创建一个`"bob"`字符串，并将地址返回给Person的形参
+- 然后使用栈帧中的局部变量，给`this`所指空间内的成员变量赋值
+- `Person()`退栈，局部变量消失。但是`"bob"`有对象在使用，所以保留
+- 在main的栈帧中创建局部变量`person`记录堆中对象的地址
+
+### 内存分析(复杂)
+
+```java
+public class Person {
+    private String name;
+    private int age;
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    public void setAge(int age) {this.age = age;}
+}
+pubilc class Test {
+    public static void main(String[] args) {
+        Test test = new Test();
+        int age = 40;
+        Person tom = new Person("tom", 10);
+        Person jack = new Person("jack", 20);
+        test.changeAge(age);
+        test.changeTom(tom);
+        test.changeJack(jack);
+        sout("id:"+jack.id+",age:"+jack.age);
+    }
+    public void changeAge(int age) {
+        age = 3366;
+    }
+    public void changeTom(Person tom) {
+        tom = new Person("bob", 2);
+    }
+    public void changeJack(Person jack) {
+        jack.setAge(66);
+    }
+}
+```
+
+上述代码的内存分析：
+
+- 在栈中加载`main()`的栈帧
+- 第一次遇到`Test`于是将`Test.class`字节码文件加载到*方法区*
+- 使用`new`关键字，根据其提供的模板在*堆*中创建对象，没有成员变量，直接将字节码文件的内存地址记录在对象空间中。然后将对象地址返回
+- 调用了`Test()`构造方法，在栈中加载Test栈帧，又其内部没有操作，直接退栈
+- 在main栈帧中创建`test`变量接收了堆中对象的地址
+- 然后在main的栈帧中创建`age`局部变量，并赋值
+- 第一次遇到`Person`于是将`Person.class`字节码文件加载到方法区
+- 使用`new`关键字，根据字节码文件提供的模板创建对象，并对成员变量进行默认赋值，然后将字节码文件的内存地址存储到对象空间中
+- 调用了`Person()`全参构造方法，在栈中创建Person栈帧，在栈帧中使用局部变量记录形参，分别入栈。由于`"tom"`字符串是第一次出现，字符串常量区找不到，所以在其中创建一个`"tom"`对象，并将地址返回给局部变量
+- 通过`this`获取当前调用对象的地址，分别使用局部变量的值给成员变量赋值。Person退栈
+- 在main的栈帧中创建`tom`接收对象的地址
+- 直接根据字节码文件创建Person对象，并对成员变量进行默认赋值，然后将字节码文件的内存地址存储到对象空间中
+- 调用了`Person()`全参构造方法，在栈中创建Person栈帧，在栈帧中使用局部变量记录形参，分别入栈。由于`"jack"`字符串是第一次出现，字符串常量区找不到，所以在其中创建一个`"jack"`对象，并将地址返回给局部变量
+- 通过`this`获取当前调用对象的地址，分别使用局部变量的值给成员变量赋值。Person退栈
+- 在main的栈帧中创建`jack`接收对象的地址
+- 通过`test`对象的指针找到`Test.class`提供的模板，找到`changeAge()`方法，并在栈中创建栈帧
+- 在chageAge栈帧中开辟空间接收传入的`age`的值(值传递)，并将开空间的值修改为`3366`，退栈
+- 创建`changeTom`栈帧，并在栈帧中开辟空间使用局部变量存储`tom`对象的地址(即将main中tom的存储内容赋值给栈中的局部变量)
+- 创建新的`Person`对象，过程不再赘述，并将对象的对内存地址返回给局部变量`tom`，退栈。新对象和`"bob"`等待被回收，因为已经没有引用指向这两个对象
+- 创建`changeJack`栈帧，并使用局部变量接收`jack`对象，通过jack指向的堆内存空间，找到`Person.class`的地址，然后找到`setAge()`方法
+- 创建`setAge`栈帧，并创建局部变量接收形参`66`，通过`this`指针找到当前调用对象，并赋值。退栈
+- changeJack退栈
+- 创建`println`栈帧，并传入字符串，进行打印输出
+
+### this
+
+记录调用当前方法的对象的地址
+
+作用：
+
+- 可以用来修饰属性。`this.age`相当于`person.age`，可以避免引起歧义，直接使用当前调用对象的成员属性
+- 可以用来修饰方法，可以在避免调用方法时，出现同名方法
+- 可以修饰构造方法，同一个类的构造方法之间可以相互调用，但是使用`this`调用构造方法必须放在第一
+
+### static
+
+#### static修饰属性
+
+static修饰的成员属性是静态属性，为类所有，即所有对象所共有
+
+静态属性存储在方法区中的*静态域*中，在类加载的时候，会将类的静态内容加载到静态域中。因此先于对象存在。静态内容是所有类的对象共享的
+
+可以通过`ClassName.fieldName`来直接访问，也可以通过`对象名.属性名`来访问
+
+应用场景：
+
+某些特定的数据想要在内存中共享，可以将该该属性变为静态属性
+
+
+
+#### static修饰方法
+
+注意：
+
+- 静态方法中不能访问非静态属性
+  - 因为静态内容随着类的加载而加载，先于对象而存在，而非静态属性随着对象的创建才存在。在非静态属性存在之前已经可以使用静态方法，所以不能访问
+- 静态方法中，不能访问非静态方法
+  - 理由同上
+- 静态方法中，不能使用`this`关键字
+  - 因为静态内容可以使用`类名.方法名`来调用，此时并没有对象调用该方法
+- 
+
 # JavaSE中阶
 
 # JavaSE高阶
