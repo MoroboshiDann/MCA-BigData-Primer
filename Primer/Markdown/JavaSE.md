@@ -1474,11 +1474,251 @@ byte[] value; int count;// 记录数组有效长度
 
 断言：`Assert.assertEquals(expected, result)`，来判断结果是否与预设好的结果一致
 
+
+
 ### 注解
 
-#### @Before & @After
+注解(Annotation)，也称元数据
 
-使用该标注的方法，可以分别在测试方法执行前和zhi'xing'hou
+什么是注解，注解就是代码里的特殊标记，可以在编译，类加载，运行时被读取，并执行相应的处理。通过注解，可以在不改变原有逻辑的情况下，在源文件中嵌入一些补充信息
+
+> 一定程度上来说，框架=注解+反射+设计模式
+
+
+
+#### Junit @Before & @After
+
+使用该标注的方法，可以分别在测试方法执行前和执行后执行。而且是所有测试方法公用的
+
+- 一般放在@Before中的是申请资源的代码，如申请数据库资源，申请IO资源，申请网络资源等
+- 一般放在@After中的是释放资源的代码，如释放数据库资源，释放IO资源，释放网络资源
+
+
+
+#### 文档注解
+
+放在文档注释中，用来对类和方法进行解释和说明
+
+
+
+#### JDK 内置注解
+
+- @Override：限定重写父类方法，只能用于方法
+- @Deprecated：废弃方法或过期方法的注解
+- @SuppressWarnings：抑制编译器警告。如抑制变量未使用警告，可以在该变量前加`@SuppressWarnings("unused")`
+
+
+
+#### 自定义注解(了解即可)
+
+- 声明关键字`@interface`，但是与接口没有关系
+- 以`@SuppressWarnings`为例，其内部为`String[] value();`，是一个成员属性，value为变量名
+- 该成员属性为配置参数，只要定义了，使用时就必须要赋值。且如果变量名为value，赋值时可以省略
+- `String[] value() default "abc";`如果使用default给出了默认值，可以不赋值直接使用
+- 注解内部也可以不定义参数
+  - 内部没有参数的注解，称为标记
+  - 内部有参数的，称为元数据
+
+
+
+#### 元注解
+
+用来修饰其他注解的注解，就是元注解
+
+JDK5提供了四种元注解：@Retention，@Target，@Document，@Inherited
+
+
+
+##### @Retention
+
+用于指定修饰的注解的生命周期，包含一个RetentionPolicy枚举类型的成员变量，使用注解时必须为该value成员变量指定值。默认`RetentionPolicy.CLASS`
+
+内部定义了三个属性
+
+- `RetentionPolicy.CLASS`：被注解的自定义注解，在`.class`文件中有效，保留在`.class`中，但是当运行Java程序时，就不会继续加载了，不会保留在内存中。即运行时方法上没有自定义注解。如果定义自定义注解时，没有添加@Retention元注解，就会默认这种注解
+- `RententionPolicy.RUNTIME`：运行时有效，当Java程序运行时，JVM会保留注解，加载在内存中。*程序可以通过反射获取该注解*。
+- `RetentionPolicy.SOURCE`：在源文件中有效，编译过后的字节码文件中没有该注解
+
+
+
+@Target
+
+用于指定修饰的注解可以修饰哪些程序元素(类，方法，变量)
+
+```java
+@Target(METHOD, CONSTRUCTOR, TYPE, ) // 添加一个就能多作用一种
+```
+
+
+
+@Document
+
+用于指定该元注解修饰的注解类将被javadoc工具条提取成文档。默认情况下，javadoc是不包含注解的，但是加上了这个注解，生成的文档中就会带注解
+
+即，使用一个注解修饰了一个方法，如果这个注解类定义时没有被`@Documented`修饰，那么javadoc生成api文档时，该方法上就不会标注被某注解修饰
+
+
+
+@Inherited(极少使用)
+
+修饰的注解类具有继承性，注解被修饰后，被该注解修饰的类的子类，也会自动被该注解修饰
+
+
+
+### 枚举
+
+如果一个类的对象的种类数是有限的，确定的，可以将这个类定义为枚举类。
+
+如：星期，月份，性别等
+
+#### 自定义枚举类
+
+e.g.
+
+```java
+public class Season {
+    private final String seasonName;
+    private final String seasonDesc;
+    
+    private Season(String seasonName, String seasonDesc) {
+        this.seasonName = seasonName;
+        this.seasonDesc = seasonDesc；
+    }
+    
+    public static final Season SPRING = new Season("Spring", "Warm");
+    public static final Season SUMMER = new Season("Summer", "Hot");
+    public static final Season FALL = new Season("Fall", "Cool");
+    public static final Season WINTER = new Season("Winter", "Cold");
+    
+    public String getSeasonName() { return this.seasonName;}
+    public String getSeasonDesc() { return this.seasonDesc;}
+    public String toString() { return "Season{" + "seasonName = '" + seasonName 
+                             + '\'' + ", seasonDesc = '" + seasonDesc + '\'' + '}'}
+}
+```
+
+构造方法私有化，属性全部为私有常量，在类的内部将所有可能的对象给出，只提供get方法。
+
+
+
+#### JDK5之后使用enum关键字创建枚举类
+
+enum关键字枚举类要求*对象(常量)*必须放在最开始定义
+
+只需要写`对象名(value, value, ...)`定义，多个对象之间使用`,`分隔
+
+```java
+public enum Season {
+    SPRING("Spring", "Warm"),
+    SUMMER("Summer", "Hot"),
+    FALL("Fall", "Cool"),
+    WINTER("Winter", "Cold");
+    private Season(String seasonName, String seasonDesc) {
+        this.seasonName = seasonName;
+        this.seasonDesc = seasonDesc；
+    }
+    public String getSeasonName() { return this.seasonName;}
+    public String getSeasonDesc() { return this.seasonDesc;}
+    public String toString() { return "Season{" + "seasonName = '" + seasonName 
+                             + '\'' + ", seasonDesc = '" + seasonDesc + '\'' + '}'}
+	public static void main(String[] args) {
+        Season winter = Season.WINTER; // 直接使用`类名.对象名`获取对象
+    }
+}
+```
+
+> - enum关键字定义的枚举类，上层父类是`java.lang.Enum`
+>   - 使用默认的toString方法，输出的是对象名
+>
+> - 自定义枚举类的父类是`java.lang.Object`
+
+ ##### 没有成员属性的枚举类
+
+```java
+public enum Season {
+    SPRING,
+    SUMMER,
+    FALL,
+    WINTER;
+}
+```
+
+没有属性，不需要提供带参构造，不需要提供get方法，对象的申请的小括号可以删除
+
+
+
+#### 常用方法
+
+- `String toString()`：返回对象名
+- `static Enum[] valus()`：将枚举对象全部返回
+- `static Enum valueOf(Sting name)`：按照对象名返回对象
+
+
+
+#### 枚举类实现接口
+
+枚举类实现接口重写方法时，默认是所有对象都用同样的方法。
+
+为了能让不同对象重写的方法不同，可以在对象定义时重写
+
+```java
+public enum Season implements TestInterface {
+    SPRING {
+    	@Override
+        public void test() {
+            sout("this is " + this.toString());
+        }
+    },
+    SUMMER {
+    	@Override
+        public void test() {
+            sout("this is summer");
+        }
+    },
+    FALL,
+    WINTER;    
+}
+```
+
+
+
+#### 枚举类应用(性别类)
+
+- 通过将属性变为枚举对象的方式，约束设置属性只能传入固定种类的对象。
+
+```java
+public enum Gender {
+    MALE,
+    FEMALE;
+}
+public class Person {
+    private String name;
+    private Gender sex;
+    public String getName() { return this.name;}
+    public Gender getSex() { return this.sex;}
+    public void setName(String name) { return this.name = name;}
+    public void setSex(Gender sex) { return this.sex = sex;}
+    
+    public static void main(String[] args) {
+        Person person = new Person();
+        person.setSex(Gender.MALE); // 只能传入特定对象
+    }
+}
+```
+
+- switch中可以使用枚举类型
+
+
+
+## I/O流
+
+### File类
+
+
+
+
+
+
 
 
 
