@@ -1714,9 +1714,406 @@ public class Person {
 
 ### File类
 
+Java万物皆对象，将盘符上的文件/目录的各种信息进行封装，称为一个对象，然后操作对象
+
+常用方法：
+
+|   boolean canRead(), boolean canWrite()    | 文件是否可读，文件是否可写 |
+| :----------------------------------------: | :------------------------: |
+|              String getName()              |         获取文件名         |
+|             String getParent()             |        获取上级目录        |
+|           boolean isDirectory()            |         是否是目录         |
+|    boolean isFile(), boolean isHidden()    |   是否是文件，是否被隐藏   |
+|                int length()                |        获取文件长度        |
+|              boolean exists()              |        文件是否存在        |
+|          boolean createNewFile()           |          创建文件          |
+| String getAbsolutePath(), String getPath() |   获取绝对路径、相对路径   |
+
+File.separator，获取当前系统的分隔符
+
+相对路径，相对的是当前main方法的文件夹
+
+对目录操作和对文件操作大部分是一致的：
+
+| boolean mkdir()    | 创建目录，如果目录不存在，试用其对象创建                 |
+| ------------------ | -------------------------------------------------------- |
+| boolean mkdirs()   | 创建多级目录，如果打开的路径中多级目录都不存在，都会创建 |
+| boolean delete()   | 删除单级目录，里面含有内容就拒绝删除                     |
+| String[] list()    | 返回目录下所有文件和目录的名称                           |
+| File[] listFiles() | 返回目录下所有文件和目录的对象                           |
 
 
 
+> File类对象只能获取文件和目录中一些基础信息，无法获取文件中的内容。
+>
+> 因此需要I/O流来读取和写入文件内容
+
+### I/O流简介
+
+程序和数据源之间交换信息的桥梁
+
+- 按照方向分为：输入流和输出流
+- 按照处理数据的单位分为：字节流和字符流
+
+| 四种抽象基类 | 字节流       | 字符流 |
+| ------------ | ------------ | ------ |
+| 输入流       | InputStream  | Reader |
+| 输出流       | OutputStream | Writer |
+
+- 按照功能分为：节点流和处理流
+  - 节点流：一个流就可以完成任务
+  - 处理流：组合多个流使用(构造器嵌套)，需要通过节点流创建
+
+### FileReader & FileWriter(字符流)
+
+目标：将文件A复制到另一个位置
+
+```java
+public static void main(String[] args) {
+    File origin = new File("origin/path"); // 获取原文件对象
+    FileReader reader =  null // 将原文件放到流上
+    FileWriter writer =  null;
+//    int n = reader.read();
+//    while (n != -1) { // 读取文件内容，读到文件结尾，读取到的内容为“-1”
+//        n = reader.read();
+//    }
+    try {
+        reader = new FileReader(origin);
+        writer = new FileWriter(new File("duplicate/path"), false);
+        char[] ch = new char[5];
+    	int len = reader.read(ch);
+        while(len != -1) {
+//        for (char c : ch) {sout(c);} // 这样会把多余数据输出，是错误示范
+  		for (int i = 0; i < len; i++) {sout(ch[i]);}      
+        String str = new String(ch, 0, len); // 这种方式也是正确的
+        writer.write(ch, 0, len);
+        writer.write(str);
+        len = reader.read(ch);
+        }
+    } catch (FileNotFoundException ex) {
+        ex.printStackTrace();    
+    } catch (IOException ex) {
+        ex.printStackTrace();
+    } finally {
+        try {
+            if (writer != null) {
+				writer.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (reader != null) {
+                reader.close();
+            }
+        } catch (IOException ex) {
+			ex.printStackTrace();
+        }
+    }
+}
+```
+
+读取时：
+
+- 使用`read()`方法读取文件时，每次读取一个字符，无论中英文。读取到文件末尾时，返回-1
+- 空参方法返回读取到的字符，使用`int read(char[] ch)`方法，可以每次读入该数组长度的字符数，存入该数组。读取完毕后，数组长度为-1
+  - 该方法返回的是数组的实际使用长度，因为是重复覆盖的，所以数组的length变量一直为5，因此要使用返回的长度作为判断条件
+- 流、数据库、网络资源，靠JVM本身是无法关闭的，需要程序员手动关闭
+  - 先申请的后关闭
+
+写入时：
+
+- 如果目标文件不存在的话，会自动创建；目标文件存在的话，会将该文件覆盖。想要不覆盖，需要创建写入字符流的时候，加入参数`new FileWriter(file, true);`true表示对文件追加写入，false表示只覆盖不追加
+- `write()`方法可以一次写入一个字符，也可以一次写入一个字符数组。需要注意写入长度为有效长度
+- 也可以写入字符串
+
+
+
+#### 不要用字符流去操作非文本文件
+
+- 文本文件：.txt, .c, .java
+- 非文本文件：.mp3, .doc, .ppt
+
+无法正确解析内容
+
+
+
+#### 使用try catch finally处理IO异常
+
+- 将流对象的申请放到try中，并在try之前先对其进行初始化`FileReader reader = null;`
+- 在finally中写关闭流的逻辑，但是要分别使用try catch 环绕，避免前面的流关闭出现异常，导致后续流无法正常关闭
+- 关闭流的时候，需要判断空指针，否则会出现空指针异常
+
+
+
+### FileInputSream & FileOutputStream(字节流)
+
+#### 处理文本文件
+
+- 如果文件时utf-8字符集的，英文占一个字节，中文占三个字节，所以使用字节流处理文本文件时会无法正确读取。因此建议文本文件使用字符流处理
+- `read()`方法返回值为int，但是只读取一个字节，这是因为底层做了处理，让放回的数据都是正数，防止读取出-1时无法判断是正常字符还是文件结束
+
+#### 处理非文本文件
+
+将图像复制到目标文件
+
+```java
+public static void main(String[] args) {
+    FileInputStream input = null;
+    FileOutputStream output = null;
+    try {
+        input = new FileInputStream(new File("origin/path"));
+        output = new FileOutputStream(new File("target/path"));
+        byte[] buffer = byte[1024];
+        int len = input.read(buffer);
+        while (len != -1) {
+            output.write(buffer, 0, len);
+            len = input.read(buffer);
+        }
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+		e.printStrackTrace();
+    } finally {
+        try {
+            if (output != null) output.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }  
+        try {
+            if (input != null) input.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }      
+    }
+}
+```
+
+
+
+### BufferedInputStream & BufferedOutputStream (缓冲字节流)
+
+虽然上面的例子中，已经使用了buffer数组来做缓冲，能够一次读出和写入多个字节，但是，还是需要多次IO
+
+缓冲字节流在进行文件的读取和写入操作时，系统会分配两个缓冲区
+
+- 从源文件读取时，会先存入缓冲区，然后等待程序来读取。(一次全部读入缓冲区，写满为止)
+- 从程序中写入文件时，会先写入缓冲区，然后等待写入文件。(一次从缓冲区全部写入文件，写满为止)
+
+程序可以从缓冲区中进行读取和写入，大大减少磁盘的IO次数
+
+BufferedInputStream & BufferedOutputStream属于处理流，之前的流为节点流
+
+- 缓冲区默认大小为8192B
+- 底层自动执行缓冲区刷新操作
+
+```java
+public stati void main(String[] args) {
+    BufferedInputStream bufferdInput = null;
+    BufferedOutputStream bufferedOutput = nul;
+    try {
+        bufferedInput = new BufferedInputStream(new FileInputStream(new File("origin/path")));
+        bufferedOutput = new BufferedOutputStream(new FileInputStream(new File("target/path")));
+        byte[] buffer = byte[1024];
+        int len = bufferedInput.read(buffer);
+        while (len != -1) {
+            bufferedOutput.write(buffer, 0, len);
+            len = bufferedInput.read(buffer);
+        }
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+		e.printStrackTrace();
+    } finally {
+        try {
+            if (bufferedOutput != null) bufferedOutput.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }  
+        try {
+            if (bufferedInput != null) bufferedInput.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }      
+    }
+}
+```
+
+
+
+### BufferedReader & BufferedWriter(缓冲字符流)
+
+```java
+public static void main(String[] args) {
+    BufferedReader reader = null;
+    BufferedWriter writer = null;
+    try {
+        reader = new BufferedReader(new FileReader(new File("origin/path")));
+        writer = new BufferedWriter(new FileWriter(new File("origin/path")));
+        char[] ch = new char[5];
+    	int len = reader.read(ch);
+        while(len != -1) {
+            writer.write(ch, 0, len);
+            len = reader.read(ch);
+        }
+    } catch (FileNotFoundException ex) {
+        ex.printStackTrace();    
+    } catch (IOException ex) {
+        ex.printStackTrace();
+    } finally {
+        try {
+            if (writer != null) {
+				writer.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (reader != null) {
+                reader.close();
+            }
+        } catch (IOException ex) {
+			ex.printStackTrace();
+        }
+    }
+}    
+}
+```
+
+
+
+### InputStreamReader & OutputStreamWriter(转换流、字符流、处理流)
+
+- InputStreamReader，将字节输入流转换为字符输入流
+- OutputStreamWriter，将字节输出流转换为字符输出流
+
+> 先使用字节流从文件中读取内容，然后通过转换流，将这个流变为字符流交给程序
+>
+> 输出时，先通过字符流传输给转换流，然后将字符流的内容转换为字节流写入程序
+>
+
+- 字节流与字符流转换时，需要给定字符集。
+- 在程序中，ISR， OSW的使用同字符流一致
+
+```java
+public static void main(String[] args) {
+    InputStreamReader reader = null;
+    OutputStreamWriter writer = null;
+    try {
+        reader = new InputStreamReader(new FileInputStream(new File("origin/path")), "UTF-8");
+        writer = new OutputStreamWriter(new FileOutputStream(new File("target/path")), "gbk");
+        char[] ch = new char[10];
+        int len = input.read(ch);
+        while (len != -1) {
+            writer.write(ch, 0, len);
+            len = reader.read(ch);
+        }
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+		e.printStrackTrace();
+    } finally {
+        try {
+            if (writer != null) writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }  
+        try {
+            if (reader != null) reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }      
+    }
+}
+```
+
+
+
+### 数据流
+
+用来操作基本数据类型和字符串的。是处理流
+
+- DataInputStream：将文件中存储的基本数据类型和字符串写入内存的变量中
+- DataOutputStream：将内存中的基本数据类型和字符串变量写出到文件中
+
+写入到文件的内容，不具备可读性，人不能直接看懂
+
+所以，写出的类型和读入的类型需要一致
+
+```java
+public static void main(String[] args) {
+    DataOutputStream dos = new DataOutputStream(new FileOutputStream("d:\abc.txt"));
+    dos.writeUTF("hello");
+    dos.writeDouble(6.9);
+    DataInputStream dis = new DateInputStream(new FileInputStream("d:\abc.txt"));
+    String str = dis.readUTF();
+    Double dou = dis.readDouble();
+    dis.close();
+    dos.close();
+}
+```
+
+
+
+
+
+### 对象流
+
+用来操作引用数据类型的处理流
+
+- ObjectInputStream：当其他程序获取了这种二进制数据，可以恢复成原来的Java对象。(反序列化)
+- ObjectOutputStream：把内存中的Java对象转换成*平台无关的*二进制数据。从而允许将二进制数据持久地保存在磁盘上，或者通过二进制数据传输到另一个网络节点。(序列化)
+
+读取时使用的是`readObject()`方法
+
+```java
+public static void main(String[] args) {
+	ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("d:\\demo.txt"));
+    oos.write("hello"); // 写出一个String对象
+    ObjectInputStream ois = new ObjectInputStream(new FileInputStream("d:\\demo.txt"));
+    Object obj = ois.readObject();
+    obj = (String) obj;
+    ois.close();
+    oos.close();
+}
+```
+
+
+
+### 序列化和反序列化
+
+将对象转换为平台无关的二进制数据为序列化，将二进制数据转换为原对象为反序列化
+
+类需要实现`Serializable`接口，其对象才能被序列化和反序列化
+
+- Serializabe接口中没有内容，是一个*标识接口*，起到标识作用。只有实现了这个接口的类，其对象才能被序列化和反序列化
+
+
+
+#### serialVersionUID
+
+如果在序列化之后，对对象对应的类文件进行了修改，然后再反序列化将对象读回，此时就会报`InvalidClassException`异常，无法正确识别类
+
+- 原因是，对类文件进行了修改，导致类型不匹配
+- 解决方法，给类中加入序列号`serialVersionUID`
+
+serialVersionUID，凡是实现Serializable接口的类，都有一个表示序列化版本标识的静态变量
+
+- `private static final long serialVersionUID;`
+- 用来表明类的不同版本间的兼容性，简言之，其目的就是以序列化对象进行版本控制，各版本反序列化时是否兼容
+- 如果没有显示定义这个静态常量，它的值是Java运行时环境根据类的内部细节*自动生成的*，如果类的实例变量做了修改，就会发生变化，因此要显示定义
+- 在反序列化时，JVM会将对象流中的serialVersionUID和本地类对应的常量进行对比，如果相同，就认为是一致的，可以进行反序列化，否则就会弧线序列版本不一致的异常
+
+> IDEA中，在设置中Editor->Inspections->Serializable Class without 'serialVersionUID'勾选，即可自动生成
+
+
+
+#### 序列化细节
+
+- 被序列化的类，内部属性都要是可序列化的
+  - 基本数据类型都是可序列化的
+  - 成员是类时，该类也需要实现Serializable
+- 被`static` 和 `transient`修饰的属性，不能被序列化
 
 
 
@@ -1729,4 +2126,3 @@ public class Person {
 # JavaSE中阶
 
 # JavaSE高阶
-
