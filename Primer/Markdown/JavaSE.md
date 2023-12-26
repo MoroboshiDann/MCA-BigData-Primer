@@ -1487,6 +1487,10 @@ byte[] value; int count;// 记录数组有效长度
   - HashMap实现类
   - TreeMap实现类
 
+![image-20231225210200538](..\img\collection.png)
+
+
+
 
 
 ### Collection接口
@@ -1788,6 +1792,12 @@ ArrayList重写的iterator()方法返回值为该内部类的对象
 
 继承HashSet，在哈希表之外，额外支持了一个链表，使得其能够按照存入顺序输出。
 
+###### HastSet底层原理
+
+HashSet底层时通过HashMap实现的，创建HashSet对象时，构造器会创建HashMap对象
+
+因为HashSet的元素是一个一个地存在的，且不允许重复，所以在底层就将存入的元素作为key值，value值为默认占位值
+
 
 
 ##### 比较器
@@ -1821,6 +1831,177 @@ public static void main(String[] args) {
 ```
 
 两种比较器中，外部比较器比较好，因为可以利用多态，接口引用指向实现类对象
+
+
+
+##### TreeSet实现类
+
+- 元素唯一，元素无法重复存入
+- 元素按照升序排序
+
+数据的逻辑结构是二叉排序树
+
+因为需要根据升序来构造二叉排序树，所以需要用到比较器
+
+如果不指定，使用的是内部比较器
+
+
+
+如果要使用到外部比较器，需要在实例化TreeSet对象时，传入外部比较器。有如下形式
+
+- 定义一个外部比较器类，实现Comparator接口，然后实例化比较其对象
+- 使用匿名内部类的形式创建Comparator接口的对象
+- 使用匿名内部类的形式，直接创建TreeSet
+
+```java
+// 1. 创建一个外部比较器对象，然后传入
+Comparator<Student> compare = new StuComparator();
+TreeSet<Student> set = new TreeSet<>(compare);
+// 2. 通过匿名内部类的形式创建接口对象
+Comparator<Student> compare = new Comparator() {
+    @Override
+    public int compare(Student o1, Student o2) {
+        return o1.getName().compareTo(o2.getName());
+    }
+}
+TreeSet<Student> set = new TreeSet<>(compare);
+// 3. 通过匿名内部类的形式创建TreeSet
+TreeSet<Student> set = new TreeSet<>(new Comparator<Student>() {
+    @Override
+    public int compare(Student o1, Student o2) {
+        return o1.getName().compareTo(o2.getName());
+    }
+})
+}
+```
+
+###### TreeSet底层原理
+
+底层为TreeMap实现的，空参构造时，会创建一个TreeMap<E, Object>，存入的元素作为key
+
+add()方法，调用的TreeMap.put()方法
+
+
+
+#### Collections工具类
+
+工具类，构造器私有化，不可创建对象。内部所有方法都为静态方法
+
+常用方法：
+
+- `Collections.addAll(Collection<? super T> c, T... elements)`：给集合中添加多个元素
+- `Collections.binarySearch(c, T elements)`：二分查找，集合必须有序
+- `Collections.sort(List<T> list)`：升序排序
+- `Collections.copy(List dest, List src)`：将源集合复制到目标集合
+
+
+
+
+
+
+
+
+
+### Map接口
+
+元素按照键值对`<Key, Value>`的形式存储。因此需要两个泛型`Map<K, V>`
+
+特点：
+
+- 元素唯一，即key是唯一的，如果存入集合时key值重复，会将value覆盖
+
+#### 常用方法
+
+| V put(K key, V value), void putAll(Map<? extends K, ? extends V> m) | 存储键值对，或Map集合                                       |
+| ------------------------------------------------------------ | ----------------------------------------------------------- |
+| V remove(Object key), void clear()                           | 按照键删除值，清空集合                                      |
+| V get(Object key), Set<K> keySet(), Collection<V> values()   | 按照键查值，返回所有的key的集合，返回所有值的Collection集合 |
+| Set<Map.Entry<K, V>> entrySet()                              | 返回所有键值对的Set集合                                     |
+| boolean contains(K key)                                      | 是否包含该键                                                |
+
+- put(K key, V value)：如果key值不存在，直接存入该键值对，返回null；如果key存在，将value覆盖，返回原value值
+- keySet()返回值为Set集合，是因为key是唯一的，不可重复。而valueSet返回值类型为Collection，是因为value是可能重复的
+- Set<Map.Entry<K, V>> entrySet()：返回值是一个Set集合，内部每一个元素是Map中的Entry接口的实现类的对象。内部包含getKey() getValue()方法
+
+
+
+#### HashMap实现类
+
+特点：无序，唯一。按照key进行维护，底层key遵照哈希表的结构(数组+链表)，因此存入的元素需要重写equals()和hashCode()方法
+
+
+
+##### 底层原理
+
+- 哈希表的主数组存储的是*Entry<K, V>*的实现类对象Node<K, V>
+  - Node<K, V>中的主要属性为`int hash` `K key` `V value` 以及一个指向下一个结点的指针
+- 哈希表的冲突解决是使用拉链法实现的，即数组的每个位置都可以存储一个链表，当发生冲突时，新插入的结点，采用头插法，放到数组里，然后将next指针指向原来的头部即可。
+  - 如果两个Node的哈希值一致，要先判断Key是否相同，如果相同需要将新的Value替换原来的Value，此时不会新创建Node对象
+  - 如果Key不相同，才采用冲突消解方法，新创建Node对象然后插入链表
+  - JDK7冲突消解使用的是头插法，JDK8采用的是尾插法
+
+> 主数组的默认长度为16，最大长度为 `1<<30`，负载因子为0.75f
+>
+> 当容量超出`threshold`且当前发生了冲突，就会进行数组扩容，容量为原来两倍
+
+
+
+##### 经典面试题
+
+- 装填因子为什么是0.75f
+
+>如果装填因子为1，只有元素数等于数组长度是才会扩容，空间利用率高。但是碰撞率会很高，所以链表的长度会较长，查询效率低
+>
+>如果装填因子为0.5，碰撞概率降低，容易扩容，所以链表长度不会很长，因此查询效率高
+>
+>因此权衡空间利用率和查询效率，选择了0.75f
+
+- 主数组的容量，为什么一定是2的整数倍
+
+>首先，数组容量的计算过程是循环执行`1 << 1`得来的，因此数量上一定是2的整数倍
+>
+>其次，在计算元素的数组下标时，计算公式为`h & (length - 1)`，只有当length为2的整数倍时，该公式才能等效为`h % length`
+>
+>再者，为了防止哈希冲突，因为数组下标计算是按照上式得来的，对length取余能够大大降低冲突概率
+
+
+
+##### 对比Hashtable实现类和LinkedHashMap实现类
+
+- HashMap出现晚，效率高，但是线程不安全
+  - key值可以为空，但是多个key为空时，会按照key的唯一性，进行覆盖
+- Hashtable出现早，效率低，线程安全
+  - key值不可以为空，如果为空直接抛出空指针异常
+- LinkedHashMap，在HashMap基础上额外维护了一个链表，使得元素能够按照输入顺序排序
+
+
+
+
+
+#### TreeMap
+
+特点：唯一，有序，按照升序或者降序排序。底层为红黑树 ，因此元素的key需要实现比较器(内部或外部)
+
+外部比较器可以定义比较器类，或者通过匿名内部类的方式在创建集合时，直接传入
+
+
+
+##### TreeMap底层原理
+
+节点的成员属性
+
+```java
+K key;
+V value;
+Entry<K,V> left;
+Entry<K,V> right;
+Entry<K,V> parent;
+boolean color = BLACK;
+```
+
+默认使用内部比较器，外部比较器需要传入Comparator实现类对象
+
+如果传入的key出现了重复，使用新的value替换原来的value
 
 
 
@@ -2666,4 +2847,267 @@ public class Person {
 - switch中可以使用枚举类型
 
 
+
+## 网络编程
+
+把分布在不同地理区域的计算机与专门的外部设备，用通信线路互连成一个规模大、功能强的网络系统，从而使众多的计算机可以方便地滑行传递信息、共享硬件、软件、数据等资源。
+
+为了能够定位通信的双方，需要一个地址，一般为IP+端口号组成的套接字
+
+中间还涉及到DNS域名解析，将网址解析为IP地址
+
+
+
+### InetAddress & InetSocketAddress
+
+- InetAddress封装了IP地址
+- InetSocketAddress封装了网络套接字(IP+端口号)
+
+```java
+public static void main(String[] args) throws UnknownHostException {
+    //封装IP://InetAddress ia = new InetAddress();不能直接创建对象，为InetAddress()被default修饰了
+    InetAddress ia = InetAddress.getByName("192.168.199.217");
+	System.out.printIn(ia);
+    InetAddress ia2 = netAddress.etByName("localhost");//Localhost指代的是本机的p地址
+    System.out.println(ia2);
+	InetAddress ia3 = InetAddress.getByName("127.0.0.1");//127.0.0.1指代的是本机的p地址
+    System.out.println(ia3);
+    InetAddress ia4 = InetAddress.getByName("LAPTOP-CRIVSRRU");//封装计算机名
+    System.out.println(ia4);
+	InetAddress ia5 = InetAddress.getByName("www,mashibing.com");//封装域名
+    System.out.printIn(ia5);
+	System.out.println(ia5.getHostName());
+    System.out.println(ia5.getHostAddress());
+}
+```
+
+```java
+public static void main(String[] args) {
+	InetSocketAddress isa = new InetSocketAddress("192.168.0.1", 8080);
+    isa.getHostName(); // 域名
+    isa.getHostPort();
+    InetAddress ia = isa.getAddress(); // 获取InetAddress对象
+}
+```
+
+
+
+### Socket套接字
+
+套接字的作用是，应用层获取传输层的协议
+
+直观上来说，客户端之间传输数据是通过流来实现的`OutputStream` `InputStream`
+
+
+
+### TCP通信
+
+实例：模拟网站的登录，客户端录入账号密码，然后服务端进行验证
+
+#### 功能分解一 单向通信
+
+客户端发送数据到服务器
+
+
+
+#### 功能分解二 双向通信
+
+服务器收到消息后，向客户端输出消息
+
+客户端
+
+```java
+public static void main(String[] args) throws IOException {
+    // 创建套接字对象，指定服务器的IP和端口号
+    Socket socket = new Socket("localhost", 8888);
+    // 获取输出流
+    OutputStream outputStream = socket.getOutputStream();
+    // 因为获取的流没有传输字符串的方法，所以需要使用处理流
+    DataOutputStream output = new DataOutputStream(outputStream);
+    output.writeUTF("hello");
+    // 接收服务器发来的消息
+    InputStream inputStream = socket.getInputStream();
+    DataInputStream input = new DataInputStream(inputStream);
+    String msg = input.readUTF();
+    System.out.println(msg);
+
+    // 关闭流
+    input.close();
+    inputStream.close();
+    output.close();
+    outputStream.close();
+    socket.close();
+}
+```
+
+服务端
+
+```java
+public static void main(String[] args) throws IOException {
+    // 创建套接字，指定服务器的端口号
+    ServerSocket serverSocket = new ServerSocket(8888);
+    // 等待客户端发来信息
+    Socket accept = serverSocket.accept();// 阻塞发给发：什么时候接收到消息，什么时候继续进行
+    // 阻塞方法返回值为Socket，就是客户端的Socket对象
+    // 获取输入流
+    InputStream inputStream = accept.getInputStream();
+    DataInputStream input = new DataInputStream(inputStream);
+    String msg = input.readUTF();
+    System.out.println(msg);
+
+    // 向客户端写回数据
+    OutputStream outputStream = accept.getOutputStream();
+    DataOutputStream output = new DataOutputStream(outputStream);
+    output.writeUTF("message received");
+
+    // 关闭流和关闭网络资源
+    output.close();
+    outputStream.close();
+    input.close();
+    inputStream.close();
+    accept.close();
+    serverSocket.close();
+}
+```
+
+
+
+#### 功能实现
+
+客户端
+
+```java
+public static void main(String[] args) {
+    // 创建套接字对象，指定服务器的IP和端口号
+    Socket socket = null;
+    OutputStream outputStream = null;
+    ObjectOutputStream userStream = null;
+    try {
+        socket = new Socket("localhost", 8888);
+        outputStream = socket.getOutputStream();
+        userStream = new ObjectOutputStream(outputStream);
+
+        Scanner scanner = new Scanner(System.in);
+        User user = new User();
+        System.out.println("please input your username:");
+        user.setUsername(scanner.next());
+        System.out.println("please input your password:");
+        user.setPassword(scanner.next());
+        userStream.writeObject(user);
+        // 接收服务器发来的消息
+        InputStream inputStream = socket.getInputStream();
+        DataInputStream input = new DataInputStream(inputStream);
+        String msg = input.readUTF();
+        System.out.println(msg);
+    } catch (IOException e) {
+        e.printStackTrace();
+    } finally {
+        // 关闭流
+        try {
+            if (userStream != null) {
+                userStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+服务端
+
+```java
+public static void main(String[] args) {
+    // 创建套接字，指定服务器的端口号
+    ServerSocket serverSocket = null;
+    Socket accept = null;
+    InputStream inputStream = null;
+    ObjectInputStream userStream = null;
+    OutputStream outputStream = null;
+    DataOutputStream output = null;
+    try {
+        serverSocket = new ServerSocket(8888);
+        // 等待客户端发来信息
+        accept = serverSocket.accept();// 阻塞发给发：什么时候接收到消息，什么时候继续进行
+        // 阻塞方法返回值为Socket，就是客户端的Socket对象
+        // 获取输入流
+        inputStream = accept.getInputStream();
+        userStream = new ObjectInputStream(inputStream);
+        User user = (User) userStream.readObject();
+        String msg = "";
+        if (user.getUsername().equals("moro") && user.getPassword().equals("123123")) {
+            msg = "login successfully";
+        } else {
+            msg = "username or password incorrect";
+        }
+        // 向客户端写回数据
+        outputStream = accept.getOutputStream();
+        output = new DataOutputStream(outputStream);
+        output.writeUTF(msg);
+    } catch (IOException | ClassNotFoundException e) {
+        throw new RuntimeException(e);
+    } finally {
+        // 关闭流和关闭网络资源
+        // 为了防止关闭出错，后续流无法关闭所以只能一个一个try
+        try {
+            if (output != null) {
+                output.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (accept != null) {
+                accept.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+- 为了防止关闭出错，后续流无法关闭所以只能一个一个try
+- 为了防止空指针异常，每次关闭前都需要判断指针不为空
+
+
+
+##### 遗留问题
+
+目前服务器只能服务于一个客户，无法多线程
 
