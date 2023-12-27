@@ -2902,6 +2902,13 @@ public static void main(String[] args) {
 
 ### TCP通信
 
+- 客户端创建 Socket对象，封装服务器的IP+端口号组成的套接字
+- 服务端创建ServerSocket对象，封装程序运行监听的端口号
+
+程序通过流的方式输出和输入数据
+
+
+
 实例：模拟网站的登录，客户端录入账号密码，然后服务端进行验证
 
 #### 功能分解一 单向通信
@@ -3110,4 +3117,328 @@ public static void main(String[] args) {
 ##### 遗留问题
 
 目前服务器只能服务于一个客户，无法多线程
+
+
+
+### UDP通信
+
+通信双方是对等的，通过创建DatagramSocket对象来封装本机端口
+
+发送的数据通过DatagramPacket来封装
+
+通信双方都需要一个byte数组，用于封装要发送的数据和接收数据
+
+
+
+实例：模拟网络聊天
+
+```java
+public static void main(String[] args) {
+    // 1. 准备套接字
+    DatagramSocket datagramSocket = null;
+    try {
+        datagramSocket = new DatagramSocket(9999);
+        byte[] receiveBytes = new byte[1024];
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            // 接收
+            DatagramPacket receivePacket = new DatagramPacket(receiveBytes, receiveBytes.length);
+            datagramSocket.receive(receivePacket);
+            byte[] data = receivePacket.getData();
+            String receiveMsg = new String(data, 0, receivePacket.getLength());
+            System.out.println(receiveMsg);
+            System.out.print("> ");
+            // 2. 准备数据包
+            String sendMsg = scanner.next();
+            byte[] sendBytes = sendMsg.getBytes();
+            /*
+            四个参数：字节数组形式的数据，数组长度，封装接收方的IP对象，接收方的端口号
+             */
+            DatagramPacket sendPacket = new DatagramPacket(sendBytes,
+                    sendBytes.length, InetAddress.getByName("localhost"), 8888);
+            datagramSocket.send(sendPacket);
+
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    } finally {
+        // 关闭流和网络资源
+        assert datagramSocket != null;
+        datagramSocket.close();
+    }
+}
+```
+
+
+
+## 多线程
+
+- 进程是程序的一次执行过程，是资源分配的单位
+- 线程是进程的细分，是处理机调度的单位
+
+### 单核CPU与多核CPU
+
+单核cpu，相当于只有一个处理机，进程会轮流获得处理机资源，轮流执行。因此只是表面上看起来像是进程同时进行。
+
+多核cpu，内部包含多个处理机，可以同时运行多个进程，真正意义的同时进行
+
+### 并行和并发
+
+- 并行是同一时刻同时有多个进程在执行
+- 并发是一个时间段内，有多个进程在执行
+
+
+
+### 创建线程的三种方式
+
+在接触到多线程之前的程序，实际上也是多线程的，一般的进程都包含处理异常的线程、main方法所在的线程和垃圾收集器线程等。只是其余的线程都感知不到，只能看到main方法所在的线程
+
+
+
+#### 继承Thread类
+
+主要步骤如下：
+
+- 继承`Thread`类
+- 重写`public void run()`方法，将线程的主要逻辑放在其中
+  - run()方法不能直接调用，否则会被当作普通方法处理
+- 在main方法中创建该类的对象，然后调用`start()`方法
+
+
+
+##### 设置线程名字的方法
+
+- 使用线程对象调用`setName(String name)`为该线程设置名字
+- 在该线程中，使用Thread类提供的静态方法`Thread.currentThread()`获取当前线程对象，然后调用`getName(String name)`为本线程设置名字
+  - 如果是继承Thread类，可以直接在类中使用`this.setName()`设置名字
+- 通过构造器设置名字，Thread类有一个带参构造`public Thread(String name) {}`，因此可以在自己创建的线程类中设置一个带参构造器，在其中使用`super(name);`来调用Thread类的带参构造
+
+
+
+##### 多线程实例--买火车票
+
+假设有一百张票，然后设有三个窗口
+
+```java
+public class Thread01 extends Thread {
+    private static int remain = 100;
+    public Thread01(String name) {
+        super(name);
+    }
+
+    @Override
+    public void run() {
+        while (remain > 0) {
+            System.out.println(this.getName() + " is selling " + (100 - remain + 1) + "th ticket");
+            --remain;
+        }
+    }
+    public static void main(String[] args) {
+        Thread01 windows1 = new Thread01("windows-1");
+        Thread01 windows2 = new Thread01("windows-2");
+        Thread01 windows3 = new Thread01("windows-3");
+        windows3.start();
+        windows2.start();
+        windows1.start();
+    }
+}
+```
+
+
+
+#### 实现Runnable接口
+
+具体做法：
+
+- 创建自定义线程类，实现`Runnable`接口
+- 重写`public void run() {}`方法，将线程的逻辑放入其中
+
+> 因为不是继承Thread类，就无法使用`getName()/setName()`等方法。只能使用Thread.currentThread()来获取和设置相关属性
+
+- 创建自定义线程类对象，然后创建Thread类对象，将自定义类对象作为参数传入
+
+
+
+##### 多线程实例--买火车票
+
+```java
+public class Thread02 implements Runnable {
+    private int remain = 100;
+    @Override
+    public void run() {
+        while (remain > 0) {
+            System.out.println(Thread.currentThread().getName() + " is selling " + (100 - remain + 1) + "th ticket");
+            --remain;
+        }
+    }
+
+    public static void main(String[] args) {
+        Thread windows1 = new Thread(new Thread02(), "windows-1");
+        Thread windows2 = new Thread(new Thread02(), "windows-2");
+        Thread windows3 = new Thread(new Thread02(), "windows-3");
+        windows3.start();
+        windows2.start();
+        windows1.start();
+    }
+}
+```
+
+
+
+> 实际开发中，由于Java有单继承的特性，如果类继承了Thread类，就无法继承其他类。
+>
+> 并且，继承Thread类时，资源共享能力也会变弱，例如买票需要将成员属性变为静态属性才能共享
+
+![image-20231227163953570](..\img\thread-1.png)
+
+
+
+#### 实现Callable接口
+
+> 对比前两种多线程实现方式，无论是哪种，都有两个缺点
+>
+> - run()方法没有返回值
+> - run()方法不能使用`throws`关键字抛出异常
+>   - 子类重写父类或方法中的接口，要么不抛出异常，要么异常抛出父类方法异常的子类异常
+>
+> 实现Callable接口的优缺点如下：
+>
+> - 有返回值
+> - 能抛出异常
+> - 线程创建比较繁琐
+
+具体做法：
+
+- 创建自定义线程类，实现`Callable`接口
+- 重写`public T call() throws Exception{}`方法，将线程的逻辑放入其中
+- 在main方法中创建自定义线程对象，然后创建FutureTask类对象，将自定义线程类对象传入
+- 创建Thread类对象，将FutureTask对象传入
+- 如果想获取call()方法的返回值，就需要使用FutureTask对象调用`get()`方法来获取
+
+
+
+### 线程的生命周期
+
+五状态模型：
+
+![image-20231227180214438](..\img\threadLifespan.png)
+
+- 阻塞状态：出现了阻塞事件，线程主动放弃了cpu的使用权
+- 就绪状态：线程已经具备了能运行的所有资源，但是没有获取cpu的使用权
+  - 从运行态到就绪态，线程是被迫放弃了cpu的使用权，如时间片用尽
+
+
+
+### 线程常见方法
+
+#### start()
+
+启动当前线程对象，表面上是调用start()方法，底层是调用线程内部的run()方法
+
+#### run()
+
+线程类继承Thread类或者实现Runnable接口时，需要重写该方法。run()方法内部是线程需要执行的逻辑
+
+#### currentThread()
+
+Thread类中的静态方法，能够当前正在执行的线程(也就是说能够获取当前线程，因为只有线程在处理机上执行时，才能执行到该方法)
+
+#### setName() & getName()
+
+Thread类中提供的get和set方法，用于设置和获取线程对象的名称
+
+
+
+#### setPriority() & getPriority()
+
+设置线程的优先级
+
+同优先级的线程之间，采用的是先到先服务，时间片轮转策略
+
+如果线程优先级高，被CPU调度的概率就更高
+
+Thread类中设计了几个优先级常量：
+
+```java
+public final static int MIN_PRIORITY = 1;
+public final static int NORM_PRIORITY = 0;
+public final static int MAX_PRIORITY = 10;
+```
+
+由此可见，默认优先级为5
+
+
+
+#### join()
+
+当一个线程调用了join()方法，这个线程就会被先执行，它*执行结束*以后才会轮到其他线程
+
+> 必须先start再join()，否则是无效的
+
+e.g.
+
+```java
+public class Test extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 100; i++) {sout(i);}
+    }
+    public static void main(String[] args) {
+        for (int i = 0; i < 100; i++) {
+            if (i == 5) {
+                Test test = new Test("sub thread");
+                test.start();
+                test.join();
+            }
+            sout("main is printing " + i);
+        }
+    }
+}
+```
+
+上例中，main方法所在线程输出到i==5时，创建了新的线程，并调用了join()方法，该线程会输出完1~100，然后才会恢复卖弄方法所在线程的执行
+
+
+
+#### sleep()
+
+手动制造阻塞事件，让正在执行的线程进入阻塞状态，到达设定的时间(单位为ms)后，被唤醒并进入就绪态
+
+
+
+#### setDaemon()
+
+设置伴随线程(守护线程)，当线程停止时，伴随线程也会停止，不会继续执行
+
+在一个线程里，使用另一个线程对象调用该方法，会将该进程设置为当前进程的伴随线程
+
+- 如在main方法中新建线程类对象，然后调用setDaemon()，该线程就成了main方法所在线程的伴随线程
+
+> 先设置伴随进程setDaemon()，再执行，否则无效
+
+
+
+#### stop()
+
+手动结束线程，让线程进入结束状态
+
+
+
+### 线程安全问题
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
