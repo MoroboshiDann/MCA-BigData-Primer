@@ -3256,8 +3256,10 @@ public class Thread01 extends Thread {
 > 因为不是继承Thread类，就无法使用`getName()/setName()`等方法。只能使用Thread.currentThread()来获取和设置相关属性
 
 - 创建自定义线程类对象，然后创建Thread类对象，将自定义类对象作为参数传入
+  - 创建多个Thread对象时，需要传入同一个自定义线程类对象
 
 
+> 对比继承Thread类，实现Runnable接口的线程类只是规定了线程需要完成的任务，而不是线程本身，而Thread对象才是线程，因此创建多个对象需要传入同一个接口对象
 
 ##### 多线程实例--买火车票
 
@@ -3288,6 +3290,8 @@ public class Thread02 implements Runnable {
 > 实际开发中，由于Java有单继承的特性，如果类继承了Thread类，就无法继承其他类。
 >
 > 并且，继承Thread类时，资源共享能力也会变弱，例如买票需要将成员属性变为静态属性才能共享
+>
+> 因为实现Runnable接口，只是将线程的任务作了规定，实际使用中，之会创建一个该类的对对象，因此成员变量可以直接共享
 
 ![image-20231227163953570](..\img\thread-1.png)
 
@@ -3424,13 +3428,664 @@ public class Test extends Thread {
 
 
 
-### 线程安全问题
+### 线程同步
+
+为什么要使用线程同步？
+
+Java允许多线程并发控制，当多个线程操作同一个可共享资源时(如数据增删改查)，临界区并不是原子操作，会导致数据的不一致性，相互之间产生冲突。加入同步锁可以保证当前线程没有执行完操作前，共享资源不会被其他线程使用。保证了变量的唯一性和准确性
+
+> 使用synchronized关键字，传入的锁对象一定是唯一的，否则无法正确加锁
+>
+> 如果线程类继承Thread，可以将类的字节码文件传入，如果是实现Runnable接口，可以将对象传入，因为只有一个对象
+
+锁的要求：
+
+- 传入类型必须为引用数据类型，不能是基本数据类型
+- 可以创建一个专门的锁变量，没有任何业务意义
+- 一般使用共享资源做同步监视器(锁)
+- 在同步代码块中，不能改变同步监视器对象的引用
+- 尽量不要String和包装类Integer做同步监视器
+- 建议使用final修饰同步监视器
 
 
 
+使用synchronized之后，代码的执行过程：
+
+- 第一个线程执行到同步代码块，发现同步监视器为open状态，然后将其close，执行代码块内部的逻辑
+- 第一个线程执行过程中，发生了线程切换(阻塞，或时间片用尽)，失去处理机，但是锁仍为close
+- 其余线程执行到同步代码块，发现锁为close状态，进入阻塞态，等待锁的释放
+- 第一个线程再次获得处理机，执行后续逻辑，直到释放锁，将其置为open状态
+- 其余线程之一被唤醒，上处理机，将锁置为close
+
+> 即使是在执行同步代码块的过程中，也是可以发生线程切换的，但是其他竞争线程无法获得锁，所以还会再切换回来
 
 
 
+#### 同步方法
+
+将操作临界区的方法使用`synchronized`关键字修饰。
+
+Java每个对象都有一个内置锁，当方法使用该关键字修饰时，内置锁会保护整个方法。
+
+方法被调用前，需要获得内置锁，否则进入阻塞状态
+
+> 两种情况：
+>
+> - 如果线程类实现了Runnable接口，那么使用synchronized关键字将run方法加锁，由于只会存在一个自定义线程对象，所以可以正常同步
+> - 如果线程类继承了Thread类，那么使用synchronized关键字将run方法加锁，由于会创建多个自定义线程对象，他们分别会调用自己的run方法，所以无法同步
+>   - 这种情况下需要将run方法加上`static`修饰，让其成为类共有的方法
+
+如果一个类中有多个同步方法，则某个对象调用了其中的一个，而其他对象调用另外的同步方法时，也会被阻塞
+
+
+
+#### 同步代码块
+
+使用`synchronized`关键字修饰操作临界区的代码块。
+
+在执行该代码块之前，会先获取内置锁，否则进入阻塞状态
+
+```java
+public class TicketWindow implements Runnable {
+    int tickets = 0;
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (TicketWindow.class) {
+                if (tickets < 1000) {
+                    tickets++;
+                    System.out.println(Thread.currentThread().getName() + " is selling " + tickets + " th tickets");
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        TicketWindow ticketWindow = new TicketWindow();
+        Thread windows1 = new Thread(ticketWindow, "windows-1");
+        Thread windows2 = new Thread(ticketWindow, "windows-2");
+        Thread windows3 = new Thread(ticketWindow, "windows-3");
+        windows1.start();
+        windows2.start();
+        windows3.start();
+    }
+```
+
+> 注意不要将循环放到锁中，否则一个线程抢到了锁之后，其他线程就无法获得锁，直到该线程执行结束
+
+
+
+#### Lock锁
+
+- Lock锁是显示锁，需要手动开启和关闭，synchronized锁是隐式锁
+- Lock锁只能同步代码块，而synchronized可以修饰方法
+- 使用Lock锁，JVM将花费较少的时间来调度线程，性能更好
+- 扩展性好，Lock是只是一个接口，有众多实现类
+
+> 锁的推荐程度：Lock > 同步代码块 > 同步方法
+
+
+
+#### 线程同步的缺点
+
+- 效率低
+- 可能会造成死锁
+  - 多个线程分别占用其他线程的需要的同步资源，且在相互等待对方放弃同步资源，就形成了死锁
+  - 出现死锁后，不会抛出异常，不会出现提示，所有线程都会进入阻塞状态
+
+
+
+### 线程通信
+
+生产者消费者问题
+
+通过同步代码块实现
+
+```java
+public class Producer implements Callable<Integer> {
+    private Product product;
+
+    public Producer(Product product) {
+        this.product = product;
+    }
+
+    @Override
+    public Integer call() {
+        for (int i = 0; i < 10; i++) {
+            synchronized (product) {
+                if (i % 2 == 0) {
+                    product.setBrand("Dove");
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    product.setName("chocolate");
+                } else {
+                    product.setBrand("TsingTao");
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    product.setName("beer");
+                }
+                System.out.println("the producer has produced " + product.getBrand() + "---" + product.getName());
+            }
+        }
+        return null;
+    }
+}
+```
+
+```java
+public class Consumer implements Callable<Integer> {
+    private Product product;
+
+    public Consumer(Product product) {
+        this.product = product;
+    }
+
+    @Override
+    public Integer call() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            synchronized (product) {
+                System.out.println("the consumer has consumed " + product.getBrand() + "---" + product.getName());
+            }
+        }
+        return null;
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Product product = new Product();
+        Producer producer = new Producer(product);
+        Consumer consumer = new Consumer(product);
+        FutureTask<Integer> produceTask = new FutureTask<>(producer);
+        FutureTask<Integer> consumTask = new FutureTask<>(consumer);
+        Thread produceThread = new Thread(produceTask);
+        Thread consumThread = new Thread(consumTask);
+        produceThread.start();
+        consumThread.start();
+    }
+}
+```
+
+
+
+通过同步方法解决
+
+给设置和读取对象属性的方法设置为synchronized，即可实现读写互斥
+
+```java
+public class Producer implements Callable<Integer> {
+    private Product product;
+
+    public Producer(Product product) {
+        this.product = product;
+    }
+
+    @Override
+    public Integer call() {
+        for (int i = 0; i < 10; i++) {
+            if (i % 2 == 0) {
+                product.setProduct("Dove", "chocolate");
+            } else  {
+                product.setProduct("TsingTao", "beer");
+            }
+        }
+        return null;
+    }
+}
+```
+
+```java
+public class Consumer implements Callable<Integer> {
+    private Product product;
+
+    public Consumer(Product product) {
+        this.product = product;
+    }
+
+    @Override
+    public Integer call() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            product.getProduct();
+        }
+        return null;
+    }
+
+```
+
+```java
+public class Product {
+    private String brand;
+    private String name;
+
+    public Product() {
+    }
+
+    public Product(String brand, String name) {
+        this.brand = brand;
+        this.name = name;
+    }
+
+    /**
+     * 获取
+     * @return brand
+     */
+    public String getBrand() {
+        return brand;
+    }
+
+    /**
+     * 设置
+     * @param brand
+     */
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    /**
+     * 获取
+     * @return name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * 设置
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void getProduct() {
+        System.out.println("the consumer has consumed " + this.getBrand() + "---" + this.getName());
+    }
+
+    public void setProduct(String brand, String name) {
+        this.setBrand(brand);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        this.setName(name);
+    }
+
+    public String toString() {
+        return "Product{brand = " + brand + ", name = " + name + "}";
+    }
+}
+```
+
+
+
+#### wait() & notify()
+
+通过同步代码块或者同步方法来解决生产者和消费者问题，生产者和消费者双方是对等的，所以会出现生产者连续生产，消费者连续消费的情况。且生产数量和消费数量并不一致
+
+在代码中加入wait()和notify()方法，生产者生产完毕唤醒消费者，消费者消费完毕唤醒生产者
+
+生产和消费的方法需要用synchronized来修饰，以达到互斥的目的
+
+- 如果一个线程执行了某个对象的wait()方法，那么该线程进入该对象的等待池中(并且已经将锁释放)
+
+- 如果一个线程执行了该对象的notify()方法或notifyAll()方法，那么该等待池中的线程会被唤起，然后进入该对象的锁池中获取锁
+
+- 如果获取锁册灰姑娘共，那么该线程就会返回wait()方法之后，继续执行
+
+synchronized对应对象的锁池，wait(), notify(), notifyAll()对应对象的等待池
+
+> - wait(), notify()只有放在同步方法或者同步代码块中才有效
+> - sleep()线程会进入阻塞状态，但是不会释放锁，而wait()之后，线程会释放锁
+
+```java
+public synchronized void getProduct() {
+    if (!flag) {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    System.out.println("the consumer has consumed " + this.getBrand() + "---" + this.getName());
+    flag = false;
+    notify();
+}
+
+public synchronized void setProduct(String brand, String name) {
+    if (flag) {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    this.setBrand(brand);
+    try {
+        Thread.sleep(100);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+    this.setName(name);
+    System.out.println("the producer has produced " + this.getBrand() + "---" + this.getName());
+    flag = true;
+    notify();
+}
+```
+
+
+
+#### Lock
+
+上述实例中，生产者和消费者线程都在同一个等待池中，当存在多个生产者和消费者时，如果使用notify()方法，就无法顺利按序执行。
+
+那就创建两个等待池，将生产者和消费者隔离开来，然后生产者唤醒消费者，消费者唤醒生产者
+
+可以通过`Lock.newCondition()`方法来创建一个等待队列`produceCondition`
+
+通过`produceCondition.await()`和`produceCondition.signal()`来分别将线程放入该队列和从该队列唤醒一个线程
+
+```java
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Product {
+    private String brand;
+    private String name;
+    private boolean flag = false;
+    private Lock lock = new ReentrantLock();
+    private Condition produceCondition = lock.newCondition();
+    private Condition consumCondition = lock.newCondition();
+
+    /**
+     * 获取
+     *
+     * @return brand
+     */
+    public String getBrand() {
+        return brand;
+    }
+
+    /**
+     * 设置
+     *
+     * @param brand
+     */
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    /**
+     * 获取
+     *
+     * @return name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * 设置
+     *
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void getProduct() {
+        lock.lock();
+        try {
+            if (!flag) {
+                try {
+                    consumCondition.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            System.out.println("the consumer has consumed " + this.getBrand() + "---" + this.getName());
+            flag = false;
+            produceCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void setProduct(String brand, String name) {
+        lock.lock();
+        try {
+            if (flag) {
+                try {
+                    produceCondition.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            this.setBrand(brand);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            this.setName(name);
+            System.out.println("the producer has produced " + this.getBrand() + "---" + this.getName());
+            flag = true;
+            consumCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public String toString() {
+        return "Product{brand = " + brand + ", name = " + name + "}";
+    }
+}
+
+```
+
+
+
+## 反射
+
+在运行过程中，对于任何一个类都能够知道其所有属性和方法；对于任何一个对象，都能够调用它的任意方法和属性；这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制
+
+Java源文件通过编译产生`.class`二进制字节码文件，类加载器子系统，通过二进制字节流，负责从文件系统加载字节码文件。
+
+- 执行程序时，类加载器将`.class`文件读入JVM中，这个过程称为类的加载。
+- JVM会在内存中创建一个对应的`java.lang.Class`类对象，这个Class对象就是读入的字节码文件的对象，这个对象会被放入字节码信息中。
+- 这个Class对象将被作为程序访问方法区中该类的各种数据的外部接口
+
+> 我们可以通过这个Class对象看到类的结构，这个对象就好像一面镜子，透过镜子看到类的各种信息，我们形象地称之为“反射”。
+>
+> 这种看透字节码信息的能力被称为introspection，内省、内观、反省。Reflection和Introspection是常被提及的两个术语
+
+如果在运行期间，我们要产生某个类的对象，JVM会先查看该类是否已经被加载。如果没有被加载，JVM会根据类的名称找到对应的`.class`文件并加载它。一旦某个类的Class对象已经被加载到内存，就可以用它来产生过该类型的所有对象。
+
+
+
+> 虽然多态可以提高代码的扩展性，但是扩展性没有达到极致
+>
+> 而为了极大地提高代码的扩展性，所以引入反射
+
+
+
+### Class类的理解
+
+Java万物皆对象。对于`.class`字节码文件，内部结构都类似，都包含成员方法、成员属性、构造器等，于是可以将字节码文件的共性抽取为一个类，即`java.lang.Class`类
+
+通过Class类可以获得具体的Class类的对象，即具体的字节码文件，然后就可以获取对象内部的信息
+
+
+
+### 获取字节码信息的四种方式
+
+#### 通过类的实例对象来获取
+
+- 创建该类的一个对象
+- 使用该对象来调用`getClass()`方法，返回该类的Class对象
+
+#### 通过类的内置class属性获取
+
+- 使用`类名.class`直接获取该类的Class对象
+
+> 前两种方式都不常用，因为已经显示地知道了该类的文件和对象，已经不需要反射了
+
+#### 通过Class类的静态方法forName来获取(最常用)
+
+- 需要提供类的全称(包名+类名)
+- 通过`Class.forName(String className)`来返回该类的对象
+
+#### 通过类的加载器获取
+
+是类加载器将字节码文件加载到JVM中的
+
+- 先通过任意一个类的class属性来获取类加载器对象`Main.class.getClassLoader()`
+- 然后通过类加载器调用`loadClass(String className)`方法来获取对应类的Class对象
+
+```java
+public static void main(String[] args) throws ClassNotFoundException {
+    // 1. 不常用
+    Person person = new Person();
+    Class<? extends Person> personClassFirst = person.getClass();
+    System.out.println(personClassFirst);
+    // 2. 不常用
+    Class<Person> personClassSecond = Person.class;
+    System.out.println(personClassSecond);
+    System.out.println(personClassSecond == personClassFirst);
+    // 3.
+    Class<?> personClassThird = Class.forName("Person");
+    System.out.println(personClassThird);
+    // 4.
+    ClassLoader classLoader = Main.class.getClassLoader();
+    Class<?> personClassForth = classLoader.loadClass("Person");
+    System.out.println(personClassForth);
+}
+```
+
+
+
+### 可以作为Class类的实例的种类
+
+- 类：外部类，内部类
+- 接口
+- 注解`@Annotation`
+- 数组
+  - 同维度，同类型数组的字节码对象是同一个
+- 基本数据类型
+- void
+
+```java
+Class personClass = Person.class;
+Class compClass = Comparable.class;
+Class overrideClass = Override.class;
+int[] arr = {1}; Class arrClass = arr.getClass();
+Class intClass = int.class;
+Class voidClass = void.class;
+```
+
+
+
+### 通过Class对象来获取类的信息
+
+#### 获取构造器和创建对象
+
+获取构造器：
+
+- `getConstructors()`：获取所有public修饰的构造器
+- `getConstructor(Class<?>... parameterTypes)`：按照形参类型和个数来获取public修饰的构造器
+  - 该方法形参为可变参数，可以传入任意个数的Class对象
+- `getDeclaredConstructors()`：获取所有构造器，无视修饰符
+- `getDeclaredConstructor(Class<?>... parameterTypes)`：按照形参类型和个数来获取构造器
+
+创建对象：
+
+- 使用构造器对象调用`newInstance()`方法来创建对象
+- 该方法的参数为构造器的参数，需要传入与构造器一致的参数
+
+
+
+#### 获取属性和赋值
+
+获取属性：
+
+- `getFields()`：返回类中定义的和继承得来的所有public修饰的属性
+- `getDeclaredFields()`：获取类中定义的所有属性
+  - `private`修饰的，甚至非`public`修饰的父类的属性，都无法继承，从而无法获取
+- `getField(String name)`：通过变量名获取public属性
+- `getDeclaredField(String name)`：通过变量名获取运行时所有属性
+
+获取属性的信息：
+
+- `Field.getType()`：获取属性的类型，返回Class对象
+- `Field.getName()`：获取属性的变量名
+- `Field.getModifiers()` 和 `Modifier.toString(int)`：前者获取修饰符对应的常量，或者是Modifier类提供的静态方法，将常量转为对应的字符串
+
+给属性赋值：
+
+- `Field.set(Object obj, Object value)`：给输入对象的当前属性赋值
+
+
+
+#### 获取方法和调用方法
+
+获取方法：
+
+- `Class.getMethods()`：获取所有public修饰的方法，包括继承得来的
+- `Class.getDeclaredMethods()`：获取自己定义的方法
+- `Class.getMethod(String name, Class<?>... parameterTypes)`：通过名称和形参类型来获取指定方法。只能获取public修饰的
+- `Class.getDeclaredMethod(String name, Class<?>... parameterTypes)`
+
+获取属性：
+
+- `Method.getReturnType()`：获取返回值类型，返回Class对象
+- `Method.getName()`：获取方法名
+- `Method.getModifiers()` 和 `Modifier.toString(int)`：前者获取修饰符对应的常量，或者是Modifier类提供的静态方法，将常量转为对应的字符串
+- `Method.getParameterTypes()`：获取形参的类型数组，如果是空参返回空数组
+- `Method.getAnnotations()`：获取运行时注解
+  - 生命周期为RUNTIME的才能获取，如Override就无法获取
+- `Method.getExceptionTypes()`：获取异常类型
+
+调用方法：
+
+- `Method.invoke(Object obj, Object... args)`：调用方法需要传入调用的对象和形参
+
+
+
+#### 获取类的接口，所在包，注解
+
+- `getInterfaces()`：返回实现的接口的Class对象数组，不能直接获取父类实现的接口
+- `getPackage()`：获取运行时类所在的包
+- `getAnnotations()`：获取运行时类的注解
+
+
+
+### 关于反射的面试题
+
+1. 创建Person对象，到底是使用new Person()，还是使用反射创建
+
+> 还是正常使用new关键字创建对象，反射有自己的应用场景。
+>
+> 在某种业务场景下，无法在编写源代码时就确定传入哪个类的对象，需要根据用户行为动态地做出响应。这时就可以通过反射机制在运行阶段根据用户的输入来判断到底实例化哪个类的对象，并调用该对象的方法等操作。
+
+2. 反射是否破坏了面向对象的封装性
+
+> Java的封装是指利用权限修饰符来对类中的成员的访问权进行限制，强制用户使用该类的对象时必须遵守这个权限限制，只能按照类中设计的接口来访问。
+>
+> 反射并没有破坏面向对象的封装性。因为通过反射机制获取到的带权限修饰符的方法和属性都依然遵照权限修饰符限定的访问方式。
+>
+>  除非调用setAccessible(true)方法来抑制java访问权限检查，从而达到可以随意访问的效果。但是利用setAccessible(true)是一种暴力方式，不安全。开发人员一般不会用这种方式损害自己代码的封装性。
 
 
 
