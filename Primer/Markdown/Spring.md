@@ -390,12 +390,181 @@ public class User {
 </bean>
 ```
 
-
-
 ### 7. 数组类型赋值
 
+注入到容器中的Bean对象的属性可能是数组类型，这时可以通过<array>标签来完成赋值。
+
+```xml
+<bean id="student" class="org.moroboshidan.spring.Student">
+    <property name="id" value="1"></property>
+    <property name="name" value="moroboshidan"></property>
+    <property name="hobbies">
+        <array>
+            <value>basketball</value>
+            <value>football</value>
+            <value>badminton</value>
+        </array>
+    </property>
+    <property name="hobbiesDup">
+        <list>
+            <value>basketball</value>
+            <value>football</value>
+            <value>badminton</value>
+        </list>
+    </property>
+</bean>
+```
+
+### 8. 集合类型赋值
+
+注入到容器中的Bean对象的属性可能是数组类型，这时可以通过<list>标签。
+
+具体代码见7。其中实例List内容为String类型，List的类型也可以是自定义类型，处理方式一致。
+
+```xml
+<bean id="student" class="org.moroboshidan.spring.Student">
+    <property name="id" value="1"></property>
+    <property name="name" value="moroboshidan"></property>
+    <property name="clazzList">
+        <list>
+            <ref bean="clazz"></ref>
+            <bean class="org.moroboshidan.spring.Clazz"></bean>
+        </list>
+    </property>
+</bean>
+```
+
+还有一种情况是Map集合，则每个键值对需要使用一个<entry>标签来封装
+
+```xml
+<bean id="student" class="org.moroboshidan.spring.Student">
+    <property name="id" value="1"></property>
+    <property name="name" value="moroboshidan"></property>
+    <property name="map">
+        <map>
+            <entry>
+                <key>
+                    <value>alpha</value>
+                </key>
+                <value>18</value>
+            </entry>
+            <entry>
+                <key>
+                    <value>beta</value>
+                </key>
+                <value>19</value>
+            </entry>
+        </map>
+    </property>
+</bean>
+```
+
+我们可以通过util标签来定义外部的集合数据。然后通过ref来引用就可以了。但是我们需要先声明util的schema。
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+```
+
+然后进行具体操作
+
+```xml
+<util:list id="hobbyList">
+    <value>h1</value>
+    <value>h2</value>
+    <value>h3</value>
+</util:list>
+
+<bean id="student" class="org.moroboshidan.spring.Student">
+    <property name="id" value="1"></property>
+    <property name="name" value="moroboshidan"></property>
+    <property name="hobbyList" ref="hobbyList"></property>
+</bean>
+```
+
+### 9. p命名空间
+
+用来简化属性的赋值操作
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 外部定义的集合数据 -->
+    <util:list id="studentHobbies">
+        <value >h1</value>
+        <value >h2</value>
+        <value >h3</value>
+    </util:list>
+   <!-- p 属性 简化属性的赋值操作 -->
+   <bean class="org.moroboshidan.spring.Student" id="student"
+         p:id="666" p:name="波哥" p:hobbies2-ref="studentHobbies"></bean>
+</beans>
+```
+
+> 注意，如果是自定义类型的成员对象，需要在属性名后加上`-ref`，才能引用别处的定义
+
+### 10. 外部属性文件
+
+为了实现配置信息内容的共享。我们可以把一些共享的信息单独的配置在一个独立的properties文件中。然后通过context标签来引入。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 引入外部的属性文件 -->
+    <context:property-placeholder location="classpath:myProperties.properties"></context:property-placeholder>
+
+    <!-- 外部定义的集合数据 -->
+    <util:list id="studentHobbies">
+        <value >${user.hobbies.h1}</value>
+        <value >${user.hobbies.h2}</value>
+        <value >h3</value>
+    </util:list>
+   <!-- p 属性 简化属性的赋值操作 -->
+   <bean class="com.boge.spring.bean4.Student" id="student1"
+         p:id="666" p:name="波哥" p:hobbies2-ref="studentHobbies"></bean>
+
+</beans>
+```
+
+在`myProperties.proterties`文件中，做如下定义：
+
+```properties
+user.hobbies.h1 = basketball
+user.hobbies.h2 = football
+```
+
+本质上就是进行映射，使用一个变量名来代替具体的取值
 
 
+具体的步骤：
+
+1. 定义属性文件
+2. 添加context标签的schema
+3. 通过context中的 property-placeholder引入属性文件
+4. 然后通过${}表达式来使用属性文件中什么的信息
 
 
 ## 三、基于注解的方式
