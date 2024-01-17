@@ -788,4 +788,118 @@ UserController userController = ac.getBean(UserController.class);
 
 # Spring核心之AOP
 
-## 
+## 一、前置基础-代理
+
+设计模式之代理模式。代理的作用是增强目标对象的功能。
+
+其抽象过程为：
+
+- 在执行目标对象的某个方法前，执行代理方法中的某功能
+- 执行目标对象对象方法
+- 返回代理方法继续执行
+
+通常需要为目标对象创建一个代理类
+
+![img.png](..\img\proxy.png)
+
+### 1. 静态代理
+
+若代理类在程序运行前就已经存在，那么这种代理方式被成为 静态代理 ，这种情况下的代理类通常都是我们在Java代码中定义的。 通常情况下， 静态代理中的代理类和目标类会*实现同一接口或是派生自相同的父类*。
+
+公共接口
+
+```java
+public interface SomeService {
+    String doSomethin();
+}
+```
+
+定义目标类
+
+```java
+public class SomeServiceImpl implements SomeService {
+	@Override
+    public String doSomething() {
+        sout("target instance is executing ...");
+        return "Hello";
+    }
+}
+```
+
+定义代理类
+
+```java
+public class SomeProxy implements SomeService {
+	// 代理对象持有的目标对象
+    private SomeService targe;
+    
+    public SomeProxy(SomeService someService) {
+        this.target = someService;
+    }
+    
+    // 代理对象需要增强的方法
+    @OVerride
+    public String doSomething() {
+        sout("before target instance starts ...");
+        String msg = target.doSomething();
+        sout("after target instance ends ...");
+        return msg.toUpperCase();
+    }
+}
+```
+
+进行测试
+
+```java
+public void test() {
+    SomeService target = new SomeServiceImpl();
+    SomeProxy proxy = new SomeProxy(target);
+    sout(proxy.doSomething());
+}
+```
+
+
+
+### 2. 动态代理
+
+代理类在程序运行时创建的代理方式被成为 动态代理。 也就是说，这种情况下，代理类并不是在Java代码中定义的，而是在运行时根据我们在Java代码中的“指示”动态生成的。
+代理类型	使用场景:
+
+* JDK动态代理:如果目标对象实现了接口，采用JDK的动态代理
+* CGLIB动态代理:如果目标对象没有实现了接口，必须采用CGLIB动态代理
+
+### 
+
+## 二、AOP-面向切面编程
+
+### 1.  AOP概述与相关概念
+
+#### 1.1 AOP概述
+
+AOP（Aspect Oriented Programming）是一种设计思想，是软件设计领域中的面向切面编程，它是面向对象编程OOP的一种补充和完善，它以通过预编译方式和运行期动态代理方式实现，在不修改源代码的情况下，给程序动态统一添加额外功能的一种技术。利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率。 日志、事务、安全检查等。
+
+#### 1.2 AOP术语
+
+在学习AOP中我们会涉及到如下的相关概念
+
+| 术语          | 说明                                                         |
+| ------------- | :----------------------------------------------------------- |
+| 切面          | 切面泛指交叉业务逻辑。比如事务处理、日志处理就可以理解为切面。常用的切面有通知与顾问。实际就是对主业务逻辑的一种增强 |
+| 织入          | 织入是指将切面代码插入到目标对象的过程。                     |
+| 连接点        | 连接点指切面可以织入的位置。                                 |
+| 切入点        | 切入点指切面具体织入的位置。                                 |
+| 通知(Advice)  | 通知是切面的一种实现，可以完成简单织入功能（织入功能就是在这里完成的）。通知定义了增强代码切入到目标代码的时间点，是目标方法执行之前执行，还是之后执行等。通知类型不同，切入时间不同。 |
+| 顾问(Advisor) | 顾问是切面的另一种实现，能够将通知以更为复杂的方式织入到目标对象中，是将通知包装为更复杂切面的装配器。 不仅指定了切入时间点,还可以指定具体的切入点 |
+
+### 2. 基于注解实现
+
+#### 2.1 基本介绍
+
+#### 2.2 基本案例
+
+#### 2.3 其他通知
+
+#### 2.4 切入点表达式
+
+### 3. 基于XML实现
+
