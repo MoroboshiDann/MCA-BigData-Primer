@@ -567,5 +567,225 @@ user.hobbies.h2 = football
 4. 然后通过${}表达式来使用属性文件中什么的信息
 
 
+
+#### 10. 练习案例
+
+对于普通的Spring项目来说，一般分为三层，`Controller` `Service` 和 `Dao`，后两者均有接口和其实现类。其中Controller中需要用到Service的实现类对象，Service中需要用到Dao层的实现类对象。
+
+根据IoC的思想，需要将创建对象的权利交给IoC容器，而不是在类中直接使用`new`关键字显示地创建需要使用的对象。
+
+因此，需要给`Controller`和`ServiceImpl`中添加`private Service service`和`private Dao dao`，即接口的对象，但是不赋值。而是提供setter或者构造器。
+
+然后，在`ApplicationContext.xml`中分别将`DaoImpl` `ServiceImpl`和`Controller`注册为Bean，并在后两者中通过setter或者构造器的方式注入成员值。
+
+在测试类中先获取容器对象，然后通过容器创建Controller对象。
+
+```java
+public void test() {
+    // 1. 获取IoC容器对象
+    ApplicationContext ac = new ClassPathXmlApplicationContext("ApplicationContext.xml");
+    // 2. 通过id+类型的方式获取容器中的对象
+    UserController userController = ac.getBean("userController", UserController.class);
+    userController.queryAllUser();
+}
+```
+
+
+
+
 ## 三、基于注解的方式
 
+Spring 从 2.5 版本开始提供了对注解技术的全面支持，我们可以使用注解来实现自动装配，简化 Spring 的 XML 配置。
+
+Spring 通过注解实现自动装配的步骤如下：
+
+1. 引入依赖
+2. 开启组件扫描
+3. 使用注解定义 Bean
+4. 依赖注入
+
+
+
+### 1. 创建项目
+
+同上
+
+### 2. 开启扫描
+
+开启扫描需要添加`context`的schema，然后通过<context:component-scan>标签来指定扫描的路径。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 1. 引入context 的 schema
+         2. 开启扫描
+         3. 通过相关的注解实现注入 -->
+    <context:component-scan base-package="org.moroboshidan"></context:component-scan>
+</beans>
+```
+
+上面的扫描指定的路径是 org.moroboshidan 那么项目启动的时候就会去这个包下面加载所有被@Component 注解修饰的Java类。
+
+### 3. 注解标识
+
+在需要被Spring加载的类上添加`@Component`注解
+
+```java
+@Component
+public class User {
+    private Integer id;
+    private String name;
+}
+```
+
+### 4. 依赖注入问题
+
+在上面的案例中。我们的controller service dao我们都可以通过@Component注解来完成对象的注入。但是controller对service的依赖，service对Dao的依赖。也就是 设值注入和构造注入是不能使用的。这时候我们可以通过@Autowired注解来解决这个问题
+
+在setter方法和构造器上添加这个注解，就可以实现和基于XML一样的效果
+
+### 5. 接口注入
+
+上面我们虽然通过@Autowried注解解决了属性的依赖注入问题。但是在我们的实体中还是需要添加对应的setter和构造方法。会显得整个的代码结构不太简洁，这时我们可以通过接口注入的方式来处理。
+
+```java
+public class UserController {
+    @Autowired
+    private UserService userService;
+    
+    public void queryAllUsers() {
+		List<User> list = userService.queryUser();
+    }
+}
+```
+
+
+
+### 6. 注解的多样性
+
+Spring 提供了以下多个注解，这些注解可以直接标注在 Java 类上，将它们定义成 Spring Bean。
+
+| 注解        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| @Component  | 该注解用于描述 Spring 中的 Bean，它是一个泛化的概念，仅仅表示容器中的一个组件（Bean），并且可以作用在应用的任何层次，例如 Service 层、Dao 层等。  使用时只需将该注解标注在相应类上即可。 |
+| @Repository | 该注解用于将数据访问层（Dao 层）的类标识为 Spring 中的 Bean，其功能与 @Component 相同。 |
+| @Service    | 该注解通常作用在业务层（Service 层），用于将业务层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。 |
+| @Controller | 该注解通常作用在控制层（如SpringMVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。 |
+
+> 这些标注都是标注在实现类上的，不是在接口的定义上
+
+
+
+### 7. Autowired注解
+
+@Autowired注解作用是完成对应的Bean依赖注入
+
+```java
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Autowired {
+
+	/**
+	 * Declares whether the annotated dependency is required.
+	 * <p>Defaults to {@code true}.
+	 */
+	boolean required() default true;
+
+}
+```
+
+通过源码的查看我们可以发现@Autowired注解的作用位置
+
+* 构造方法--构造注入
+* 方法上--setter方法上完成设值注入
+* 形参上--接口注入
+* 属性上
+* 注解上
+
+还有就是在源码中有一个 required 抽象方法。表示注入的bean是否是必须的。默认为true，表示在注入的bean必须是存在，如果不存在就报错，如果required设值为false。如果不存在就不会报错。
+
+
+
+同一个接口有多个实现类，且都被标注为`@Component`就无法正确自动注入。针对这种情况。@Qualifier 可以实现基于name的查找注入。
+
+@Autowired注解可以和@Qualifier注解一块去使用。@Autowired注解默认是基于类型类完成Bean的依赖注入的。
+
+
+
+### 8. @Resource
+
+@Resource注解也可以完成属性注入。那它和@Autowired注解有什么区别？
+
+* @Resource注解是JDK扩展包中的，也就是说属于JDK的一部分。所以该注解是标准注解，更加具有通用性。(JSR-250标准中制定的注解类型。JSR是Java规范提案。)
+* @Autowired注解是Spring框架自己的。
+* @Resource注解默认根据名称装配byName，未指定name时，使用属性名作为name。通过name找不到的话会自动启动通过类型byType装配。
+* @Autowired注解默认根据类型装配byType，如果想根据名称装配，需要配合@Qualifier注解一起用。
+* @Resource注解用在属性上、setter方法上。
+* @Autowired注解用在属性上、setter方法上、构造方法上、构造方法参数上。
+
+@Resource注解属于JDK扩展包，所以不在JDK当中，需要额外引入以下依赖：【****如果是JDK8的话不需要额外引入依赖。高于JDK11或低于JDK8需要引入以下依赖。】
+
+```
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>2.1.1</version>
+</dependency>
+```
+
+![image.png](..\img\resource.png)
+
+### 9. 基于Java配置类的方式
+
+上面的介绍中基于注解的使用我们还是需要添加对应的配置文件。不是分方便。那么从Spring3.0开始提供的@Configuration注解。到Spring3.1 推出的@ComponentScan注解。那么我们完全可以脱离xml配置文件的使用方式了。 
+
+使用方法：
+
+- 创建一个SpringConfiguration类
+- 在类上添加`@Configuration`注解，添加之后，这个类就相当于ApplicationContext.xml文件，起到配置作用
+- 可以在配置类上添加`@ComponentScan(basePackages = "org.moroboshidan")`来指定扫描的路径
+
+然后我们也可以通过@Bean注解实现对象的注入操作
+
+```java
+/**
+ * Spring的配置类
+ * 作用是替换调配置文件
+ */
+@Configuration // 加了这个注解 我们的这个配置类就相对于 applicationContext.xml 配置文件
+@ComponentScan(basePackages = "com.boge")
+public class SpringConfiguration {
+
+
+    /**
+     * 我们在相关的方法的头部添加 @Bean注解 可以实现讲改方法的返回对象注入到容器中
+     * @return
+     */
+    @Bean
+    public UserEntity userEntity(){
+        UserEntity bean = new UserEntity(1, "波哥");
+        return bean;
+    }
+}
+```
+
+使用了@Configuration注解的配置类后，获取IoC容器的方式为：
+
+```java
+ApplicationContext ac = new AnnotationConfigurationApplicationContext(SpringConfiguration.class);
+UserController userController = ac.getBean(UserController.class);
+```
+
+
+
+# Spring核心之AOP
+
+## 
