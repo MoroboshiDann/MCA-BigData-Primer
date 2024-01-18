@@ -6,8 +6,6 @@ https://www.spring.io
 
 ## Spring的发展历史
 
-宇宙
-
 ![spring history](..\img\SpringHistory.png)
 
 ## Spring概述
@@ -862,13 +860,122 @@ public void test() {
 
 ### 2. 动态代理
 
-代理类在程序运行时创建的代理方式被成为 动态代理。 也就是说，这种情况下，代理类并不是在Java代码中定义的，而是在运行时根据我们在Java代码中的“指示”动态生成的。
-代理类型	使用场景:
+代理类在程序运行时创建的代理方式被称为*动态代理*。 也就是说，这种情况下，代理类并不是在Java代码中定义的，而是在运行时根据我们在Java代码中的“指示”动态生成的。
 
-* JDK动态代理:如果目标对象实现了接口，采用JDK的动态代理
-* CGLIB动态代理:如果目标对象没有实现了接口，必须采用CGLIB动态代理
+代理类型与使用场景:
 
-### 
+- JDK动态代理:如果目标对象实现了接口，采用JDK的动态代理
+- CGLIB动态代理:如果目标对象没有实现了接口，必须采用CGLIB动态代理
+
+![img.png](..\img\proxy2.png)
+
+>* JDK动态代理动态生成的代理类会在com.sun.proxy包下，类名为$proxy1，和*目标类实现相同的接口*
+>* cglib动态代理动态生成的代理类会和目标在在相同的包下，*会继承目标类*
+>* 动态代理（InvocationHandler）：JDK原生的实现方式，需要被代理的目标类必须实现接口。因为这个技术要求代理对象和目标对象实现同样的接口（兄弟两个拜把子模式）。
+>* cglib：通过继承被代理的目标类（认干爹模式）实现代理，所以不需要目标类实现接口。
+
+
+
+#### JDK动态代理
+
+如果目标类实现了接口，那么我们就不需要显式地定义代理类
+
+目标类：
+
+```java
+public class SomeServiceImpl extends SomeService {
+    public String doSomething() {
+        sout("this is target");
+        return "Hello";
+    }
+}
+```
+
+测试方法
+
+```java
+public void test() {
+    SomeService target = new SomeServiceImpl(); // 获取目标对象
+    SomeService proxy = (SomeService) Proxy.newProxyInstance(
+        Test.class.getClassLoader(), // 获取类加载器
+        target.getClass().getInterfaces(), // 获取目标对象实现的所有接口
+        new InvocationHandler() { // 匿名内部类，直接重写接口的方法，然后返回一个这个匿名类的对象
+            @Override
+            // 本方法是代理对象用来执行目标对象方法的一个回调方法
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                sout("----executing------");
+                // 调用目标对象的方法
+                // String msg = target.doSomething();
+                String msg = (String) method.invoke(target, args);
+                return msg.toUpperCase();
+            }
+        }
+    );
+    // 通过代理对象来执行目标对象的方法
+    sout("proxy is executing" + proxy.doSomething());
+}
+```
+
+> 在回调方法中，没有像之前一样直接硬编码写为`target.doSomething()`，而是采用了反向代理的方式，使用`method.invoke()`，这样更有普适性
+> 当目标类有多个方法时，都可以被代理，代理对象直接可以调用目标对象中的所有方法。
+
+#### CGLIB代理
+
+如果目标类并没有实现任何接口，只能通过CGLIB的方式来动态代理了。我们需要单独添加CGLIB的依赖
+
+```xml
+<!-- https://mvnrepository.com/artifact/cglib/cglib-nodep -->
+<dependency>
+    <groupId>cglib</groupId>
+    <artifactId>cglib-nodep</artifactId>
+    <version>3.3.0</version>
+</dependency>
+```
+
+定义目标对象(不实现任何接口)
+
+```java
+public class SomeService {
+    public String doSomething() {
+        sout("this is target");
+        return "Hello";
+    }
+}
+```
+
+定义CGLIB的代理对象
+
+```java
+public class CglibProxy implements MethodInterceptor {
+    private SomeService target;
+    public CglibProxy(SomeService target) {this.target = target;}
+    // 对外提供代理类对象的方法
+    public SomeService createProxy() {
+        Enhancer enhancer = new Enhancer(); // 创建CGLIB的增强器
+        enhancer.setSuperclass(SomeService.class); // 指定父类
+        enhancer.setCallBack(this);
+        return (SomeService) enhancer.create();
+    }
+    @Override
+    // 增强方法
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        sout("----start----");
+        String msg = (String) method.invoke(target, objects);
+        sout("-----end-----");
+        return msg.toUpperCase();
+    }
+}
+```
+
+测试
+
+```java
+public void test() {
+    SomeService target = new SomeService(); // 创建目标对象
+    SomeService proxy = new CglibProxy(target).createProxy(); // 创建代理对象
+    sout(proxy.doSomething());
+}
+```
 
 ## 二、AOP-面向切面编程
 
@@ -876,7 +983,7 @@ public void test() {
 
 #### 1.1 AOP概述
 
-AOP（Aspect Oriented Programming）是一种设计思想，是软件设计领域中的面向切面编程，它是面向对象编程OOP的一种补充和完善，它以通过预编译方式和运行期动态代理方式实现，在不修改源代码的情况下，给程序动态统一添加额外功能的一种技术。利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率。 日志、事务、安全检查等。
+AOP(Aspect Oriented Programming)是一种设计思想，是软件设计领域中的面向切面编程，它是面向对象编程OOP的一种补充和完善，它以通过预编译方式和运行期动态代理方式实现，在不修改源代码的情况下，给程序动态统一添加额外功能的一种技术。利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率。 日志、事务、安全检查等。
 
 #### 1.2 AOP术语
 
@@ -895,11 +1002,375 @@ AOP（Aspect Oriented Programming）是一种设计思想，是软件设计领�
 
 #### 2.1 基本介绍
 
+对于AOP这种编程思想，很多框架都进行了实现。Spring就是其中之一，可以完成面向切面编程。然而，AspectJ也实现了AOP的功能，且其实现方式更为简捷，使用更为方便，而且还支持注解式开发。所以，Spring又将AspectJ的对于AOP的实现也引入到了自己的框架中。在Spring中使用AOP开发时，一般使用AspectJ的实现方式。
+
+![](..\img\AOPAnno.png)
+
+AspectJ：是AOP思想的一种实现。本质上是静态代理，将代理逻辑“织入”被代理的目标类编译得到的字节码文件，所以最终效果是动态的。weaver就是织入器。Spring只是借用了AspectJ中的注解。
+
+
+
 #### 2.2 基本案例
+
+首先定义对应的接口
+
+```java
+public interface Calculator {
+	int add(int i, int j);
+    int dec(int i, int j);
+    int mul(int i, int j);
+    int div(int i, int j);
+}
+```
+
+然后创建接口的实现类
+
+```java
+@Component
+public class CalculatorImpl implements Calculator {
+    @Override
+    public int add(int i, int j) {return i + j;}
+    @Override
+    public int dec(int i, int j) {return i - j;}
+    @Override
+    public int mul(int i, int j) {return i * j;}
+    @Override
+    public int div(int i, int j) {return i / j;}
+}
+```
+
+创建对应的切面类(被切面拦截的方法是自动执行的，不需要像代理那样在回调函数里调用)
+
+```java
+@Aspect
+@Component
+public class LogAspect {
+    // 前置通知
+    @Before("execution(public int org.moroboshidan.service.impl.CalculatorImpl.*(...))")
+    public void beforeMethod(JoinPoint joinPoint) {
+        sout("pre advice is executing ...");
+        String name = joinPoit.getSignature().getName();
+        String args = Arrays.toString(joinPoint.getArgs());
+        sout("执行方法的相关信息：" + name + "参数" + args);
+    }
+}
+```
+
+测试
+
+```java
+@Test
+public void test() {
+    ApplicationContext ac = new ClassPathXmlApplicationContext("ApplicationContext.xml");
+    Calculator calc = ac.getBean(Calculator.class); // 注意是接口的类文件
+    sout(calc.add(1, 2));
+}
+```
+
+
 
 #### 2.3 其他通知
 
+* 前置通知
+* 后置通知
+* 环绕通知
+* 异常通知
+* 最终通知
+
+相关的通知的案例：
+
+```java
+@Aspect // 被该注解所修饰的Java类就是一个切面类
+@Component
+public class LogAspect {
+
+    /**
+     * 前置通知:@Before()
+     */
+    @Before("execution(public int com.boge.service.impl.CalculatorImpl.*(..))")
+    public void beforeMethod(JoinPoint joinPoint){
+        System.out.println("前置通知执行了。。。。");
+        String name = joinPoint.getSignature().getName();
+        String args = Arrays.toString(joinPoint.getArgs());
+        System.out.println("执行方法的相关信息：" + name + " 参数：" + args);
+    }
+
+    /**
+     * 后置通知:可以获取目标方法的返回结果
+     */
+    @AfterReturning(value = "execution(* com.boge.service.impl.*.*(..))",returning = "res")
+    public void afterReturningMethod(JoinPoint joinPoint,Object res){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("后置通知：" + methodName + "  返回结果：" + res);
+    }
+
+    /**
+     * 环绕通知
+     */
+    @Around("execution(* com.boge.service.impl.*.*(..))")
+    public Object  aroundMethod(ProceedingJoinPoint joinPoint){
+        Object obj = null;
+        try {
+            System.out.println("环绕通知执行之前....");
+            obj =joinPoint.proceed(); // 执行目标对象的方法
+            System.out.println("环绕通知执行之后....");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            System.out.println("环绕通知执行异常....");
+        }finally {
+            System.out.println("环绕通知执行....最终完成");
+        }
+        return obj;
+    }
+
+    /**
+     * 异常通知
+     */
+    @AfterThrowing(value = "execution(* com.boge.service.impl.*.*(..))",throwing = "ex")
+    public void afterThrowingMethod(JoinPoint joinPoint,Throwable ex){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("异常通知：" + methodName + " " + ex);
+    }
+
+    /**
+     * 最终通知
+     */
+    @After(value = "execution(* com.boge.service.impl.*.*(..))")
+    public void afterMethod(JoinPoint joinPoint){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("最终通知执行了..." + methodName);
+    }
+}
+
+```
+
+&emsp;&emsp;&emsp;&emsp;
+
 #### 2.4 切入点表达式
+
+切入点表达式要匹配的对象就是目标方法的方法名。所以，execution表达式中明显就是方法的签名。注意，表达式中加[ ]的部分表示可省略部分，各部分间用空格分开。在其中可以使用以下符号
+
+![image.png](..\img\joinPoint1.png)
+
+语法要求：
+
+![image.png](..\img\joinPointSyntax.png)
+
+作用：
+
+![image.png](..\img\joinPoint2.png)
+
+细节介绍：
+
+* 用*号代替“权限修饰符”和“返回值”部分表示“权限修饰符”和“返回值”不限
+* 在包名的部分，一个“*”号只能代表包的层次结构中的一层，表示这一层是任意的。
+  * 例如：*.Hello匹配com.Hello，不匹配com.boge.Hello
+* 在包名的部分，使用“*..”表示包名任意、包的层次深度任意
+* 在类名的部分，类名部分整体用*号代替，表示类名任意
+* 在类名的部分，可以使用*号代替类名的一部分
+  * **例如：*Service匹配所有名称以Service结尾的类或接口**
+* 在方法名部分，可以使用*号表示方法名任意
+* 在方法名部分，可以使用*号代替方法名的一部分
+  * **例如：*Operation匹配所有方法名以Operation结尾的方法**
+* 在方法参数列表部分，使用(..)表示参数列表任意
+* 在方法参数列表部分，使用(int,..)表示参数列表以一个int类型的参数开头
+* 在方法参数列表部分，基本数据类型和对应的包装类型是不一样的
+  * 切入点表达式中使用 int 和实际方法中 Integer 是不匹配的
+* 在方法返回值部分，如果想要明确指定一个返回值类型，那么必须同时写明权限修饰符
+  * 例如：execution(public int *..*Service.*(.., int))	正确
+    **例如：execution(* int *..*Service.*(.., int))**	错误
+
+如果一个切入点表达式需要被重复的复用。那么我们可以通过@Pointcut注解来定义表达式。然后我们在通知调用即可：
+
+```java
+package com.boge.aop;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+
+/**
+ * 切面类
+ */
+@Aspect // 被该注解所修饰的Java类就是一个切面类
+@Component
+public class LogAspect2 {
+
+    /**
+     * 定义一个切入点表达式
+     */
+    @Pointcut("execution(public int com.boge.service.impl.CalculatorImpl.*(..))")
+    public void ponitCut(){
+
+    }
+
+    /**
+     * 前置通知:@Before()
+     */
+    @Before("ponitCut()")
+    public void beforeMethod(JoinPoint joinPoint){
+        System.out.println("前置通知执行了。。。。");
+        String name = joinPoint.getSignature().getName();
+        String args = Arrays.toString(joinPoint.getArgs());
+        System.out.println("执行方法的相关信息：" + name + " 参数：" + args);
+    }
+
+    /**
+     * 后置通知:可以获取目标方法的返回结果
+     */
+    @AfterReturning(value = "ponitCut()",returning = "res")
+    public void afterReturningMethod(JoinPoint joinPoint,Object res){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("后置通知：" + methodName + "  返回结果：" + res);
+    }
+
+    /**
+     * 环绕通知
+     */
+    @Around("ponitCut()")
+    public Object  aroundMethod(ProceedingJoinPoint joinPoint){
+        Object obj = null;
+        try {
+            System.out.println("环绕通知执行之前....");
+            obj =joinPoint.proceed(); // 执行目标对象的方法
+            System.out.println("环绕通知执行之后....");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            System.out.println("环绕通知执行异常....");
+        }finally {
+            System.out.println("环绕通知执行....最终完成");
+        }
+        return obj;
+    }
+
+    /**
+     * 异常通知
+     */
+    @AfterThrowing(value = "ponitCut()",throwing = "ex")
+    public void afterThrowingMethod(JoinPoint joinPoint,Throwable ex){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("异常通知：" + methodName + " " + ex);
+    }
+
+    /**
+     * 最终通知
+     */
+    @After(value = "ponitCut()")
+    public void afterMethod(JoinPoint joinPoint){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("最终通知执行了22..." + methodName);
+    }
+}
+
+```
+
+
 
 ### 3. 基于XML实现
 
+在Spring中AOP还有基于XML的实现方式。当然这种不是我们常用的方案。但是我们还是需要了解下
+
+先定义对应的切面类：
+
+```java
+/**
+ * 切面类
+ */
+@Component
+public class LogAspect3 {
+
+    /**
+     * 前置通知:@Before()
+     */
+    public void beforeMethod(JoinPoint joinPoint){
+        System.out.println("前置通知执行了。。。。");
+        String name = joinPoint.getSignature().getName();
+        String args = Arrays.toString(joinPoint.getArgs());
+        System.out.println("执行方法的相关信息：" + name + " 参数：" + args);
+    }
+
+    /**
+     * 后置通知:可以获取目标方法的返回结果
+     */
+    public void afterReturningMethod(JoinPoint joinPoint,Object res){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("后置通知：" + methodName + "  返回结果：" + res);
+    }
+
+    /**
+     * 环绕通知
+     */
+    public Object  aroundMethod(ProceedingJoinPoint joinPoint){
+        Object obj = null;
+        try {
+            System.out.println("环绕通知执行之前....");
+            obj =joinPoint.proceed(); // 执行目标对象的方法
+            System.out.println("环绕通知执行之后....");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            System.out.println("环绕通知执行异常....");
+        }finally {
+            System.out.println("环绕通知执行....最终完成");
+        }
+        return obj;
+    }
+
+    /**
+     * 异常通知
+     */
+    public void afterThrowingMethod(JoinPoint joinPoint,Throwable ex){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("异常通知：" + methodName + " " + ex);
+    }
+
+    /**
+     * 最终通知
+     */
+    public void afterMethod(JoinPoint joinPoint){
+        String methodName = joinPoint.getSignature().getName();
+        System.out.println("最终通知执行了..." + methodName);
+    }
+}
+
+```
+
+然后定义对应的配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 添加扫描路径 -->
+    <context:component-scan base-package="com.boge.*"></context:component-scan>
+    <!-- 基于XML的AOP实现 -->
+    <aop:config>
+        <!-- 配置切面 -->
+        <aop:aspect ref="logAspect3">
+            <!-- 定义切入点表达式 -->
+            <aop:pointcut id="pointCut" expression="execution(* com.boge.service.impl.*.*(..))"/>
+            <!-- 配置相关的通知 -->
+            <aop:before method="beforeMethod" pointcut-ref="pointCut"></aop:before>
+            <aop:after-returning method="afterReturningMethod" pointcut-ref="pointCut" returning="res"></aop:after-returning>
+            <aop:around method="aroundMethod" pointcut-ref="pointCut"></aop:around>
+            <aop:after-throwing method="afterThrowingMethod" pointcut-ref="pointCut" throwing="ex"></aop:after-throwing>
+            <aop:after method="afterMethod" pointcut-ref="pointCut"></aop:after>
+        </aop:aspect>
+    </aop:config>
+</beans>
+```
+
+然后测试即可
+
+![image.png](..\img\aspectXml.png)
