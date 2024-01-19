@@ -1012,6 +1012,27 @@ AspectJ：是AOP思想的一种实现。本质上是静态代理，将代理逻�
 
 #### 2.2 基本案例
 
+在xml文件中加入schema，并开启aop代理
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <context:component-scan base-package="org.moroboshidan"></context:component-scan>
+    <aop:aspectj-autoproxy/>
+</beans>
+```
+
+
+
 首先定义对应的接口
 
 ```java
@@ -1071,11 +1092,11 @@ public void test() {
 
 #### 2.3 其他通知
 
-* 前置通知
-* 后置通知
-* 环绕通知
-* 异常通知
-* 最终通知
+* 前置通知 `@Before(value = "joinPoint")`
+* 后置通知 `@AfterReturning(value="joinPoint", res="name")`
+* 环绕通知 `@Around(value="joinPoint")`
+* 异常通知 `@AfterThrowing(value="joinPoint", throwing="name")`
+* 最终通知 `@After(value="joinPoint")`
 
 相关的通知的案例：
 
@@ -1096,7 +1117,7 @@ public class LogAspect {
     }
 
     /**
-     * 后置通知:可以获取目标方法的返回结果
+     * 后置通知:可以获取目标方法的返回结果，一旦返回立即执行，即使目标方法返回值外还有执行语句
      */
     @AfterReturning(value = "execution(* com.boge.service.impl.*.*(..))",returning = "res")
     public void afterReturningMethod(JoinPoint joinPoint,Object res){
@@ -1155,6 +1176,10 @@ public class LogAspect {
 语法要求：
 
 ![image.png](..\img\joinPointSyntax.png)
+
+> `execution(public * org.morosboshidan.service.impl.*.*(..))`
+>
+> 上述语句表示，切入点可以匹配`org.moroboshidan.service.impl`包下，public修饰的，任意类下的，参数为任意个数，任意方法名，且返回值类型为任意值的方法。
 
 作用：
 
@@ -1374,3 +1399,298 @@ public class LogAspect3 {
 然后测试即可
 
 ![image.png](..\img\aspectXml.png)
+
+# Spring6.0新特性
+
+## 一、Spring的发展历史
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/f78f52f0d13d41b8a26e3ec0413d1f8d.png)
+
+## 二、AOT
+
+&emsp;&emsp;AOT是Spring6.0提供的一个新特性，Ahead of Time 提前编译。
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/5ad47e20fae547d1aa10e2bdbcd0ccb9.png)
+
+## 1.AOT概述
+
+### 1.1 JIT和AOT的关系
+
+#### 1.1.1 JIT
+
+&emsp;&emsp; JIT(Just-in-time) 动态编译，即时编译，也就是边运行边编译，也就是在程序运行时，动态生成代码，启动比较慢，编译时需要占用运行时的资源。
+
+#### 1.1.2 AOT
+
+&emsp;&emsp;AOT,Ahead Of Time 指的是运行前编译，预先编译，AOT 编译能直接将源代码转化为机器码，内存占用低，启动速度快，可以无需 runtime 运行，直接将 runtime 静态链接至最终的程序中，但是无运行时性能加成，不能根据程序运行情况做进一步的优化，AOT 缺点就是在程序运行前编译会使程序安装的时间增加。
+
+**简单来讲**：JIT即时编译的是在程序的运行过程中，将字节码转换为可在硬件上直接运行的机器码，并部署至托管环境中的过程。而 AOT 编译指的则是，在程序运行之前，便将字节码转换为机器码的过程。
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/b07dc88e2e454880aad5ae40843c2d96.png)
+
+## 三、GraalVM
+
+GraalVM即支持AOT也支持JIT。支持多种开发语言。
+
+&emsp;&emsp;Spring6 支持的 AOT 技术，这个 GraalVM  就是底层的支持，Spring 也对 GraalVM 本机映像提供了一流的支持。GraalVM 是一种高性能 JDK，旨在加速用 Java 和其他 JVM 语言编写的应用程序的执行，同时还为 JavaScript、Python 和许多其他流行语言提供运行时。 GraalVM 提供两种运行 Java 应用程序的方法：在 HotSpot JVM 上使用 Graal 即时 (JIT) 编译器或作为提前 (AOT) 编译的本机可执行文件。 GraalVM 的多语言能力使得在单个应用程序中混合多种编程语言成为可能，同时消除了外语调用成本。GraalVM 向 HotSpot Java 虚拟机添加了一个用 Java 编写的高级即时 (JIT) 优化编译器。
+
+GraalVM 具有以下特性：
+
+（1）一种高级优化编译器，它生成更快、更精简的代码，需要更少的计算资源
+
+（2）AOT 本机图像编译提前将 Java 应用程序编译为本机二进制文件，立即启动，无需预热即可实现最高性能
+
+（3）Polyglot 编程在单个应用程序中利用流行语言的最佳功能和库，无需额外开销
+
+（4）高级工具在 Java 和多种语言中调试、监视、分析和优化资源消耗
+
+### 1.GraalVM安装
+
+#### 1.1 下载GraalVM
+
+下载地址：https://www.graalvm.org/downloads/![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/e338e9f6443c4625a79a30a7e1b38fb3.png)
+
+下载社区版本即可，点击进入选择相关的版本：https://github.com/graalvm/graalvm-ce-builds/releases
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/b5bd6b0b848e43f7994516a4c2fc5b68.png)
+
+下载好后解压缩出来
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/5306fe92e01c4aca9d4782c044577ed6.png)
+
+#### 1.2 配置环境变量
+
+添加：GRAALVM_HOME
+
+编辑用户变量
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/beec6cd3bc8841ab9e6deca8b8f13d66.png)
+
+把JAVA_HOME修改为graalvm的位置
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/07c04dde102c4ae19d3518927a6e25f5.png)
+
+检查是否配置成功
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/66e630ed2fb449459dcb6877f6124325.png)
+
+#### 1.3 安装native-image插件
+
+使用命令 gu install native-image 下载安装插件，因为社区版默认不提供支持。需要手动下载
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/bd4febd41c204a38aa2ae71008da1eb9.png)
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/b768615e0b40438b885e17e3e201a9d2.png)
+
+#### 1.4 Native Image
+
+&emsp;&emsp;Native image（本地镜像）是一种在Java平台上构建本地应用程序的技术。它将Java应用程序编译成本地机器代码，以便在不需要Java虚拟机（JVM）的情况下运行。这使得应用程序可以更快地启动，更高效地执行，并且占用更少的内存。
+
+&emsp;&emsp;Native image使用GraalVM编译器技术，可以将Java应用程序转换为本地可执行文件，支持Windows、Linux和MacOS等多个操作系统平台。此外，Native image还可以将Java应用程序打包成单个可执行文件，从而方便部署和分发。
+
+&emsp;&emsp;使用Native image，开发人员可以将Java应用程序作为本地应用程序来构建和部署，从而获得更好的性能和更好的用户体验。
+
+### 2.安装C++的编译环境
+
+#### 2.1 下载Visual Studio
+
+[https://visualstudio.microsoft.com/zh-hans/downloads/](https://visualstudio.microsoft.com/zh-hans/downloads/)
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/19046151d2ca474c99a2006fa2a77354.png)
+
+同样我们下载社区版本即可
+
+#### 2.2 安装Visual Studio
+
+下载后双击直接安装即可
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/933f6005ff6d4fb29768c31a78ee7dd6.png)
+
+等待在线下载
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/2dfbc250d97c4e0881a187cec26c73f9.png)
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/7cc10245f27f483e9ee8516a79cee4b3.png)
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/9bedc375b3014669acd8a9c001afed07.png)
+
+注意安装选项，然后继续等待
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/993d1d742a0d4762bd26cb719227064a.png)
+
+创建一个普通Hello.java文件
+
+```java
+public class Hello{
+
+	public static void main(String[] args){
+		System.out.println("Hello World ...");
+	}
+}
+```
+
+然后通过 javac Hello.java 编译
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/073f04a5a3a84aada095d8d8b1498c1c.png)
+
+通过native-image Hello 执行
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/017a5c8c351f4f7cb1ed558c90a882f0.png)
+
+通过 native-image 生成了 Hello.exe 文件，我们就可以直接生成了。
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/7b9e5cc580b749a0b4cb43d3e09339cc.png)
+
+## 四、SpringBoot实战
+
+&emsp;&emsp;我们同样可以在SpringBoot项目中通过AOT来提前编译我们的项目，新建一个Maven项目。然后添加相关的依赖
+
+```xml
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.0.2</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+```
+
+同时我们还需要添加相关的SpringBoot插件
+
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+然后我们编写一点简单的代码测试即可
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/5173c84db5e54ae7abe5f7fa0a1825eb.png)
+
+然后我们打开 x64 Native Tools Command Prompt for VS 2019 。然后我们需要切换到工程目录下
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/74400c42fea44e4b99676f811411aa85.png)
+
+然后执行 mvn -Pnative native:compile 进行编译就可以了，编译成功就会在target目录下生成 EXE 文件。后续执行该文件就可以了
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/c5d69ff42fc2463a89f6806a8003361f.png)
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/1d0fd4b7b5ed4d879a0c83a59b84d893.png)
+
+编译成功
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/db69f0675986426985635cba5e57c9b4.png)
+
+然后我们双击执行exe文件即可。你会发现速度会快很多
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/150cab91d7e447e0bcb06bb43b143602.png)
+
+## 五、RuntimeHints
+
+&emsp;&emsp;与常规 JVM 运行时相比，将应用程序作为本机映像运行需要额外的信息。例如，GraalVM 需要提前知道组件是否使用反射。同样，除非明确指定，否则类路径资源不会在本机映像中提供。因此，如果应用程序需要加载资源，则必须从相应的 GraalVM 原生图像配置文件中引用它。
+
+API[`RuntimeHints`](https://docs.spring.io/spring-framework/docs/6.0.9/javadoc-api/org/springframework/aot/hint/RuntimeHints.html)在运行时收集反射、资源加载、序列化和 JDK 代理的需求。
+
+### 1.案例分析
+
+声明个普通的实体类型
+
+```java
+public class UserEntity {
+    public String hello(){
+        return "hello ...";
+    }
+}
+```
+
+然后我们在控制器中通过反射来操作处理
+
+```java
+    @GetMapping("/hello")
+    public String hello(){
+        String res = "hello";
+        try {
+            Method hello = UserEntity.class.getMethod("hello");
+            res =  (String)hello.invoke(UserEntity.class.newInstance(),null);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+        return res;
+    }
+```
+
+然后通过命令编译为 exe 文件
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/1488471aa8994afe988fdf5e5f9a84e8.png)
+
+运行exe文件后。我们通过浏览器发起请求
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/81bc9f42e09a4493ae2b0ff1fbf77085.png)
+
+在HelloController中。我们通过反射的方式使用到了UserEntity的无参构造方法。如果不做任何处理。那么打成二进制可执行文件后是执行不了的。上面是具体的报错信息。针对这种情况。我们可以通过 Runtime Hints 机制来处理。
+
+### 2. RuntimeHintsRegistrar
+
+官网提供的解决方案。我们自定义一个RuntimeHintsRegistrar接口的实现类，然后把该实现类注入到Spring中
+
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1683612311015/aee7a64697a84a8e8cc424e91f20e1fd.png)
+
+我们自己的实现
+
+```java
+@RestController
+@ImportRuntimeHints(HelloController.UserEntityRuntimeHints.class)
+public class HelloController {
+
+    @GetMapping("/hello")
+    public String hello(){
+        String res = "hello";
+        try {
+            Method hello = UserEntity.class.getMethod("hello");
+            res =  (String)hello.invoke(UserEntity.class.newInstance(),null);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+        return res;
+    }
+
+    static class UserEntityRuntimeHints implements RuntimeHintsRegistrar{
+
+        @Override
+        public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+            try {
+                hints.reflection().registerConstructor(UserEntity.class.getConstructor(), ExecutableMode.INVOKE);
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
+```
+
