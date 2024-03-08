@@ -48,7 +48,9 @@ public static int[] generateRandomArray(int maxSize, int maxValue) {
 
 无序数组，任意两个相邻的数不相等，当一个数比相邻的两个数都小时，称之为局部最小
 
-无序数组寻找局部最小时可以使用二分法，先检查两端是否满足局部最小，如果是直接返回，否则查看中间位置，如果中间位置为局部最小，直接返回，否则继续寻找比中间位置小的那一侧
+无序数组寻找局部最小时可以使用二分法，先检查两端是否满足局部最小，如果是直接返回，否则查看中间位置，如果中间位置为局部最小，直接返回，否则继续寻找比中间位置小的那一侧。
+
+如此往复一定能找到局部最小，否则，会出现冲突。
 
 
 
@@ -68,7 +70,7 @@ public static int[] generateRandomArray(int maxSize, int maxValue) {
 
 即满足交换律又满足结合律
 
-### 不借助额外空间减缓两个数
+### 不借助额外空间交换两个数
 
 ```java
 public static void swap(int[] arr, int i, int j) {
@@ -166,6 +168,6 @@ sout(a == b); // 输出false，证明a和b的堆地址并不一致
 MyClass m1 = new MyClass(1);
 MyClass m2 = new MyClass(1);
 hashmap.put(m1, "m1");
-sout(hashmap.containsKey(m2)); // 输出false
+sout(hashmap.containsKey(m2)); // 输出false1
 ```
 

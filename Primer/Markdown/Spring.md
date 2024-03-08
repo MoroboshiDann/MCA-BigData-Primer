@@ -784,6 +784,119 @@ UserController userController = ac.getBean(UserController.class);
 
 
 
+## 四、IoC底层原理
+
+### 1. XML解析技术读取配置文件
+
+```xml
+<bean id="testService" class="org.moroboshidan.service.impl.TestServiceImpl"></bean>
+```
+
+将类通过<bean>标签配置在xml配置文件中后，通过如DOM4J等技术，将配置文件读取至项目程序中。
+
+获取了对象的id和对象的类的全路径名。
+
+
+
+### 2. 反射技术实例化对象，存储在容器中
+
+```java
+// 获得类的字节码对象
+Class clazz = Class.forName("org.moroboshidan.service.impl.TestServiceImpl");
+// 通过字节码实例化对象
+Object obj = clazz.newInstance();
+```
+
+先通过全路径名获取类的字节码对象，然后通过字节码的`newInstance()`方法来实例化对象。
+
+```java
+// 将实例化后的对象存储在map集合中
+map.put("testService", obj);
+```
+
+IoC容器使用的是map集合来存储实例化对象的。其结构为`<"类的id", 对象>`
+
+
+
+### 3. 工厂模式返回bean对象
+
+ IoC容器的根接口为`BeanFactory`，规定了IoC容器的基本功能，是Spring内部使用的接口，我们在业务中一般不直接使用该接口。
+
+常用的接口为`ApplicationContext`接口，它是`BeanFactory`接口的子接口，提供了更多更完善的功能。
+
+在获取到IoC容器对象，即`ApplicationContext`接口的实现类对象之后，通过`getBean()`方法来获取容器中的对象。
+
+```java
+public Object getBean(String name) {
+    if (map.containsKey(name)) {
+        return map.get(name);
+    }
+}
+```
+
+通过bean的name来从容器中获取对象。
+
+
+
+## 五、bean
+
+### 1. bean工厂
+
+对于普通的bean，在spring.xml文件中通过`<bean>`标签注册后，在通过IoC容器获取bean对象时，会返回其注册时所填写的全路径名对应的类对象。
+
+但是，如果该路径名对应的对象为一个实现了`FactoryBean`接口的工厂类，那么通过IoC容器获取的对象，实际上是该工厂生产的对应的bean对象，而不是工厂类本身的对象。
+
+因为，在向容器获取bean对象时，实际上调用的是工厂内部的`getObject()`方法。此时，`getBean()`获取的是该方法的返回值，也就是工厂生产的对应的bean对象。
+
+
+
+### 2. bean生命周期
+
+bean从创建到销毁，经历的各个阶段和每个阶段调用的方法：
+
+| 阶段                      | 方法                                          |
+| ------------------------- | --------------------------------------------- |
+| 1. 通过构造器创建bean实例 | 执行构造器                                    |
+| 2. 为bean属性赋值         | 执行set方法(如果是构造器注入，此步骤不会执行) |
+| 后置处理器的方法          |                                               |
+| 3. 初始化bean             | 调用bean的初始化方法，需要配置指定调用的方法  |
+| 后置处理器的方法          |                                               |
+| 4. bean的获取             | 容器对象调用getBean()方法                     |
+| 5. 容器关闭，销毁bean     | 调用销毁方法，需要配置指定调用的方法          |
+
+- 第三步，初始化bean，可以在<bean>标签中使用init-method来指定初始化方法。
+- 第五步，销毁bean，同样在该标签中使用destroy-method来指定销毁bean之后执行的方法。
+
+#### 后置处理器
+
+在bean对象初始化之前和之后，都可以通过后置处理器来增加额外处理。
+
+需要创建后置处理器类，实现`BeanPostProcessor`接口，重写两个方法，分别在bean对象初始化之前和之后运行。
+
+且后置处理器是对所有的bean都有效的，任何bean在初始化之前都会执行后置处理器的方法。
+
+两个方法的返回值为传入的bean对象。不能返回null，会将bean对象置为null。
+
+需要将后置处理器在spring.xml文件中注册为bean。
+
+
+
+### 3. bean自动装配
+
+通过<property>标签可以手动给指定属性进行注入
+
+也可以通过自动装配来完成属性的自动注入。可以简化D的配置。
+
+具体如下：
+
+​	当一个类的成员属性为另一个类的对象，在两个类都被注册为bean时，可以在<bean>标签中使用autowire属性，来让Spring自动查找容器中对应的对象来完成注入。
+
+​	autowire属性有两种值，byName通过id来查找，和byType通过类型来查找。
+
+​	根据类型装配时，目标类只能有一个。
+
+
+
 # Spring核心之AOP
 
 ## 一、前置基础-代理
