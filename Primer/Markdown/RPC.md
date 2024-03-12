@@ -490,11 +490,150 @@ System.out.println(moro);
 
 ##### 2.3 新建data目录
 
-##### 2.2 解压
+##### 2.4 解压
 
 
 
+## 向Zookeeper中注册内容
+
+​	新建ZookeeperClient项目
+
+### 1. 创建/demo
+
+​	使用Zookeeper的客户端命令工具创建/demo目录
+
+```unix
+./zkCli.sh
+create /demo
+```
+
+### 2. 添加依赖
+
+```xml
+<!-- https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
+<dependency>
+  <groupId>org.apache.zookeeper</groupId>
+  <artifactId>zookeeper</artifactId>
+  <version>3.8.4</version>
+</dependency>
+```
+
+### 3. 编写代码
+
+​	创建`org.moroboshidan.SendContent`类。
+
+​	`ZooDefs.Ids.OPEN_ACL_UNSAFE`表示权限
+
+​	`CreateMode.PERSISTENT_SEQUENTIAL`永久储存，文件内容编号递增。
+
+```java
+public static void main(String[] args) {
+    /*
+    * 创建zookeeper对象
+    * 参数：1 zookeeper ip + 端口号
+    * 参数：2 访问超时设置
+    * 参数：3 通过观察者模式发出访问回复
+    * */
+    ZooKeeper zooKeeper = null;
+    try {
+        zooKeeper = new ZooKeeper("172.29.205.122:2181", 100000, new Watcher() {
+            @Override
+            public void process(WatchedEvent watchedEvent) {
+                System.out.println("get connection");
+            }
+        });
+        /*
+         * 向zookeeper服务器中发送内容
+         * 发送的文件
+         * 发送的内容
+         * 权限
+         * 内容的模式
+         * */
+        String content =  zooKeeper.create("/demo/rmi-address", "rmi:locaohost:8080/demoService".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT_SEQUENTIAL);
+        System.out.println("content: " + content);
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+    } catch (KeeperException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+
+### 4. 查看上传数据
+
+​	运行上述代码后，可以看到`/demo`目录下，出现了`rmi-address0000000000`文件。
+
+​	使用`get`指令，可以看到其内容为`rmi:locaohost:8080/demoService`。
 
 
 
+## 从ZooKeeper中发现内容
+
+​	在上述项目中新建一个类，编写主方法。
+
+```java
+public static void main(String[] args) {
+    // 创建zookeeper对象
+    try {
+        ZooKeeper zooKeeper = new ZooKeeper("172.29.205.122:2181", 100000, new Watcher() {
+            @Override
+            public void process(WatchedEvent watchedEvent) {
+                System.out.println("get connection");
+            }
+        });
+        // 从zookeeper中获取内容
+        // 获取节点
+        List<String> children = zooKeeper.getChildren("/demo", false);
+        for (String child : children) {
+            byte[] data = zooKeeper.getData("/demo/" + child, false, null);
+            System.out.println(new String(data));
+        }
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+    } catch (KeeperException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+
+
+
+# 手写RPC框架
+
+​	使用Zookeeper作为注册中心，RMI作为连接技术，手写RPC框架。
+
+> ​	RMI可以让两个Java项目之间相互调用方法，但是在先前的案例中，存在如下问题：
+>
+> - 被调用的方法是服务提供方某个接口的实现类的方法，该实现类还继承固定的类，抛出固定异常。
+>
+>   - 在使用方，调用该接口需要将`lookup()`方法的返回值强转为该接口类型。
+>   - 但是在使用方并没有这个接口，因此先前的做法是直接将提供方的接口拷贝到使用方。
+>
+> - 项目之间是直接调用的，没有管理，连接关系是写死的。
+>
+> - 调用的方法也是直接在本项目中写死的，无法动态修改。
+>
+>     为了解决第一个问题，通常会再写一个父项目，让双方都依赖该父项目，解决冗余问题。
+>
+> ​        使用Zookeeper作为注册中心，可以让各个项目将自己提供的服务注册在Zookeeper中。某个项目需要调用非本地的方法时，通过注册中心来获取服务名称，从而实现调用。
+>
+> ​	Zookeeper本质上就是个map集合。服务提供方将自己的服务通过`Naming.bind()`注册在RMI中，注册时会给这个服务起一个名称。然后，将服务的名称(如连接套接字`rmi://localhost:8080/service`)写在一个文件内。需要使用服务的客户端就到约定好的文件中读取出这个字符串，然后通过这个套接字字符串，使用`Naming.lookup()`方法从RMI中查找先前注册的服务。
+
+## 1. 创建项目
+
+​	创建父项目`ParentDemo`
+
+​	包含三个聚合子项目
+
+pojo：service中需要的实体类。service项目依赖之，就可以直接使用其中的实体类，而不用复制一份。
+
+service：包含被serviceimpl和consumer依赖的接口。
+
+serviceimpl：provider提供的服务内容
+
+consumer：消费者,调用服务内容。
 
