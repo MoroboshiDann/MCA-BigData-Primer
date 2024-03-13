@@ -1314,7 +1314,10 @@ final修饰，构造器private修饰，不能被继承，不能创建对象。
 
 ## String
 
-
+> String提供的`split()`方法，如果：
+>
+> - 两个单词之间存在多个连续的空格，则会将其中一个作为分隔，其余的每个空格都作为一个新的String返回在数组中。
+> - 如果字符串只含有空格，则返回的是一个长度为0的数组。
 
 ### String & StringBuilder & StringBuffer
 
