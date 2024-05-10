@@ -1667,7 +1667,7 @@ public TreeNode postNode(TreeNode target) {
 
 ​	除第一次对折外，其余每次对着都是在原有的折痕上下，分别增加一个”凹“和”凸“。于是，折叠次数和折痕方式的关系其实是一个满二叉树。
 
-![Screenshot 2024-05-04 120742](./Screenshot 2024-05-04 120742.png)
+![Screenshot 2024-05-04 120742](../img/foldPaper.png)
 
 ```java
 public void printFold(int times) {
@@ -3451,6 +3451,8 @@ public int process(Stack<Integer> stack) { // 具体功能为：将栈底元素�
 
 # 第十四节 从暴力递归到动态规划
 
+​	动态规划就是将暴力递归中结算结果缓存下来，从而避免重复计算。可以将递归树画出来，然后观察是否有重复的分支。
+
 ## 斐波那契数列
 
 ### 暴力递归
@@ -3655,17 +3657,237 @@ private int gote(int[] arr, int left, int right) { // 后手，需要让对方�
 
 
 
+### 动态规划
+
+​	将上述暴力递归的递归树画出来，就可以观察到有重复计算过程。
+
+![](../img/treeTry.png)
+
+​	先手方法和后手方法相互依赖，在相互调用过程中，就会出现重复计算。
+
+​	最简单的优化方法就是给两个方法分别设置一个缓存数组。可以分别设置一个N*N的二维数组，然后每次递归调用之前先查缓存，如果对应位置已经有缓存，就直接返回结果，否则才去递归计算。
+
+```java
+public int amountOfWinner(int[] arr) {
+    int[][] cache1 = new int[arr.length][arr.length];
+    int[][] cache2 = new int[arr.length][arr.length];
+    for (int i = 0; i < arr.length; ++i) {
+        Arrays.fill(cache1[i], -1);
+        Arrays.fill(cahce2[i], -1);
+    }
+    
+    return Math.max(initiative(arr, 0, arr.length - 1, cache1, cache2), gote(arr, 0, arr.length - 1, cache1, cache2));
+}
+
+private int initiative(int[] arr, int left, int right, int[] cache1, int[] cache2) {
+    if (left == right) {
+        cache1[left][left] = arr[left];
+    }
+    if (cache1[left][right] == -1) {
+        cache1[left][right] = Math.max(arr[left] + gote(arr, left + 1, right, cache1, cache2), arr[right] + gote(arr, left, right - 1, cache1, cache2));
+    }
+    return cache1[left][right];
+}
+
+private int gote(int[] arr, int left, int right, int[] cache1, int[] cache2) {
+    if (left == right) {
+        cache2[left][left] = 0;
+    }
+    if (cache2[left][right] == -1) {
+        cache2[left][right] = Math.min(initiative(arr, left + 1, right, cache1, cache2), initiative(arr, left, right - 1, cache1, cache2));
+    }
+    return cache2[left][right];
+}
+```
 
 
 
+### 二次优化
+
+​	上述动态规划算法是在递归过程中将缓存表填好的，是一种顺序依赖的方法。可以将之优化为严格表依赖的方法，观察缓存表元素之间的依赖关系，以求能够在一个方法中将其直接填完。
+
+​	经过观察有如下规律：
+
+-   当`left == right`时，先手缓存`cache[left][left] == arr[left]`，后手缓存为`cache[left][left] == 0`。
+-   两张缓存表的`left > right`的位置都是没有数据的，因为不可能出现这种情况。即下三角部分不需要填。
+-   对于两张缓存表的上三角区的任意一点`left, right`，它的值依赖的是另外一张表的相同位置的`左`和`下`位置的数据。
+
+```java
+public int amountOfWinnerIII(int[] arr) {
+    int length = arr.length;
+    int[][] init = new int[length][length];
+    int[][] gote = new int[length][length];
+    for (int i = 0; i < length; ++i) { // 先处理对角线
+        init[i][i] = arr[i];
+    }
+    for (int j = 1; j < length; ++j) {
+        for (int i = 0; i < length - j; i++) {
+            init[i][i + j] = Math.max(arr[i + j] + gote[i][i + j - 1], arr[i] + gote[i + 1][i + j]);
+            gote[i][i + j] = Math.min(init[i][i + j - 1], init[i + 1][i + j]);
+        }
+    }
+    return Math.max(init[0][length - 1], gote[0][length -1]);
+}
+```
 
 
 
+## 背包问题
+
+题目描述：
+
+​	给定两个整型数组`int[] weight, int[] value`，分别代表第i个商品的重量和价值。给定一个背包容量`int bag`，求背包中能装的商品价值之和的最大值。
+
+### 暴力递归
+
+​	首先，每个商品都可以被装进或不被装进背包。直接递归出所有可能结果，选出最大值。
+
+```java
+public int maxValueOfGoods(int[] weight, int[] value, int bag) {
+    if (weight == null || value == null || weight.lenght != value.length) return 0;
+    return process(weight, value, bag, 0);
+}
+
+public int process(int[] weight, int[] value, int rest, int index) {
+    if (index == weight.length) { // 有可能会有商品重量为0
+        return 0;
+    }
+    // 当前货物不装进背包和装进背包的情况下拿取的价值，取最大值
+    int absent = process(weight, value, rest, index + 1);
+    int in = weight[index] <= rest ? process(weight, value, rest - weight[index], index + 1) + value[index] : 0; // 如果当前货物重量已经不能放进背包，就不能计算价值
+    return Math.max(absent, in);
+}
+```
 
 
 
+### 动态规划
+
+​	观察暴力递归的递归树，可以发现，当背包剩余重量一定时，调用同一个位置的商品，其结果都是相同的，但是暴力递归仍然会重复调用。
+
+​	于是，可以根据背包剩余重量和当前位置两个可变参数来进行缓存。两者皆有上限。
+
+```java
+public int maxValueOfGoods(int[] weight, int[] value, int bag) {
+    int[][] cache = new int[weight.length][bag + 1];
+    for (int i = 0; i < weight.length; i++) {
+    	Arrays.fill(cache[i], -1);
+	}
+	return processII(weight, value, 0, bag, cache);
+}
+
+private int processII(int[] weight, int[] value, int index, int rest, int[][] cache) {
+    if (index == weight.length) {
+    	return 0;
+    }
+    if (cache[index][rest] == -1) {
+        int absent = processII(weight, value, index + 1, rest, cache);
+        int in = 0;
+        if (weight[index] <= rest) {
+        in = processII(weight, value, index + 1, rest - weight[index], cache) + value[index];
+        }
+    	cache[index][rest] = Math.max(absent, in);
+    }
+	return  cache[index][rest];
+}
+```
 
 
+
+### 二次优化
+
+​	动态规划的缓存数组，其数据之间存在明显的依赖关系。行代表位置下标，列代表背包剩余空间。
+
+-   最后一行的值必定为0。
+-   对于`cache[i][j]`，它的值依赖于`cache[i + 1][j]`和`cache[i + 1][j - weight[i]]`。即它下一行的值。
+
+​	于是可以从倒数第二行开始，按照行依次往上求值。
+
+```java
+public int maxValueOfGoods(int[] weight, int[] value, int bag) {
+    int length = weight.length;
+    int[][] cache = new int[lenght][bag + 1];
+    for (int i = 0; i < bag + 1; ++i) {
+        cache[length - 1][i] = 0;
+    }
+    for (int row = length - 2; row >= 0; ++row) {
+        for (int col = 0; col < bag + 1; ++col) {
+            int temp = col - weight[row] < 0 ? -1 : cache[row + 1][col - weight[row] ] + value[row];
+            cache[row][col] = Math.max(cache[row + 1][col], temp);
+        }
+    }
+    return cache[0][bag];
+}
+```
+
+
+
+### 数字和字母进行字符串转换
+
+题目描述：
+
+​	1~26和字母a-z一一对应。给定一个由数字组成的字符串，返回将其转化为字母字符串有多少种可能。
+
+
+
+### 暴力递归
+
+​	首先，对于每个位置，有两种选择，要么当前位置的数字转化为字符，要么和后一位的数字一起转化为一个字符。
+
+​	base case：如果字符串结束，表明正确走完字符串，完成了一个选择链路，返回1。如果遇到数字0，表明上一步的决策不正确，应该结束当前递归分支，返回0。
+
+
+
+```java
+public int possibleResult(String str) {
+    return process(str, 0);
+}
+
+private int process(String str, int index) {
+    if (str.length() == index) return 1;
+    if (str.charAt(index) == '0') return 0;
+    // 当前数字单独转换
+    int single = process(str, index + 1);
+    // 和后面的数字一起转换
+    int dual = 0;
+    if (index + 1 < str.length() && index + 1 < str.length() && (str.charAt(index) - '0') * 10 + (str.charAt(index + 1) - '0') < 27) {
+        dual = process(str, index + 2);
+    }
+    return single + dual;
+}
+```
+
+
+
+### 动态规划
+
+​	观察暴力递归的递归树，可以发现有重复分支。可以通过缓存来优化。由于可变参数只有一个，所以缓存为一维数组。
+
+​	缓存数组元素之间的依赖关系比较明了，所以直接从后往前填值即可。
+
+```java
+public int possibleResultII(String str) {
+    int length = str.length();
+    int[] cache = new int[length + 1];
+    cache[length] = 1;
+    for (int i = length - 1; i >= 0; --i) {
+        if (str.charAt(i) != '0') {
+            cache[i] = cache[i + 1];
+            int dual = 0;
+            if (i + 1 < str.length() && (str.charAt(i) - '0') * 10 + (str.charAt(i + 1) - '0') < 27) {
+                cache[i] += cache[i + 2];
+            }
+        }
+    }
+    return cache[0];
+}
+```
+
+
+
+## 最小距离累加和
+
+题目描述：
 
 
 
@@ -3791,3 +4013,6 @@ class LRUCache {
 }
 ```
 
+>   相当于将键值对封装进Node节点中，然后Node节点之间本身是以双端队列的形式存在的。因此，需要一个头指针和尾指针。同时，为了能够直接通过key来找到存储的Node节点，就需要根据key再建立一个Map来映射。
+>
+>   为了能够实现LRU，就让当前被使用的数据直接从队列中提取出来，再次插入到队列尾部。如果新插入数据时队列已经满了，就将队列头出队即可。
