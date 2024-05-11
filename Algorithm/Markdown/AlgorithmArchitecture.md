@@ -3885,6 +3885,631 @@ public int possibleResultII(String str) {
 
 
 
+## 组成字符串的贴纸数
+
+题目描述：
+
+​	给定一个字符串`str`，以及一个字符串数组`String[] arr`，两者只会出现小写字母。arr中每一个字符串代表一个贴纸，可以将贴纸中的字符剪出来，单独使用。贴纸可以重复使用。
+
+​	求需要几张贴纸才能拼出来str。
+
+​	即，求arr中能够覆盖str中所有字符的，最少的字符串数量。
+
+
+
+### 暴力递归
+
+​	当前字符串被选中后，str计算剩余字符，然后，可以继续从arr挑选任意字符串。
+
+```java
+public int numberOfStickers(String str, String[] arr) {
+    int ans = process(str, arr);
+    return ans == Integer.MAX_VALUE ? -1 : ans;
+}
+
+private int process(String str, String[] arr) {
+    if (str.isEmpty()) {
+        return 0;
+    }
+    int min = Integer.MAX_VALUE;
+    for (String s : arr) {
+        String rest = minus(str, s);
+        if (!rest.equals(str)) {
+            min = Math.min(min, process(rest, arr));
+        }
+    }
+    return min == Integer.MAX_VALUE ? min : (min + 1);
+}
+
+private String minus(String str, String cur) {
+    int[] count = new int[26];
+    for (int i = 0; i < str.length(); ++i) {
+        ++count[str.charAt(i) - '0'];
+        --count[cur.charAt(i) - '0'];
+    }
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 26; ++i) {
+        while (count[i] > 0) {
+            sb.append((char) (count[i] + '0'));
+            --count[i];
+        }
+    }
+    return sb.toString();
+}
+```
+
+​	如果当前字符串不包含str中任意一个字符，那么builder中的字符串还是str，就不会进行递归，意思是不选当前字符串。
+
+​	如果所有的字符串都不能拼接出一个str，就会直接返回与定制。
+
+
+
+### 优化
+
+​	首先对贴纸数组arr，进行处理。如果按照原来的字符串数组的方式进行求解，中间会先将贴纸字符串转换为`int[] count`来统计各个字母出现的次数，然后再转换为字符串。所以，可以事先就将arr数组转换为二维的整型数组，每个贴纸都直接转换为词频数组。
+
+​	然后对递归进行剪枝。如果两个贴纸都包含target中的某些字符，那么应该优先选择覆盖范围更广的。在代码中，判断当前贴纸是否包含target的首字母，如果不包含就先不选择当前贴纸。但是，如果后面挑选了一些贴纸之后，当前的贴纸包含了字符串的首字母，还是会挑选它。相当于优先选择能够覆盖首字母的贴纸。减少了重复递归的分支。
+
+
+
+```java
+public int numberOfStickersII(String str, String[] arr)  {
+    int length = arr.length;
+    int[][] stickers = new int[length][26];
+    for (int i = 0; i < length; ++i) {
+        int len = arr[i].length();
+        for (int j = 0; j < len; ++j) {
+            ++stickers[i][arr[i].charAt(j) - '0'];
+        }
+    }
+    int ans = processII(str, stickers);
+    return ans == Integer.MAX_VALUE ? -1 : ans;
+}
+
+private int processII(String target, int[][] stickers) {
+    if (target.isEmpty()) {
+        return 0;
+    }
+    int length = target.length();
+    int[] countTarget = new int[26];
+    for (int i = 0; i < length; ++i) {
+        countTarget[target.charAt(i) - 'a']++;
+    }
+    int min = Integer.MAX_VALUE;
+    for (int[] sticker : stickers) {
+        if (sticker[target.charAt(0) - 'a'] > 0) { // 如果贴纸包含目标字符串的第一个字符，再进行递归，否则不挑选当前贴纸
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 26; i++) {
+                if (countTarget[i] > 0) {
+                    int num = countTarget[i] - sticker[i];
+                    while (num > 0) {
+                        sb.append((char) (i + 'a'));
+                        --num;
+                    }
+                }
+            }
+            min = Math.min(min, processII(sb.toString(), stickers));
+        }
+    }
+    return min == Integer.MAX_VALUE ? min : (min + 1);
+}
+```
+
+
+
+### 二次优化
+
+​	观察上述优化算法，可以发现还是存在重复计算的分支。可以将当前字符串需要的贴纸数量缓存起来，递归之前先查缓存。
+
+```java
+public int numberOfStickersIII(String str, String[] arr)  {
+    int length = arr.length;
+    int[][] stickers = new int[length][26];
+    for (int i = 0; i < length; ++i) {
+        int len = arr[i].length();
+        for (int j = 0; j < len; ++j) {
+            ++stickers[i][arr[i].charAt(j) - '0'];
+        }
+    }
+    Map<String, Integer> cache = new HashMap<>();
+    int ans = processII(str, stickers);
+    return ans == Integer.MAX_VALUE ? -1 : ans;
+}
+
+private int processII(String target, int[][] stickers, Map<String, Integer> cache) {
+    if (target.isEmpty()) {
+        return 0;
+    }
+    if (cache.containsKey(target)) return cache.get(target);
+    int length = target.length();
+    int[] countTarget = new int[26];
+    for (int i = 0; i < length; ++i) {
+        countTarget[target.charAt(i) - 'a']++;
+    }
+    int min = Integer.MAX_VALUE;
+    for (int[] sticker : stickers) {
+        if (sticker[target.charAt(0) - 'a'] > 0) { // 如果贴纸包含目标字符串的第一个字符，再进行递归，否则不挑选当前贴纸
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 26; i++) {
+                if (countTarget[i] > 0) {
+                    int num = countTarget[i] - sticker[i];
+                    while (num > 0) {
+                        sb.append((char) (i + 'a'));
+                        --num;
+                    }
+                }
+            }
+            min = Math.min(min, processII(sb.toString(), stickers));
+        }
+    }
+    cache.put(target, min == Integer.MAX_VALUE ? min : (min + 1));
+    return cache.get(target);
+}
+```
+
+
+
+## 最长公共子序列
+
+题目描述：
+
+​	给定两个字符串`str1, str2`，返回最长公共子序列。子序列可以不连续。
+
+
+
+### 暴力递归
+
+​	递归函数只考虑两个字符串在[0, i]和[0, j]位置上的公共子序列。
+
+​	如果递归时，两个字符串剩余部分都只有首字母，即`i ==0 && j ==0`，那么只需要比较首字母是否一致，即可返回当前范围上的子序列长度。
+
+​	如果，其中一个字符串只剩下首字母，即`i == 0 || j == 0`。那么，只需要递归判断首字母与另一个串的最后一个字母是否一致，即可找到子序列长度。
+
+​	对于一般情况下，对于[0, i]和[0, j]范围上的子序列。只有三种可能：
+
+- 子序列不可能以i位置的字符结尾，但是有可能以j位置的字符结尾。
+  - 直接放弃i位置的字符，递归查找(i - 1, j)
+- 可能以i位置的字符结尾，不可能以j位置的字符结尾。
+  - 与上述相反
+- 既有可能以i位置的字符结尾，也可能以j位置的字符结尾。此时两个字符需要一样。
+  - 如果两个字符一致，此种情况成立，递归查找(i - 1, j - 1)，否则不存在。
+  - 因为，递归函数本来就是考虑两个范围上的字符串有没有公共子序列的，在当前情况下就是要考虑公共子序列是否以i，j结尾。而i,j并不相等，所以这种可能不存在。直接放弃递归。
+
+```java
+public int longestCommonSubsequence(String a, String b) {
+    if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
+        return 0;
+    }
+    return process(a, b, a.length() - 1, b.length() - 1);
+}
+
+// 返回String a 0...i 范围上 和 String b 0...j 范围上的公共子序列的长度
+private int process(String a, String b, int i, int j) {
+    if (i == 0 && j == 0) {
+        return a.charAt(0) == b.charAt(0) ? 1 : 0;
+    } else if (i == 0) {
+        if (a.charAt(i) == b.charAt(j)) {
+            return 1;
+        } else {
+            return process(a, b, i, j - 1);
+        }
+    } else if (j == 0) {
+        if (a.charAt(i) == b.charAt(j)) {
+            return 1;
+        } else {
+            return process(a, b, i - 1, j);
+        }
+    } else {
+        int p1 = process(a, b, i - 1, j);
+        int p2 = process(a, b, i, j - 1);
+        int p3 = a.charAt(i) == b.charAt(j) ? 1+  process(a, b, i - 1, j - 1) : 0;
+        return Math.max(Math.max(p1, p2), p3);
+    }
+}
+```
+
+
+
+### 优化
+
+​	暴力递归中，有两个可变参数，i，j。而且结果只和这两个可变参数相关，而且存在重复递归的分支。所以可以将递归结果存储到二维数组中，从而起到剪枝作用。
+
+```java
+public int longestCommonSubsequenceII(String a, String b) {
+    if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
+        return 0;
+    }
+    int[][] cache = new int[a.length()][b.length()];
+    for (int[] row : cache) {
+        Arrays.fill(row, -1);
+    }
+    return processII(a, b, a.length() - 1, b.length() - 1, cache);
+}
+
+private int processII(String a, String b, int i, int j, int[][] cache) {
+    if (cache[i][j] != -1) {
+        return cache[i][j];
+    }
+    if (i == 0 && j == 0) {
+        cache[i][j] = a.charAt(0) == b.charAt(0) ? 1 : 0;
+    } else if (i == 0) {
+        if (a.charAt(i) == b.charAt(j)) {
+            cache[i][j] = 1;
+        } else {
+            cache[i][j] = processII(a, b, i, j - 1, cache);
+        }
+    } else if (j == 0) {
+        if (a.charAt(i) == b.charAt(j)) {
+            cache[i][j] = 1;
+        } else {
+            cache[i][j] = processII(a, b, i - 1, j, cache);
+        }
+    } else {
+        int p1 = processII(a, b, i - 1, j, cache);
+        int p2 = processII(a, b, i, j - 1, cache);
+        int p3 = a.charAt(i) == b.charAt(j) ? 1 + processII(a, b, i - 1, j - 1, cache) : 0;
+        cache[i][j] = Math.max(p1, Math.max(p2, p3));
+    }
+    return cache[i][j];
+}
+```
+
+
+
+### 二次优化
+
+​	观察上述优化算法的缓存数组，其元素之间存在依赖关系。
+
+- i == 0 && j == 0，可以通过两个字符串首字符来判断。
+
+- i == 0 第0行的值，每个值都依赖于前一个值。可以从前往后填。
+
+- j == 0 第0列的值，每个值都依赖于上一个值。可以从上往下填。
+
+- 对于其他值，依赖于三个：
+
+  - 上一个值
+  - 左边的值
+  - 左上角的值
+
+  经过上述分析，可以先将第0行和第0列填好，然后剩余部分从左往右，从上往下依次填出。
+
+```java
+public int longestCommonSubsequenceIII(String a, String b) {
+    if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
+        return 0;
+    }
+    int lengthA = a.length();
+    int lengthB = b.length();
+    int[][] cache = new int[lengthA][lengthB];
+    cache[0][0] = a.charAt(0) == b.charAt(0) ? 1 : 0;
+    for (int i = 1; i < lengthA; i++) { // 填第一列
+        cache[i][0] = a.charAt(i) == b.charAt(0) ? 1 : cache[i - 1][0];
+    }
+    for (int i = 1; i < lengthB; i++) { // 填第一行
+        cache[0][i] = a.charAt(0) == b.charAt(i) ? 1 : cache[0][i - 1];
+    }
+    for (int i = 1; i < lengthA; i++) {
+        for (int j = 1; j < lengthB; j++) {
+            int p1 = cache[i - 1][j];
+            int p2 = cache[i][j - 1];
+            int p3 = a.charAt(i) == b.charAt(j) ? 1 + cache[i - 1][j - 1] : 0;
+            cache[i][j] = Math.max(p1, Math.max(p2, p3));
+        }
+    }
+    return cache[lengthA - 1][lengthB - 1];
+}
+```
+
+
+
+## 最长回文子序列
+
+题目描述：
+
+​	给定一个字符串，返回字符串中最长的回文子序列的长度。
+
+
+
+### 取巧解
+
+​	将字符串反转，然后求原字符串和反转字符串的最大公共子序列的长度。
+
+
+
+### 暴力递归
+
+​	设计递归函数，返回字符串某个范围内的最大回文子序列。
+
+​	对于当前范围，最大公共子序列只有四种可能：
+
+- 既不以left开头，也不以right结尾
+- 可能以left开头，不以right结尾
+- 不以left开头，可能以right结尾
+- 既可能以left开头，又可能以right结尾
+
+```java
+public int longestPalindrome(String str) {
+    if (str == null || str.isEmpty()) {
+        return 0;
+    }
+    return process(str, 0, str.length() - 1);
+}
+
+private int process(String str, int left, int right) {
+    if (left == right) return 1;
+    if (left == right - 1) return str.charAt(left) == str.charAt(right) ? 2 : 1;
+    int p1 = process(str, left + 1, right);
+    int p2 = process(str, left, right - 1);
+    int p3 = str.charAt(left) == str.charAt(right) ? 2 + process(str, left + 1, right - 1) : 0;
+    int p4 = process(str, left + 1, right - 1);
+    return Math.max(Math.max(Math.max(p1, p2), p3), p4);
+}
+```
+
+
+
+### 动态规划
+
+​	有两个可变参数，且递归函数的返回值只跟这两个参数有关，于是可以使用二维数组来缓存结果。
+
+```java
+public int longestPalidrome(String str) {
+    if (str == null || str.isEmpty()) {
+        return 0;
+    }
+    int length = str.length();
+    int[][] cache = new int[length][length];
+    for (int[] c : cache) {
+        Arrays.fill(c, -1);
+    }
+    return process(str, 0, legnth - 1, cache);
+}
+
+private int process(String str, int left, int right, int[][] cache) {
+    if (cache[left][right] == -1) {
+        if (left == right) cache[left][right] = 1;
+        if (left == right - 1) cache = str.charAt(left) == str.charAt(right) ? 2 : 1;
+        int p1 = process(str, left + 1, right);
+        int p2 = process(str, left, right - 1);
+        int p3 = str.charAt(left) == str.charAt(right) ? 2 + process(str, left + 1, right - 1) : 0;
+        int p4 = process(str, left + 1, right - 1);
+        cache[left][right] = Math.max(Math.max(Math.max(p1, p2), p3), p4);
+    }
+    return cache[left][right];
+}
+```
+
+
+
+### 二次优化
+
+​	观察动态规划方法的缓存数组中，元素之间的依赖关系：
+
+- 首先，下三角区是不会出现数据的。因为不可能出现left > right的情况。
+- 对角线left == right，值为 1
+- 对角线右边的斜线left = right - 1，其值可以直接填上去
+- 剩余值，依赖于当前位置的，下、左、左下角的值
+
+```java
+public int longestPalidrome(String str) {
+    if (str == null || str.isEmpty()) {
+        return 0;
+    }
+    int length = str.length();
+    int[][] cache = new int[length][length];
+    for (int i = length - 2; i >= 0; --i) {
+        cache[i][i] = 1;
+        cache[i][i + 1] = str.charAt(i) == str.charAt(i + 1) ? 2 : 1;
+    }
+    cache[length - 1][length - 1] = 1;
+    for (int row = length - 3; row >= 0; --row) {
+        for (int col = 2; col < length; ++col) {
+            cache[row][col] = Math.max(cache[row + 1][col], cache[row][col - 1]);
+            if (str.charAt(row) == str.charAt(col)) {
+                cache[row][col] = Math.max(cache[row][col], cache[row + 1][col - 1] + 2);
+            }
+        }
+    }
+    return cache[0][length - 1];
+}
+```
+
+​	继续优化：由于每个元素都依赖于左、下和左下。三者取最大值。那么左边元素一定大于左下元素，因为左下元素是左边元素的下。于是，可以不考虑左下元素。
+
+
+
+
+
+## 马走日
+
+题目描述：
+
+​	给定一个10*9的空间。马初始时在(0, 0)，规定必须走K步，问走到(x, y)有多少种走法。
+
+
+
+### 暴力递归
+
+​	base case：剩余步数为0，判断是否到达规定点，如果到达表明这条递归路径正确，返回1，表示是一种走法。否则返回0。
+
+​	在一个位置有八种走法。所以需要进行八次递归。
+
+```java
+public int method(int x, int y, int step) {
+    if (x < 0 || y < 0) return 0;
+    return process(0, 0, x, y, step);
+}
+
+private int process(int i, int j, int x, int y, int rest) {
+    if (i < 0 || j < 0 || x > 9 || y > 8) return 0;
+    if (rest == 0) {
+        return i == x && j == y ? 1 : 0;
+    }
+    int ans = 0;
+    // 可以往八个方向走
+    ans += process(i + 2, j + 1, x, y, rest - 1);
+    ans += process(i + 1, j + 2, x, y, rest - 1);
+    ans += process(i - 1, j + 2, x, y, rest - 1);
+    ans += process(i - 2, j + 1, x, y, rest - 1);
+    ans += process(i - 2, j - 1, x, y, rest - 1);
+    ans += process(i - 1, j - 2, x, y, rest - 1);
+    ans += process(i + 1, j - 2, x, y, rest - 1);
+    ans += process(i + 2, j - 1, x, y, rest - 1);
+    return ans;
+}
+```
+
+
+
+### 动态规划
+
+​	一共有三个可变参数，且递归函数返回值只与这三个有关，所以可以通过三维数组缓存结果。
+
+```java
+public int method(int x, int y, int step) {
+    if (x < 0 || y < 0) return 0;
+    int[][][] cache = new int[9][8][step + 1];
+    for (int[][] arr : cache) {
+        for (int[] c : arr) {
+            Arrays.fill(c, -1);
+        }
+    }
+    return process(0, 0, x, y, step, cache);
+}
+
+private int process(int i, int j, int x, int y, int rest, int[][][] cache) {
+    if (i < 0 || j < 0 || x > 9 || y > 8) return 0;
+    if (cache[i][j][rest] == -1) {
+        if (rest == 0) {
+            cache[i][j][rest] = i == x && j == y ? 1 : 0;
+        }
+        cache[i][j][rest] += process(i + 2, j + 1, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i + 1, j + 2, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i - 1, j + 2, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i - 2, j + 1, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i - 2, j - 1, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i - 1, j - 2, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i + 1, j - 2, x, y, rest - 1, cache);
+        cache[i][j][rest] += process(i + 2, j - 1, x, y, rest - 1, cache);
+    }
+    return cache[i][j][rest];
+}
+```
+
+
+
+### 二次优化
+
+​	缓存数组中，前两个维度组成的平面，其中的元素只依赖于下一层的元素，本层之间不会相互依赖。可以从最底层开始填。
+
+- rest == 0 第0层的元素只有一个为1，其余全部为0。
+- 其余层当前元素依赖于下一层对应位置周围的八个点。
+
+```java
+public int method(int x, int y, int step) {
+    if (x < 0 || y < 0) return 0;
+    int[][][] cache = new int[9][8][step + 1];
+    cache[x][y][0] = 1;
+    for (int height = 1; height <= step; ++height) {
+        for (int row = 0; row < 10; ++row) {
+            for (int col = 0; col < 9; ++ col) {
+                cache[row][col][height] += pick(cache, row + 2, col + 1, height);
+                cache[row][col][height] += pick(cache, row + 1, col + 2, height);
+                cache[row][col][height] += pick(cache, row - 1, col + 2, height);
+                cache[row][col][height] += pick(cache, row - 2, col + 1, height);
+                cache[row][col][height] += pick(cache, row - 2, col - 1, height);
+                cache[row][col][height] += pick(cache, row - 1, col - 2, height);
+                cache[row][col][height] += pick(cache, row + 1, col - 2, height);
+                cache[row][col][height] += pick(cache, row + 2, col - 1, height);
+            }
+        }
+    }
+    return cache[0][0][step];
+}
+
+private int pick(int[][][] cache, int row, int col, int height) {
+    if (col < 0 || row < 0 || row > 9 || col > 8) return 0;
+    return cache[row][col][height - 1];
+}
+```
+
+
+
+
+
+## 排队喝咖啡
+
+题目描述：
+
+​	给定一个整型数组arr，arr[i]代表第i个咖啡机制作一杯咖啡需要的时间。
+
+​	给定一个整数N，代表目前有N个人在排队等待喝咖啡。
+
+​	咖啡喝完后需要清洗咖啡杯才能继续制作。只有一台清洗咖啡杯的机器，清洗一次耗时a。
+
+​	不清洗需要等待时间b才能自然风干，继续投入制作。
+
+​	假设所有人都是一拿到咖啡立即喝完。
+
+​	求从初始状态到所有人喝完咖啡，并且咖啡杯都变干净需要的最少的时间。
+
+
+
+### 暴力递归
+
+​	首先，将问题分解。先求，对于每个顾客，其最早能喝到咖啡的时间。
+
+​	对于这个问题，需要构建一个小根堆，小根据里存储的元素为<Integer, Integer>，分别代表，在哪个时刻该咖啡机可以使用，以及制作咖啡的时间。每个顾客都将小根堆的堆顶弹出，然后将可用时刻加上制作时间，重新加入堆。则当前客人能够喝到咖啡的时间就是可用时刻+制作时长。
+
+​	然后再考虑洗咖啡杯的时间。
+
+```java
+private class AvailableTime {
+    int availableTime;
+    int produceTime;
+    public AvailableTime(int a, int p) {
+        availableTime = a;
+	    produceTime = p;
+    }
+}
+
+public int shortestTime(int[] arr, int N, int a, int b) {
+	PriorityQueue<AvailableTime> heap = new PriorityQueue<>((o1, o2) -> o1.availableTime + o1.produceTime - o2.availableTime - o2.produceTime);
+    for (int i = 0; i < arr.length; ++i) {
+        heap.offer(new AvailableTime(0, arr[i]));
+    }
+    int[] timeRecord = new int[N];
+    for (int i = 0; i < N; ++i) {
+        AvailableTime temp = heap.poll();
+        temp.availableTime += produceTime;
+        timeRecord[i] = temp.availableTime;
+        heap.offer(temp);
+    }
+    return process(timeRecord, a, b);
+}
+
+private int process(int[] timeRecord, int a, int b) {
+    
+}
+```
+
+
+
+
+
+```java
+public int shortestTime(int[] arr, int N, int a, int b) {
+    
+}
+```
+
+
+
+
+
+
+
 ## 最小距离累加和
 
 题目描述：
