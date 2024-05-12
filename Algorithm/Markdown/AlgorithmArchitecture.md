@@ -4603,7 +4603,7 @@ public int shortestTime(int[] arr, int N, int a, int b) {
 
 
 
-## 最小距离累加和
+## 最小距离累加和(空间压缩优化)
 
 题目描述：
 
@@ -4658,11 +4658,127 @@ public int minPathSum(int[][] matrix) {
 
 ### 空间压缩优化
 
+​	首先，转换思路。在上面的算法中，缓存数组`cache[i][j]`的含义为，从(i, j)出发到达右下角最小的路径累加和。
+
+​	将cache的含义转变为从左上角出发，到当前位置最小的路径累加和。这样就能够将计算过程变为从上到下，从左到右。
+
+​	然后，分析元素之间的依赖关系。每个位置的元素，只依赖其上面的和左边的元素，且距离为1。也就是说，间隔大于1的行和列对于当前的计算都是无用的。
+
+​	于是，可以利用一个长度为width的一维数组cache'，来节省空间。
+
+​	初始时，先将cache'的值求出来，其值为原二维数组的第一行。然后，按照规则在对应位置，推算二维数组出下一行的值。即，第一个位置的数只依赖于上一行这个位置的数；其他位置的数只依赖左和上。于是有了原二维数组的第一行，就可以从左到右自我更新出来第二行的值，以此类推，直到推算到最后一行的值。
+
+```java
+public int minPathSum(int[][] matrix) {
+    int width = matrix[0].length;
+    int height = matrix.length;
+    int[] cache = new int[width];
+    // 二维数组第一行的值
+    int temp = 0;
+    for (int i = 0; i < width; ++i) {
+        cache[i] = matrix[0][i] + temp;
+        temp = cache[i];
+    }
+    // 开始自我更新
+    for (int i = 1; i < height; ++i) {
+        cache[0] += matrix[i][0];
+        for (int j = 1; j < width; ++j) {
+            cache[j] = Math.min(cache[j], cache[j - 1]) + matrix[i][j];
+        }
+    }
+    return cache[width - 1];
+}
+```
 
 
 
+### 推广
+
+​	根据本题的思路，以后动态规划的缓存数组，如果元素之间的依赖关系也是类似的，即当前元素依赖于左 + 上 + 左上角(或其中之一)的，就可以将二维数组简化为一维的。
+
+​	同时，应当观察二维数组行数和列数的比例关系。如果，既可以按行来压缩，也可以按列来压缩。那就应该挑选较小的维度来进行压缩。
 
 
+
+## 凑钱数
+
+题目描述：
+
+​	给定一个整型数组arr，其中元素都为正数。代表货币的面额。再给定一个正整数aim，表示需要凑够的目标钱数。货币的面值都不同，但是每个面值的货币数量无限。
+
+​	求能够凑出aim的不同的方法数。
+
+
+
+### 暴力递归
+
+​	递归函数只需要指定目标钱数aim，然后返回凑够aim的方法数。对于当前的aim，可以求出aim-arr[i]，这个目标的方法数，如果能够凑出来这个金额，就表示可以通过这个方法凑出来，返回值+1，否则行不通。
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    return process(arr, aim);
+}
+
+private int process(int[] arr, int aim) {
+    if (aim < 0) return 0;
+    if (aim == 0) {
+        return 1;
+    }
+    int ans = 0;
+    for (int i = 0; i < arr.length; ++i) {
+        ans += process(arr, aim - arr[i]);
+    }
+    return ans;	
+}
+```
+
+ 
+
+### 动态规划
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    int[] cache = new int[aim + 1];
+    Arrays.fill(cache, -1);
+    return process(arr, aim, cache);
+}
+
+private int process(int[] arr, int aim, int[] cache) {
+    if (aim < 0) return 0;
+    if (cache[aim] == -1) {
+        if (aim == 0) {
+            cache[aim] = 1;
+      	} else {
+        	cache[aim] = 0;
+            for (int i = 0; i < arr.length; ++i) {
+        		cache[aim] += process(arr, aim - arr[i]);
+   			}
+        }
+    }
+    return cache[aim];
+}
+```
+
+
+
+### 二次优化
+
+
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    int[] cache = new int[aim + 1];
+    cache[0] = 1;
+    for (int i = 1; i <= aim; ++i) {
+        for (int j = 0; j < arr.length; ++j) {
+            if (i - arr[j] >= 0) {
+                cahce[i] += cache[1 - arr[j]];
+            }
+        }
+    }
+    return cache[aim];
+}
+```
 
 
 
