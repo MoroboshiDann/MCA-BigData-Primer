@@ -4462,7 +4462,17 @@ private int pick(int[][][] cache, int row, int col, int height) {
 
 ​	对于这个问题，需要构建一个小根堆，小根据里存储的元素为<Integer, Integer>，分别代表，在哪个时刻该咖啡机可以使用，以及制作咖啡的时间。每个顾客都将小根堆的堆顶弹出，然后将可用时刻加上制作时间，重新加入堆。则当前客人能够喝到咖啡的时间就是可用时刻+制作时长。
 
-​	然后再考虑洗咖啡杯的时间。
+​	经过上面的操作，已经获得了每个人最早喝完咖啡的时间。
+
+​	然后再考虑洗咖啡杯的时间。对于每个杯子，可以选择挥发风干和清洗。挥发风干可以并行，但是清洗需要排队。
+
+​	当前杯子选择等待机器清洗时，则其开始清洗的时间为咖啡馆喝完时间和机器可用时间的最大值。而其清洗完成时间为开始时间点+清洗耗时。
+
+​	剩余杯子清洗完成的最快时间，就直接通过递归调用来获取。此时只需要修改机器可用时间点即可。
+
+​	当前杯子选择自然风干时，其变干净的时间点为咖啡喝完的时间+风干时间。
+
+​	剩余杯子清洗完成的最快时间，直接递归调用，只需要修改index即可。
 
 ```java
 private class AvailableTime {
@@ -4489,22 +4499,105 @@ public int shortestTime(int[] arr, int N, int a, int b) {
     return process(timeRecord, a, b);
 }
 
-private int process(int[] timeRecord, int a, int b) {
+private int process(int[] timeRecord, int a, int b, int index, int washLine) {
+    if (index == timeRecord.length) {
+        return 0;
+    }
+    // 当前的杯子决定交给机器清洗
+    int washCur = Math.max(timeRecord[index], washLine) + a; // 咖啡喝完的时间点和咖啡机空闲的时间点，谁大，谁就是当前杯子开始洗的时间点
+    // 剩余的杯子清洗完之后，最短的时间
+    int restClean1 = process(timeRecord, a, b, index + 1, washCur);
     
+    // 当前杯子决定自然风干
+    int wait = timeRecord[index] + b;
+    int restClean2 = process(timeRecord, a, b, index + 1, washLine);
+    
+    return Math.min(Math.max(washCur, restClean1), Math.max(wait, restClean2));
 }
 ```
 
 
 
+### 动态规划
 
+​	暴力递归中的，递归函数的可变参数为index和washLine，且返回值只跟这两个参数有关。于是可以通过二维数组来缓存递归结果。index的最大值为N-1，washLine的最大值为所有的杯子都选择等待机器清洗，最终的时间点。
 
 ```java
 public int shortestTime(int[] arr, int N, int a, int b) {
+    PriorityQueue<AvailableTime> heap = new PriorityQueue<>((o1, o2) -> o1.availableTime + o1.produceTime - o2.availableTime - o2.produceTime);
+    int[] drinks = new int[N];
+    for (int i = 0; i < arr.length; ++i) {
+        heap.offer(new AvailableTime(0, arr[i]));
+    }
+    int washLine = 0;
+    for (int i = 0; i < N; ++i) {
+        AvailableTime time = heap.poll();
+        drinks[i] = time.availableTime + time.produceTime;
+        time.availableTime += time.produceTime;
+        heap.offer(time);
+        washLine = Math.max(driniks[i], washLine) + a;
+    }
+    int[][] cache = new int[N][washLine + 1];
+    for (int i = 0; i < N; ++i) {
+        Arrays.fill(cache[i], -1);
+    }
+    return process(drinks, 0, a, b, 0, cache);
+}
+
+private int process(int[] drinks, int index, int a, int b, int washLine, int[][] cache) {
+    if (index == drinks.length) {
+        return 0;
+    }
+    if (cache[index][washLine] == -1) {
+        // 当前的杯子决定交给机器清洗
+    	int washCur = Math.max(timeRecord[index], washLine) + a; // 咖啡喝完的时间点和咖啡机空闲的时间点，谁大，谁就是当前杯子开始洗的时间点
+    	// 剩余的杯子清洗完之后，最短的时间
+    	int restClean1 = process(timeRecord, a, b, index + 1, washCur);
     
+        // 当前杯子决定自然风干
+        int wait = timeRecord[index] + b;
+        int restClean2 = process(timeRecord, a, b, index + 1, washLine);
+    	cache[index][washLine] = Math.min(Math.max(washCur, restClean1), Math.max(wait, restClean2));
+    }
+    return cache[index][washLine];
 }
 ```
 
 
+
+### 二次优化
+
+​	观察缓存数组之间的依赖关系。每一行的值，都只依赖于下一行的值，所以可以从下往上填写。
+
+```java
+public int shortestTime(int[] arr, int N, int a, int b) {
+    PriorityQueue<AvailableTime> heap = new PriorityQueue<>((o1, o2) -> o1.availableTime + o1.produceTime - o2.availableTime - o2.produceTime);
+    int[] drinks = new int[N];
+    for (int i = 0; i < arr.length; ++i) {
+        heap.offer(new AvailableTime(0, arr[i]));
+    }
+    int washLine = 0;
+    for (int i = 0; i < N; ++i) {
+        AvailableTime time = heap.poll();
+        drinks[i] = time.availableTime + time.produceTime;
+        time.availableTime += time.produceTime;
+        heap.offer(time);
+        washLine = Math.max(driniks[i], washLine) + a;
+    }
+    int[][] cache = new int[N + 1][washLine + 1];
+	for (int i = N - 1; i >= 0; ++i) {
+        for (int free = 0; free <= washLine; ++free) {
+            int selfClean1 = Math.max(drinks[i], free) + wash;
+            if (selfClean1 > washLine) continue;
+            int restClean1 = cache[i + 1][selfClean1];
+            int selfClean2 = drinks[i] + b;
+            int restClean2 = cache[i + 1][free];
+            cache[i][free] = Math.min(Math.max(selfClean1, restClean1), Math.max(selfClean2, restClean2));
+        }
+    }
+    return cache[0][0];
+}
+```
 
 
 
@@ -4514,7 +4607,56 @@ public int shortestTime(int[] arr, int N, int a, int b) {
 
 题目描述：
 
+​	给定一个二维数组matrix，一个人必须从左上角出发，左后到达右下角。沿途只可以向右走或向下走。每个位置都有一个数字，沿途所有数字的累加，就是累加和。求最小的累加和。
 
+
+
+### 暴力递归
+
+```java
+public int minPathSum(int[][] matrix) {
+    return process(matrix, 0, 0);
+}
+
+private int process(int[][] matrix, int i, int j) {
+    if (i >= matrix.length || j >= matrix[0].length) return Integer.MAX_VALUE;
+    if (i == matrix.length - 1 && j == matrix[0].length - 1) return matrix[i][j];
+	int right = process(matrix, i, j + 1);
+    int down = process(martix, i + 1, j);
+    return Math.min(right, down) + matrix[i][j];
+}
+```
+
+
+
+### 动态规划
+
+```java
+public int minPathSum(int[][] matrix) {
+    int height = matrix.length;
+    int width = matrix[0].length;
+    int[][] cache = new int[height][width];
+    // 最后一行
+    cache[height - 1][width - 1] = matrix[heigth - 1][width - 1];
+    for (int col = width - 2; col >= 0; --col) {
+        cache[height - 1][col] = cache[height - 1][col + 1] + matrix[height - 1][col];
+    }
+    // 最后一列
+    for (int row = height - 2; row >= 0; --row) {
+        cache[row][width - 1] = cache[row + 1][width - 1] + matrix[row][width - 1];
+    }
+    for (int row = height - 2; row >= 0; --row) {
+        for (int col = width - 2; col >= 0; --col) {
+            cache[row][col] = Math.min(cache[row + 1][col], cache[row][col + 1]) + matrix[row][col];
+        }
+    }
+    return cache[0][0];
+}
+```
+
+
+
+### 空间压缩优化
 
 
 
