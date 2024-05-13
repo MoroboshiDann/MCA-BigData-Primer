@@ -4937,46 +4937,279 @@ public int makeUpMoneyIII(int[] arr, int aim) {
     for (int key : counts.keySet()) {
         cash[index] = key;
         nums[index] = count.get(key);
+        ++index;
 	}
-    return process(cashe, nums, 0, aim);
+    return process(cash, nums, 0, aim);
 }
 
 private int process(int[] cash, int[] nums, int index, int aim) {
-    if (aim < 0) return 0;
     if (index == cash.length) {
         return aim == 0 ? 1 : 0;
     }
     int ans = 0;
-    for (int i = 0; i < nums[index]; ++i) {
+    for (int i = 0;i * cash[index] <= aim && i < nums[index]; ++i) {
         ans += process(cash, nums, index + 1, aim - i * cash[i]);
     }
-    return
+    return ans;
 }
 ```
 
 
+
+### 动态规划
+
+​	跳过记忆化搜索的优化过程，直接优化为严格表结构的算法。
+
+​	本题与凑钱数II不同之处在于，对于`cache[row][col]`的元素，它依赖于下一行`row + 1`的n个元素，`n = nums[row]`。也就是说只有部分元素累加起来才是当前元素，而不是所有的间隔为`cash[row]`的元素加起来。
+
+​	所以需要重新找规律。假设当前货币面值为cash，下标为i，数量为num，需要凑的钱数为aim。则需要求的目标元素为`cache[i][aim]`。其左边上一个需要填值的元素为`pre = cache[i][aim - cash]`。下一行对应位置的元素为`a = cache[i + 1][aim]`。如果直接将`pre + a`就会算重复。重复的值为`cache[i + 1][aim - cash * (num + 1)]`。
+
+​	于是，根据上述规律，`cache[row][col] = cache[row][col - cash[row]] + cache[row + 1][col] - cache[row + 1][col - cash[row] * (nums[row] + 1)]`。
 
 ```java
-public makeUpMoneyIII(int[] arr, int aim) {
-    Arrays.sort(arr);
-    set<String> record = new HashSet<>();
-    return process(arr, 0, aim, "", record);
-}
-
-private int process(int[] arr, int index, int aim, String cur, Set<String> record) {
-    if (index == arr.length) {
-        if (!record.contains(cur)) {
-            record.add(cur);
-            return 1;
+public int makeUpMoney(int[] arr, int aim) {
+    HashMap<Integer, Integer> counts = new HashMap<>();
+    for (int i : arr) {
+        if (!counts.containsKey(i)) {
+            counts.put(i, 1);
         } else {
-            return 0;
+            counts.put(i, count.get(i) + 1);
         }
     }
-    int absent = process(arr, index + 1, aim, cur, record);
-    int in = process(arr, index + 1, aim - arr[index], cur + arr[index], record);
-    return absent + in;
+    int[] cash = new int[counts.size()];
+    int[] nums = new int[counts.size()];
+    int index = 0;
+    for (int key : counts.keySet()) {
+        cash[index] = key;
+        nums[index] = count.get(key);
+        ++index;
+	}
+    int[][] cache = new int[arr.length + 1][aim + 1];
+    cache[arr.length][0] = 1;
+    for (int row = arr.length - 1; row >= 0; --row) {
+        for (int col = 0; col <= aim; ++col) {
+            cache[row][col] = cache[row + 1][col];
+            if (col - cash[row] >= 0) {
+                cache[row][col] += cache[col - cash[row]];
+            }
+            if (col - cash[row] * (nums[row] + 1) >= 0) {
+                cache[row][col] -= cache[row + 1][col - cash[row] * (nums[row] + 1)];
+            }
+        }
+    }
+    return cache[0][aim];
 }
 ```
+
+
+
+
+
+## Bob还在区域内的概率
+
+题目描述：
+
+​	给定五个整数，N, M, row, col, k。表示在N*M的区域上，Bob初始在(row, col)位置上。
+
+​	Bob只能走k步，每走一步都等概率的走向四个方向：上下左右。任意时刻，如果Bob离开了这个区域就会直接死亡。
+
+​	求k步之后，Bob还存活的概率。
+
+
+
+### 暴力递归
+
+​	一共可以走k步，每步可以有四种选择，所以全部的行动为4^k种可能。只需要统计出每一步是否存活即可。
+
+```java
+public double possibilityOfAlive(int N, int M, int row, int col, int k) {
+    return (double) process(N, M, row, col, k) / Math.pow(4, k));
+}
+
+private int process(int N, int M, int row, int col, int rest) {
+    if (row < 0 || col < 0 || row == N || col == M) {
+        return 0;
+    }
+    if (rest == 0) {
+        return 1;
+    }
+    int down = process(N, M, row + 1, col, rest - 1);
+    int up = process(N, M, row - 1, col, rest - 1);
+    int right = process(N, M, row, col + 1, rest - 1);
+    int left = process(N, M, row, col - 1, rest - 1);
+    return down + up + right + left;
+}
+```
+
+
+
+### 动态规划
+
+​	三个可变参数，且都有边界。每一层的元素，都只依赖于下层的元素，所以可以从第0层开始填起。
+
+​	rest == 0时，第0层，除了边界，其余都是1。
+
+​	其余层，都依赖于下层的元素。
+
+```java
+public int possibilityOfAlive(int N, int M, int r, int c, int k) {
+    int[][][] cache = new int[N][M][k + 1];
+	for (int row = 0; row < N; ++row) {
+        for (int col = 0; col < M; ++col) {
+            cache[row][col][0] = 1;
+        }
+    }
+    for (int height = 1; height <= k; ++height) {
+        cache[0][0][height] = cache[0][1][height - 1] + cache[1][0][height - 1];
+        cache[0][M - 1][height] = cache[0][M - 2][height - 1] + cache[1][M - 1][height - 1];
+        cache[N - 1][0][height] = cache[N - 1][1][height - 1] + cache[N - 2][0][height - 1];
+        cache[N - 1][M - 1][height] = cache[N - 1][M - 2][height - 1] + cache[N - 2][M - 1][height - 1];
+        for (int row = 1; row < N - 1; ++row) {
+            cache[row][0][height] = cache[row - 1][0][height - 1] + cache[row + 1][0][height - 1] + cache[row][1][height - 1];
+            cache[row][M - 1][height] = cache[row - 1][M - 1][height - 1] + cache[row + 1][M - 1][height - 1] + cache[row][M - 2][height - 1];
+        }
+        for (int col = 1; col < M - 1; ++col) {
+            cache[0][col][height] = cache[0][col - 1][height - 1] + cache[0][col + 1][height - 1] + cache[1][col][height - 1];
+            cache[N - 1][col][height] = cache[N - 1][col - 1][height - 1] + cache[N - 1][col + 1][height - 1] + cache[N - 2][col][height - 1];
+        }
+        for (int row = 1; row < N - 1; ++row) {
+            for (int col = 1; col < M -1; ++col) {
+                cache[row][col][height] = cache[row + 1][col][height - 1]
+                    + cache[row - 1][col][height - 1]
+                    + cache[row][col + 1][height - 1]
+                    + cache[row][col - 1][height - 1];
+            }
+    	}
+    }
+    return (double) cache[r][c][k] / Math.pow(4, k);
+}
+```
+
+
+
+
+
+## 英雄打怪兽
+
+题目描述：
+
+​	给定三个参数N，M，K。怪兽有N滴血，英雄每次攻击会随即造成[0, M]点伤害，伤害是等概率的。
+
+​	求K次攻击后，击败怪兽的概率。
+
+
+
+### 暴力递归
+
+​	枚举所有可能性，统计出击败怪兽的次数。	
+
+​	原理同上面的Bob概率题，但是如果在i < k次攻击时，已经击败了怪兽，是不能剪枝的，不然会少统计很多击败次数。
+
+```java
+public double possibilityToKillTheMonster(int N, int M, int K) {
+    return (double) process(N, M, K) / Math.pow(M + 1, K);
+}
+
+private int process(int restHP, int range, int restK) {
+    if (restK == 0) {
+		return restHP <= 0 ? 1 : 0;
+    }
+    int ans = 0;
+    for (int i = 0; i <= range; ++i) {
+        ans += process(restHP - i, range, restK - 1);
+    }
+    return ans;
+}
+```
+
+
+
+### 动态规划
+
+​	两个可变参数。为了能够考虑到上述不能被剪枝的部分，即K > 0但N < 0的部分，需要进行特殊处理。
+
+​	如果当前血量已经为0，那么继续递归会统计到的次数为`M * restK`。
+
+```java
+public double possibilityToKillTheMonster(int N, int M, int K) {
+    int[][] cache = new int[N + 1][K + 1];
+    cache[0][0] = 1;
+    for (int restMove = 1; restMove <= K; ++restMove) {
+        for (int hp = 0; hp <= N; ++hp) {
+            for (int i = 0; i <= M; ++i) {
+                if (hp - i < 0) {
+                    cache[hp][restMove] += Math.pow(M + 1, restMove - 1);
+                } else {
+                    cache[hp][restMove] += cache[hp - i][restMove - 1];
+                }
+            }
+        }
+    }
+    return (double) process(N, M, K) / Math.pow(M + 1, K);
+}
+```
+
+
+
+### 二次优化
+
+​	由于存在枚举，于是需要继续优化算法。
+
+​	当前列的值只依赖前一列的值。对于当前元素，需要将前一列从上到下的M个元素累加起来。如果部分元素的行下标超出了0，就直接计算`Math.pow(M + 1, restMove - 1)`。
+
+​	如果直接将`cache[hp - 1][restMove]`与`cache[hp][restMove - 1]`相加，会重复计算一个值。这个值有可能是M + 1 ^ restMove - 1，也有可能是`cache[hp - 1 - M][restMove - 1]`。
+
+​	同时hp - 1也有可能会越界。需要单独计算。
+
+```java
+public double possibilityToKillTheMonster(int N, int M, int K) {
+    int[][] cache = new int[N + 1][K + 1];
+    cache[0][0] = 1;
+    for (int restMove = 1; restMove <= K; ++restMove) {
+        cache[0][restMove] = Math.pow(M + 1, restMove);
+        for (int hp = 1; hp <= N; ++hp) {
+            cache[hp][restMove] = cache[hp][restMove - 1] + cache[hp - 1][restMove];
+            if (hp - 1 - M >= 0) {
+                cache[hp][restMove] -= cache[hp - 1 - M][restMove - 1];
+            } else {
+                cache[hp][restMove] -= Math.pow(M + 1, restMove - 1);
+            }
+        }
+    }
+    return (double) process(N, M, K) / Math.pow(M + 1, K);
+}
+```
+
+
+
+## 凑钱数IV
+
+题目描述：
+
+​	给定一个整数数组arr，其中元素都为正数且不重复，代表货币面值。再给定一个正数aim，代表徐要凑出的钱数。每个面值的货币的数量是无限的。
+
+​	求凑出aim需要的最少货币数。
+
+
+
+### 暴力递归
+
+​	递归函数只需要知道当前需要凑出的货币数aim，然后去尝试从`aim - arr[i]`能否凑出来当前的目标。
+
+```java
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
