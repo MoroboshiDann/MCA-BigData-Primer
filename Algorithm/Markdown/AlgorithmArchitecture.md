@@ -4704,58 +4704,57 @@ public int minPathSum(int[][] matrix) {
 
 题目描述：
 
-​	给定一个整型数组arr，其中元素都为正数。代表货币的面额。再给定一个正整数aim，表示需要凑够的目标钱数。货币的面值都不同，但是每个面值的货币数量无限。
+​	给定一个整型数组arr，其中元素都为正数，每个元素代表一张货币。再给定一个正整数aim，表示需要凑够的目标钱数。货币可能面额相同，但是每张货币都是不同的。
 
-​	求能够凑出aim的不同的方法数。
+​	求通过给定的这些货币，能够凑出aim的不同的方法数。
 
 
 
 ### 暴力递归
 
-​	递归函数只需要指定目标钱数aim，然后返回凑够aim的方法数。对于当前的aim，可以求出aim-arr[i]，这个目标的方法数，如果能够凑出来这个金额，就表示可以通过这个方法凑出来，返回值+1，否则行不通。
+​	递归函数需要知道当前处理到第几张货币了。对于当前货币，可以选择参与凑钱或不参与，分别可以通过下一张货币的处理来获得方法数。
 
 ```java
 public int makeUpMoney(int[] arr, int aim) {
-    return process(arr, aim);
+    return process(arr, 0, aim);
 }
 
-private int process(int[] arr, int aim) {
+private int process(int[] arr, int index, int aim) {
     if (aim < 0) return 0;
-    if (aim == 0) {
-        return 1;
+    if (index == arr.length) {
+        return aim == 0 ? 1 : 0;
     }
-    int ans = 0;
-    for (int i = 0; i < arr.length; ++i) {
-        ans += process(arr, aim - arr[i]);
-    }
-    return ans;	
+    int absent = process(arr, index + 1, aim);
+    int in = process(arr, index + 1, aim - arr[index]);
+    return absent + in;
 }
 ```
 
- 
+
 
 ### 动态规划
 
+​	对于暴力递归的递归函数，其返回值至于两个可变参数有关，且可变参数有上限。可以通过二维数组来优化。
+
 ```java
 public int makeUpMoney(int[] arr, int aim) {
-    int[] cache = new int[aim + 1];
-    Arrays.fill(cache, -1);
-    return process(arr, aim, cache);
+    int[][] cache = new int[arr.length + 1][aim + 1];
+    for (int[] c : cache) {
+		Arrays.fill(c, -1);
+    }
+    return process(arr, 0, aim, cache);
 }
 
-private int process(int[] arr, int aim, int[] cache) {
+private int process(int[] arr, int index, int aim, int[][] cache) {
     if (aim < 0) return 0;
-    if (cache[aim] == -1) {
-        if (aim == 0) {
-            cache[aim] = 1;
-      	} else {
-        	cache[aim] = 0;
-            for (int i = 0; i < arr.length; ++i) {
-        		cache[aim] += process(arr, aim - arr[i]);
-   			}
+    if (cache[index][aim] == -1) {
+        if (index == arr.length) cache[index][aim] = aim == 0 ? 1 : 0;
+        else {
+            cache[index][aim] = process(arr, index + 1, aim, cache) +
+                proces(arr, index + 1, aim - arr[index], cache);
         }
     }
-    return cache[aim];
+    return cache[index][aim];
 }
 ```
 
@@ -4763,18 +4762,42 @@ private int process(int[] arr, int aim, int[] cache) {
 
 ### 二次优化
 
+​	缓存数组之间存在明确的依赖关系。当前行的值只依赖于下一行的值，于是可以倒着填完。
 
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    int[][] cache = new int[arr.length + 1][aim + 1];
+    // 最后一行只有一个元素为1，其余都为0
+    cache[arr.length][0] = 1;
+    for (int row = arr.length - 1; row >= 0; --row) {
+        for (int col = aim; col >= 0; --col) {
+            cache[row][col] = cache[row + 1][col];
+            cache[row][col] += col - arr[row] >= 0 ? cache[row + 1][col - arr[row]] : 0;
+        }
+    }
+    return cache[0][aim];
+}
+```
+
+
+
+### 空间压缩
+
+​	由于二维数组当前行只与下一行有依赖关系，于是可以用两个一维数组来代替二维数组。
 
 ```java
 public int makeUpMoney(int[] arr, int aim) {
     int[] cache = new int[aim + 1];
-    cache[0] = 1;
-    for (int i = 1; i <= aim; ++i) {
-        for (int j = 0; j < arr.length; ++j) {
-            if (i - arr[j] >= 0) {
-                cahce[i] += cache[1 - arr[j]];
-            }
+    int[] help = new int[aim + 1];
+    help[0] = 1;
+    for (int row = arr.length - 1; row >= 0; --row) {
+        for (int col = 0; col <= aim; ++col) {
+            cache[col] = help[col];
+            cache[col] += col - arr[row] >= 0 ? help[col - arr[row]] : 0;
         }
+        int[] temp = help;
+        help = cache;
+        cache = temp;
     }
     return cache[aim];
 }
@@ -4783,6 +4806,57 @@ public int makeUpMoney(int[] arr, int aim) {
 
 
 
+
+## 凑钱数II
+
+题目描述：
+
+​	给定一个整数数组arr，其元素都是正数且不重复，代表货币的面值。在给定一个正数aim，表示要凑够的钱数。
+
+​	每个面值的货币数量都是无限的。
+
+​	求用给出的这些面值的货币能够凑出aim的方法数。
+
+
+
+### 暴力递归
+
+​	由于每个面值的货币数量不限，所以，对于当前位置的面值，就需要不断尝试增加数量，直到总数超过aim。
+
+```java
+public int makeUpMoneyII(int[] arr, int aim) {
+    return process(arr, 0, aim);
+}
+
+private int process(int[] arr, int index, int aim) {
+    if (index == arr.length) return aim == 0 ? 1 : 0;
+    if (aim == 0) return 1;
+    int ans = 0;
+    for (int num = 0; num * arr[index] <= aim; ++num) {
+        ans += process(arr, index + 1, aim - num * arr[index]);
+    }
+    return ans;
+}
+```
+
+
+
+### 动态规划
+
+​	
+
+```java
+public int makeUpMoneyII(int[] arr, int aim) {
+    int[][] cache = new int[arr.length + 1][aim + 1];
+    cache[arr.length][0] = 1;
+    for (int row = arr.length - 1; row >= 0; --row) {
+        for (int num = 0; num * arr[row] <= aim; ++num) {
+       		cache[row][aim] += cache[row + 1][aim - num * arr[row]];
+    	}
+    }
+    return cache[0]
+}
+```
 
 
 
