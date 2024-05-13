@@ -5197,13 +5197,72 @@ public double possibilityToKillTheMonster(int N, int M, int K) {
 ​	递归函数只需要知道当前需要凑出的货币数aim，然后去尝试从`aim - arr[i]`能否凑出来当前的目标。
 
 ```java
+public int minNum(int[] arr, int aim) {
+    return process(arr, aim);
+}
+
+private int process(int[] arr, int aim) {
+    if (aim < 0) return Integer.MAX_VALUE;
+    if (aim == 0) return 0;
+    int min = Integer.MAX_VALUE;
+    for (int i = 0; i < arr.length; ++i) {
+        min = Math.min(min, process(arr, aim - arr[i]) + 1);
+    }
+    return min == Integer.MAX_VALUE ? -1 : min;
+}
 ```
 
 
 
 
 
+## 杨辉三角形
 
+题目描述：
+
+​	给定一个正整数N，返回杨辉三角形的前N行。行号从1开始。
+
+​	杨辉三角形中，三角形的两个腰上的元素都是1，其余元素等于其左上角和右上角的元素之和。
+
+![](../img/yanghui.png)
+
+
+
+### 暴力递归
+
+​	由于杨辉三角形中，每一行都依赖于上一行的元素。如果有这样一个递归函数，其只需要输入当前的行号就能够返回当前行的所有元素；在其生成当前行元素之前，需要先拿到前一行的结果。
+
+​	base case为N == 1，此时直接返回1即可。
+
+```java
+public List<List<Integer>> generate(int N) {
+    List<List<Integer>> ans = new ArrayList<>();
+    if (N <= 0) return ans;
+    process(N, ans);
+    return ans;
+}
+
+private List<Integer> process(int N, List<List<Integer>> ans) {
+    List<Integer> current = new ArrayList<>();
+    if (N != 1) {
+        List<Integer> upper = process(N - 1, ans);
+        int size = upper.size();
+        current.add(1);
+        for (int i = size - 1; i > 0; --i) {
+            current.add(upper.get(i) + upper.get(i - 1));
+        }
+    }
+    current.add(1);
+    ans.add(current);
+    return current;
+}
+```
+
+
+
+### 动态规划
+
+​	只有一个可变参数。
 
 
 
