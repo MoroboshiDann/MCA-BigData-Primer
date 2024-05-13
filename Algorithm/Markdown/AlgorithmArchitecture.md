@@ -3453,6 +3453,17 @@ public int process(Stack<Integer> stack) { // 具体功能为：将栈底元素�
 
 ​	动态规划就是将暴力递归中结算结果缓存下来，从而避免重复计算。可以将递归树画出来，然后观察是否有重复的分支。
 
+​	动态规划四种模型：
+
+- 范围尝试模型
+- 从左往右尝试模型
+- 样本对应模型
+- 业务限制模型
+
+​	以下例题中，动态规划算法一般情况下就是记忆化搜索算法。给暴力递归增加一个缓存数组，记忆曾经进行过的计算。而二次优化就是严格表结构的算法，根据元素之间的依赖关系，直接填表，而不进行递归。
+
+​	当缓存数组中的元素之间没有枚举行为，即一个位置的元素只与某几个特定位置的元素有依赖关系，那么记忆化搜索和严格表依赖算法效率相当。但是，如果存在枚举行为，严格表依赖就会效率更高。
+
 ## 斐波那契数列
 
 ### 暴力递归
@@ -4807,7 +4818,7 @@ public int makeUpMoney(int[] arr, int aim) {
 
 
 
-## 凑钱数II
+## 凑钱数II(存在枚举行为)
 
 题目描述：
 
@@ -4850,17 +4861,122 @@ public int makeUpMoneyII(int[] arr, int aim) {
     int[][] cache = new int[arr.length + 1][aim + 1];
     cache[arr.length][0] = 1;
     for (int row = arr.length - 1; row >= 0; --row) {
-        for (int num = 0; num * arr[row] <= aim; ++num) {
-       		cache[row][aim] += cache[row + 1][aim - num * arr[row]];
-    	}
+        for (int col = 0; col <= aim; col++) {
+            for (int num = 0; num * arr[row] <= col; ++num) {
+                cache[row][col] += cache[row + 1][col - num * arr[row]];
+            }
+        }
     }
-    return cache[0]
+    return cache[0][aim];
+}
+```
+
+
+
+### 二次优化
+
+​	观察元素之间的依赖关系，可以发现，对于`cache[row][col]`这个位置的元素，其依赖于下一行的m个元素，这m个元之间相隔`arr[row]`，即当前货币的面额。当前元素需要把这m个元素累加起来。
+
+​	而对于`cache[row][col - arr[row]]`，即本行与自身相隔`arr[row]`的元素，其值为上述m个元素的前m-1个累加起来。因此，存在如下关系`cache[row][col] = cache[row][col - arr[row]] + cache[row + 1][col];`。
+
+​	而如果当前元素左边`arr[row]`位置的元素不存在，其值就等于下一行同样位置的元素。
+
+​	于是，动态规划算法可以优化如下：
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    int[][] cache = new int[arr.length + 1][aim + 1];
+    cache[arr.length][0] = 1;
+    for (int row = arr.length - 1; row >= 0; --row) {
+        for (int col = 0; col <= aim; ++col) {
+            cache[row][col] = cache[row + 1][col];
+            if (col - arr[row] >= 0) {
+                cache[row][col] += cache[row][col - arr[row]];
+            }
+        }
+    }
+    return cache[0][aim];
 }
 ```
 
 
 
 
+
+## 凑钱数III
+
+题目描述：
+
+​	给定一个整数数组arr，其中值都为整数，代表货币。再给一个正数aim，代表需要凑到的钱数。
+
+​	arr中每个元素代表一张货币，货币面值如果相同，就认为是同一张。每个货币数量只有一张。
+
+​	求能够凑出aim的方法数量。
+
+
+
+### 暴力递归
+
+​	由于面值可能重复，且每个元素代表的货币只有一张。所以可以统计每个面值的货币的数量，分别用两个数组分别来存储面值和数量。
+
+​	然后就变成了从左往右的尝试模型。
+
+```java
+public int makeUpMoneyIII(int[] arr, int aim) {
+    HashMap<Integer, Integer> counts = new HashMap<>();
+    for (int i : arr) {
+        if (!counts.containsKey(i)) {
+            counts.put(i, 1);
+        } else {
+            counts.put(i, count.get(i) + 1);
+        }
+    }
+    int[] cash = new int[counts.size()];
+    int[] nums = new int[counts.size()];
+    int index = 0;
+    for (int key : counts.keySet()) {
+        cash[index] = key;
+        nums[index] = count.get(key);
+	}
+    return process(cashe, nums, 0, aim);
+}
+
+private int process(int[] cash, int[] nums, int index, int aim) {
+    if (aim < 0) return 0;
+    if (index == cash.length) {
+        return aim == 0 ? 1 : 0;
+    }
+    int ans = 0;
+    for (int i = 0; i < nums[index]; ++i) {
+        ans += process(cash, nums, index + 1, aim - i * cash[i]);
+    }
+    return
+}
+```
+
+
+
+```java
+public makeUpMoneyIII(int[] arr, int aim) {
+    Arrays.sort(arr);
+    set<String> record = new HashSet<>();
+    return process(arr, 0, aim, "", record);
+}
+
+private int process(int[] arr, int index, int aim, String cur, Set<String> record) {
+    if (index == arr.length) {
+        if (!record.contains(cur)) {
+            record.add(cur);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    int absent = process(arr, index + 1, aim, cur, record);
+    int in = process(arr, index + 1, aim - arr[index], cur + arr[index], record);
+    return absent + in;
+}
+```
 
 
 
