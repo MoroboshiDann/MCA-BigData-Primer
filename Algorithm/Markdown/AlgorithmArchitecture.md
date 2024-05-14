@@ -5269,12 +5269,13 @@ private int process(int pre, int rest) {
 ### 动态规划
 
 ​	两个可变参数。其中pre的上限为pre == rest，rest的上限为N，为了简单起见，直接讲两个参数的上限都变为N。数据之间存在如下规律：
-- rest == 0这一列，其值全部为1
-- pre == 0这一行，不需要填值
+- rest == 0这一列，其值全部为1。
+- pre == 0这一行，不需要填值。
 - 当pre > rest时，所有的值都为0，即下三角区，除了第一列都为0。
 - 对于普通值，其依赖于`cache[i][rest - i]`，$i \in [pre, rest]$。
 - 根据这个依赖关系，可以推出对角线区域都为1。
 - 最终需要返回的是`cache[1][N]`。
+- 由于在填充元素时，存在枚举，所以要继续优化。对于同一列的下一个元素`cache[pre + 1][rest]`，其在枚举时，只比当前元素少累加了一个元素，因此可以通过它的值来减少重复的累加过程。
 
 ```java
 public int splitNumber(int N) {
@@ -5287,9 +5288,8 @@ public int splitNumber(int N) {
     // 从下往上填
     for (int pre = N - 1; pre > 0; --pre) {
 	    for (int rest = pre + 1; rest <= N; ++rest) {
-		    for (int i = pre; i <= rest; ++i) {
-			    cache[pre][rest] += cache[i][rest - i];
-		    }
+		    cache[pre][rest] = cache[pre + 1][rest];
+		    cache[pre][rest] += cache[pre][rest - pre];
 	    }
     }
     return cache[1][N];
