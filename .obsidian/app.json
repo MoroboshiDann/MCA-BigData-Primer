@@ -1,3 +1,6 @@
 {
-  "strictLineBreaks": false
+  "strictLineBreaks": false,
+  "readableLineLength": true,
+  "smartIndentList": false,
+  "tabSize": 4
 }

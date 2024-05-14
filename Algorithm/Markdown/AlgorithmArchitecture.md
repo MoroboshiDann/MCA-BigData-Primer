@@ -5301,6 +5301,7 @@ public int splitNumber(int N) {
 
 题目描述：
 
+给定一个正整数数组arr，将arr中所有元素拆分成为两部分，让两部分的累加和最接近。
 
 
 
