@@ -5003,6 +5003,58 @@ public int makeUpMoney(int[] arr, int aim) {
 
 
 
+## 凑钱数IV
+
+题目描述：
+
+​	给定一个整数数组arr，其中元素都为正数且不重复，代表货币面值。再给定一个正数aim，代表徐要凑出的钱数。每个面值的货币的数量是无限的。
+
+​	求凑出aim需要的最少货币数。
+
+
+
+### 暴力递归
+
+​	递归函数只需要知道当前需要凑出的货币数aim，然后去尝试从`aim - arr[i]`能否凑出来当前的目标。
+
+```java
+public int minNum(int[] arr, int aim) {
+    return process(arr, aim);
+}
+
+private int process(int[] arr, int aim) {
+    if (aim < 0) return Integer.MAX_VALUE;
+    if (aim == 0) return 0;
+    int min = Integer.MAX_VALUE;
+    for (int i = 0; i < arr.length; ++i) {
+        min = Math.min(min, process(arr, aim - arr[i]));
+    }
+    return min == Integer.MAX_VALUE ? -1 : min + 1;
+}
+```
+
+
+
+### 动态规划
+
+​	一个可变参数，直接用一个一维数组来缓存结果。
+
+```java
+public int coinChange(int[] coins, int amount) {
+    int[] cache = new int[amount + 1];
+    for (int i = 1; i <= amount; ++i) {
+        int min = Integer.MAX_VALUE;
+        for (int j = 0; j < coins.length; ++j) {
+            if (i - coins[j] >= 0) {
+                min = Math.min(min, cache[i - coins[j]]);
+            }
+        }
+        cache[i] = min == Integer.MAX_VALUE ? min : min + 1;
+    }
+    return cache[amount] == Integer.MAX_VALUE ? -1 : cache[amount];
+}
+```
+
 
 
 ## Bob还在区域内的概率
@@ -5182,35 +5234,73 @@ public double possibilityToKillTheMonster(int N, int M, int K) {
 
 
 
-## 凑钱数IV
+## 拆分数字
 
 题目描述：
 
-​	给定一个整数数组arr，其中元素都为正数且不重复，代表货币面值。再给定一个正数aim，代表徐要凑出的钱数。每个面值的货币的数量是无限的。
+​	给定一个正整数N，将其拆分成正整数的和。如`3 = 1 + 1 + 1 / 1 + 2`。要求，拆分的结果中的正整数非降序。
 
-​	求凑出aim需要的最少货币数。
+​	求拆分正整数的可能方法数。
 
 
 
 ### 暴力递归
 
-​	递归函数只需要知道当前需要凑出的货币数aim，然后去尝试从`aim - arr[i]`能否凑出来当前的目标。
+​	递归方法，只需要传入当前需要拆分的正整数，返回拆分的方法数量。base case，N == 1，只有一种拆分方法；N <= 0，返回0。为了保证拆分的结果中，非降序，当前拆分时需要知道上一个结果的整数是谁。
 
 ```java
-public int minNum(int[] arr, int aim) {
-    return process(arr, aim);
+public int splitNumber(int N) {
+    
 }
 
-private int process(int[] arr, int aim) {
-    if (aim < 0) return Integer.MAX_VALUE;
-    if (aim == 0) return 0;
-    int min = Integer.MAX_VALUE;
-    for (int i = 0; i < arr.length; ++i) {
-        min = Math.min(min, process(arr, aim - arr[i]) + 1);
+private int process(int pre, int rest) {
+    if (rest == 0) return 1;
+    if (rest < pre) return 0;
+	int ans = 0;
+    for (int i = pre; i <= rest; ++i) { 
+        ans += process(i, rest - i);
     }
-    return min == Integer.MAX_VALUE ? -1 : min;
+    return ans;
 }
 ```
+
+
+
+### 动态规划
+
+​	两个可变参数。其中pre的上限为pre == rest，rest的上限为N，为了简单起见，直接讲两个参数的上限都变为N。数据之间存在如下规律：
+- rest == 0这一列，其值全部为1
+- pre == 0这一行，不需要填值
+- 当pre > rest时，所有的值都为0，即下三角区，除了第一列都为0。
+- 对于普通值，其依赖于`cache[i][rest - i]`，$i \in [pre, rest]$。
+- 根据这个依赖关系，可以推出对角线区域都为1。
+- 最终需要返回的是`cache[1][N]`。
+
+```java
+public int splitNumber(int N) {
+    int[][] cache = new int[N + 1][N + 1]; // cache[pre][rest]
+    // pre == 0，这一行不需要填值
+    for (int pre = 0; pre <= N; ++pre) { 
+        cache[pre][0] = 1; // rest == 0
+        cache[pre][pre] = 1; // 对角线
+    }
+    // 从下往上填
+    for (int pre = N - 1; pre > 0; --pre) {
+	    for (int rest = pre + 1; rest <= N; ++rest) {
+		    for (int i = pre; i <= rest; ++i) {
+			    cache[pre][rest] += cache[i][rest - i];
+		    }
+	    }
+    }
+    return cache[1][N];
+}
+```
+
+
+
+
+
+
 
 
 

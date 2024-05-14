@@ -1,0 +1,163 @@
+{
+  "main": {
+    "id": "2c38fefe9fdba2f4",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce2b7d8a663c1ef6",
+        "type": "tabs",
+        "dimension": 18.53512705530643,
+        "children": [
+          {
+            "id": "a3cd1e3e30446889",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Algorithm/Markdown/AlgorithmArchitecture.md"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "51306a7e6f3e2517",
+        "type": "tabs",
+        "dimension": 81.46487294469357,
+        "children": [
+          {
+            "id": "edea54d33cfd4be0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8f94e55d9fea9df2",
+    "type": "split",
+    "children": [
+      {
+        "id": "90133215de318c9c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9953c58fcc0df153",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "2d9cfd34a15d83d7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "fe7006c42db66758",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "right": {
+    "id": "b77a72d4697a5c10",
+    "type": "split",
+    "children": [
+      {
+        "id": "f346a02228eee009",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "360380d77bb71780",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "df3e494513538fec",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "dd96db88bd12722d",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "edea54d33cfd4be0",
+  "lastOpenFiles": [
+    "Algorithm/Markdown/AlgorithmArchitecture.md"
+  ]
+}
