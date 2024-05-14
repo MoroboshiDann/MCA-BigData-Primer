@@ -5345,21 +5345,133 @@ private int process(int[] arr, int index, int rest) {
 public int splitArray(int[] arr) {
     int sum = 0;
     for (int a : arr) sum += a;
-    int[][] cache = new int[arr.length + 1][sum / 2 + 1];
+    sum /= 2;
+    int[][] cache = new int[arr.length + 1][sum + 1];
     // 第arr.length行所有元素都为0
     // 其余元素都依赖于下一行的元素
     for (int index = arr.length; index >= 0; --index) {
-        for (int rest = 0; rest <= sum / 2; ++rest) {
+        for (int rest = 0; rest < sum; ++rest) {
             cache[index][rest] = cache[index + 1][rest];
             if (arr[index] <= rest) {
-                cache[inedx][rest] = Math.max(cache[index][rest], cache[index + 1][rest - arr[index]]);
+                cache[inedx][rest] = Math.max(cache[index][rest], arr[index] + cache[index + 1][rest - arr[index]]);
             }
                 
         }
     }
-    return cache[0][sum / 2];
+    return cache[0][sum];
 }
 ```
+
+
+
+
+
+## 拆分数组II
+
+题目描述：
+
+​	给定一个正整数数组arr，请将arr分为两个集合。要求如下：
+
+- 如果arr的长度为偶数，则两个集合包含的元素数量应当一样多。
+- 如果arr的长度为奇数，两个集合的元素数量之差为1。
+- 让两个集合的累加和尽量接近。
+
+​	返回较小集合的累加和。
+
+
+
+### 暴力递归
+
+​	与上一题不同的地方在于，本题规定了集合中元素的个数。可以分类讨论，如果arr的长度为偶数，那么递归函数应当返回在较小集合的元素数量为`arr.length / 2`，时的最接近总和一半的累加和；当长度为奇数，就要分别讨论`arr.length / 2`和`arr.length / 2 + 1`数量下，取得的累加和最大值。
+
+​	那么递归函数就需要多传入一个参数，表示在挑选这么多个元素的情况下，最接近rest的集合累加和。
+
+```java
+public int splitArrayII(int[] arr) {
+    int length = arr.length;
+    int sum = 0;
+    for (int i = 0; i < length; ++i) {
+        sum += arr[i];
+    }
+    int p1 = process(arr, 0, sum / 2, length / 2);
+    if (length % 2 != 0) {
+        p1 =  Math.max(p1, process(arr, 0, sum / 2, length / 2 + 1));
+    }
+    return p1;
+}
+
+private int process(int[] arr, int index, int rest, int restNum) {
+	if (index == arr.length) {
+        return restNum == 0 ? 0 : -1; // 如果所有的元素已经遍历过一遍了，集合内元素数量不达标或者已超过，证明这次选择不对。
+    }
+    int p1 = process(arr, index + 1, rest, restNum);
+    int p2 = -1;
+    if (arr[index] <= rest) {
+        p2 = process(arr, index + 1, rest - arr[index], restNum - 1);
+
+    }
+    if (p2 != -1) p2 += arr[index];
+    return Math.max(p1, p2);
+}
+```
+
+
+
+### 动态规划
+
+​	三个可变参数，且皆有上限。可以直接优化为记忆化搜索。
+
+```java
+public int splitArrayII(int[] arr) {
+    int length = arr.length;
+    int sum = 0;
+    for (int i = 0; i < length; ++i) {
+        sum += arr[i];
+    }
+    sum >>= 1;
+    int[][][] cache = new int[length + 1][sum + 1][(length >> 1) + 2];
+	for (int i = 0; i <= length / 2 + 1; ++i) {
+        for (int j = 0; j <= sum; ++j) {
+            Arrays.fill(cache[i][j], -1);
+        }
+    }
+    for (int rest = 0; rest <= sum; ++rest) {
+        cache[length][rest][0] = 0;
+    }
+    for (int restNum = 1; restNum < (length / 2 + 2); ++restNum) {
+	    for (int index = length - 1; index >= 0; --index) {
+    	    for (int rest = 0; rest <= sum; ++rest) {    
+                int p1 = cache[index + 1][rest][restNum];
+                int p2 = -1;
+                if (arr[index] <= rest) {
+                    p2 = cache[index + 1][rest - arr[index]][restNum - 1];
+                }
+                if (p2 != -1) p2 += arr[index];
+                cache[index][rest][restNum] = Math.max(p1, p2);
+            }
+        }
+    }
+   	if (length % 2 == 0) {
+        return cache[0][sum][length / 2];
+    } else {
+        return Math.max(cache[0][sum][length / 2], cache[0][sum][length / 2 + 1]);
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
