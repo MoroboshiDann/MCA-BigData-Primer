@@ -36,8 +36,17 @@
                 "source": true
               }
             }
+          },
+          {
+            "id": "00a1c0aa3b5702d9",
+            "type": "leaf",
+            "state": {
+              "type": "style-settings",
+              "state": {}
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -156,7 +165,7 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "edea54d33cfd4be0",
+  "active": "00a1c0aa3b5702d9",
   "lastOpenFiles": [
     "Algorithm/Markdown/AlgorithmArchitecture.md"
   ]
