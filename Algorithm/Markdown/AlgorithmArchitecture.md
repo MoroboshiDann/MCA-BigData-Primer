@@ -5301,7 +5301,65 @@ public int splitNumber(int N) {
 
 题目描述：
 
-给定一个正整数数组arr，将arr中所有元素拆分成为两部分，让两部分的累加和最接近。
+​	给定一个正整数数组arr，将arr中所有元素拆分成为两部分，让两部分的累加和最接近。
+
+​	返回，最接近情况下，较小的集合的累加和。
+
+分析：
+
+​	将数组分成两个集合，最理想的情况就是两个集合之和相等。如果两个集合的和不相等，那么必定一个集合的和比整个数组的和的一半要小，一个要大。
+
+### 暴力递归
+
+​	设计递归方法，其传入参数为有一个rest，要求返回数组一部分的累加和，使得该累加和接近rest但是不能超过rest。初始时，只需要将数组整体之和的一半传入递归方法，就可以将数组中某些元素之和最接近这个值，但又不会超过这个值的元素之和求出。
+
+```java
+public int splitArray(int[] arr) {
+    int sum = 0;
+    for (int a : arr) {
+        sum += a;
+    }
+    return process(arr, 0, sum / 2);
+}
+
+private int process(int[] arr, int index, int rest) {
+    if (index == arr.length) {
+    	return 0;
+    }
+    int p1 = process(arr, index + 1, rest); // 当前元素不出现在累加和中
+    int p2 = 0; // 如果当前元素已经比剩余要凑的累加和大了，那么本元素一定会不会出现在累加和中，只有p1生效
+    if (arr[index] <= rest) { // 如果当前元素比累加和小，就有可能出现在累加和中
+        p2 = arr[inex] + process(arr, index + 1, rest - arr[index]); // 当前元素出现在累加和中
+    }
+    return Math.max(p1, p2);
+}
+```
+
+
+
+### 动态规划
+
+​	两个可变参数。皆有上限。
+
+```java
+public int splitArray(int[] arr) {
+    int sum = 0;
+    for (int a : arr) sum += a;
+    int[][] cache = new int[arr.length + 1][sum / 2 + 1];
+    // 第arr.length行所有元素都为0
+    // 其余元素都依赖于下一行的元素
+    for (int index = arr.length; index >= 0; --index) {
+        for (int rest = 0; rest <= sum / 2; ++rest) {
+            cache[index][rest] = cache[index + 1][rest];
+            if (arr[index] <= rest) {
+                cache[inedx][rest] = Math.max(cache[index][rest], cache[index + 1][rest - arr[index]]);
+            }
+                
+        }
+    }
+    return cache[0][sum / 2];
+}
+```
 
 
 

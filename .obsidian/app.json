@@ -1,6 +1,8 @@
 {
-  "strictLineBreaks": false,
+  "strictLineBreaks": true,
   "readableLineLength": true,
-  "smartIndentList": false,
-  "tabSize": 4
+  "smartIndentList": true,
+  "tabSize": 4,
+  "showIndentGuide": false,
+  "useTab": true
 }
