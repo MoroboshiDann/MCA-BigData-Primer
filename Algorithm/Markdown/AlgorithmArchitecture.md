@@ -3464,6 +3464,8 @@ public int process(Stack<Integer> stack) { // 具体功能为：将栈底元素�
 
 ​	当缓存数组中的元素之间没有枚举行为，即一个位置的元素只与某几个特定位置的元素有依赖关系，那么记忆化搜索和严格表依赖算法效率相当。但是，如果存在枚举行为，严格表依赖就会效率更高。
 
+​	即，缓存数组如果是二维或者三维的，但是填数据时，还需要给每个元素再进行一次循环操作才能计算出当前元素的值，就需要继续优化，减少重复计算。
+
 ## 斐波那契数列
 
 ### 暴力递归
@@ -5345,133 +5347,20 @@ private int process(int[] arr, int index, int rest) {
 public int splitArray(int[] arr) {
     int sum = 0;
     for (int a : arr) sum += a;
-    sum /= 2;
-    int[][] cache = new int[arr.length + 1][sum + 1];
+    int[][] cache = new int[arr.length + 1][sum / 2 + 1];
     // 第arr.length行所有元素都为0
     // 其余元素都依赖于下一行的元素
     for (int index = arr.length; index >= 0; --index) {
-        for (int rest = 0; rest < sum; ++rest) {
+        for (int rest = 0; rest <= sum / 2; ++rest) {
             cache[index][rest] = cache[index + 1][rest];
             if (arr[index] <= rest) {
-                cache[inedx][rest] = Math.max(cache[index][rest], arr[index] + cache[index + 1][rest - arr[index]]);
-            }
-                
+                cache[inedx][rest] = Math.max(cache[index][rest], cache[index + 1][rest - arr[index]]);
+            }     
         }
     }
-    return cache[0][sum];
+    return cache[0][sum / 2];
 }
 ```
-
-
-
-
-
-## 拆分数组II
-
-题目描述：
-
-​	给定一个正整数数组arr，请将arr分为两个集合。要求如下：
-
-- 如果arr的长度为偶数，则两个集合包含的元素数量应当一样多。
-- 如果arr的长度为奇数，两个集合的元素数量之差为1。
-- 让两个集合的累加和尽量接近。
-
-​	返回较小集合的累加和。
-
-
-
-### 暴力递归
-
-​	与上一题不同的地方在于，本题规定了集合中元素的个数。可以分类讨论，如果arr的长度为偶数，那么递归函数应当返回在较小集合的元素数量为`arr.length / 2`，时的最接近总和一半的累加和；当长度为奇数，就要分别讨论`arr.length / 2`和`arr.length / 2 + 1`数量下，取得的累加和最大值。
-
-​	那么递归函数就需要多传入一个参数，表示在挑选这么多个元素的情况下，最接近rest的集合累加和。
-
-```java
-public int splitArrayII(int[] arr) {
-    int length = arr.length;
-    int sum = 0;
-    for (int i = 0; i < length; ++i) {
-        sum += arr[i];
-    }
-    int p1 = process(arr, 0, sum / 2, length / 2);
-    if (length % 2 != 0) {
-        p1 =  Math.max(p1, process(arr, 0, sum / 2, length / 2 + 1));
-    }
-    return p1;
-}
-
-private int process(int[] arr, int index, int rest, int restNum) {
-	if (index == arr.length) {
-        return restNum == 0 ? 0 : -1; // 如果所有的元素已经遍历过一遍了，集合内元素数量不达标或者已超过，证明这次选择不对。
-    }
-    int p1 = process(arr, index + 1, rest, restNum);
-    int p2 = -1;
-    if (arr[index] <= rest) {
-        p2 = process(arr, index + 1, rest - arr[index], restNum - 1);
-
-    }
-    if (p2 != -1) p2 += arr[index];
-    return Math.max(p1, p2);
-}
-```
-
-
-
-### 动态规划
-
-​	三个可变参数，且皆有上限。可以直接优化为记忆化搜索。
-
-```java
-public int splitArrayII(int[] arr) {
-    int length = arr.length;
-    int sum = 0;
-    for (int i = 0; i < length; ++i) {
-        sum += arr[i];
-    }
-    sum >>= 1;
-    int[][][] cache = new int[length + 1][sum + 1][(length >> 1) + 2];
-	for (int i = 0; i <= length / 2 + 1; ++i) {
-        for (int j = 0; j <= sum; ++j) {
-            Arrays.fill(cache[i][j], -1);
-        }
-    }
-    for (int rest = 0; rest <= sum; ++rest) {
-        cache[length][rest][0] = 0;
-    }
-    for (int restNum = 1; restNum < (length / 2 + 2); ++restNum) {
-	    for (int index = length - 1; index >= 0; --index) {
-    	    for (int rest = 0; rest <= sum; ++rest) {    
-                int p1 = cache[index + 1][rest][restNum];
-                int p2 = -1;
-                if (arr[index] <= rest) {
-                    p2 = cache[index + 1][rest - arr[index]][restNum - 1];
-                }
-                if (p2 != -1) p2 += arr[index];
-                cache[index][rest][restNum] = Math.max(p1, p2);
-            }
-        }
-    }
-   	if (length % 2 == 0) {
-        return cache[0][sum][length / 2];
-    } else {
-        return Math.max(cache[0][sum][length / 2], cache[0][sum][length / 2 + 1]);
-    }
-}
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -5526,13 +5415,165 @@ private List<Integer> process(int N, List<List<Integer>> ans) {
 
 
 
-### 动态规划
+## N皇后问题
 
-​	只有一个可变参数。
+问题描述：
+
+​	给定N*N的棋盘，需要在棋盘上面摆放N个皇后。要求，任意两个皇后不同行不同列，也不能在同一斜线上。
+
+​	给定N，返回N个皇后有多少种解法。
+
+
+
+### 暴力递归
+
+分析：
+
+​	可以使用一个二维数组，存储每个皇后的位置坐标。第i个皇后就根据之前皇后的坐标，来检查自己在第i行能否找到合理的位置。
+
+​	如何判断当前皇后的位置是否合理？
+
+​	对于之前的某个皇后的位置`(x, y)`，当前的皇后位置为`(i, j)`。如果：
+
+- `y == j || x == i`，则为同行或同列，位置冲突，不合理。
+- `Math.abs(i - x) == Math.abs(j - y)`， 则为同对角线，位置冲突，不合理。
+- 但是，每个皇后只会在自己对应的行中出现，所以不会同行。并且，其在数组中的位置就可以表示其行号，所以不需要二维数组，一维数组即可。
+
+​	根据上述判断方法，每个皇后都需要依次遍历当前行所有位置是否能够摆放，如果能够就检查下一个皇后，否则所有的位置都不能拜访，则证明之前皇后的位置不合理，需要调整，或问题无解。
+
+
+
+```java
+public int NQueens(int n) {
+    if (n < 1) return 0;
+    int[] records = new int[n];
+    return process(n, 0, record);
+}
+
+private int process(int n, int row, int[] records) {
+    if (row == n) return 1; // 所有的皇后都被检查过了，且都找到了合理的位置，找到了一种摆放方法
+    int ans = 0;
+    for (int col = 0; col < n; ++col) {
+        if (isValid(row, col, records)) { // 行号是直接传入的，列可以放的位置需要遍历
+			records[row] = col;
+            ans += process(n, row + 1, records); // 如果检查到一个当前比较合理的位置，就检查下一个皇后
+        }
+    }
+    return ans; // 如果所有的可能性都不存在，则当前皇后无法摆放，证明之前的皇后位置有问题，或问题无解
+}
+
+private boolean isValid(int i, int j, int[] records) {
+	for (int row = 0; row < i; ++row) { // 只需要检查前面的皇后
+        if (records[row] == j || Math.abs(i - row) == Math.abs(j - records[row]));
+        return false;
+    }
+    return true;
+}
+```
+
+
+
+### 位运算优化版
+
+​	对于N皇后问题，可以通过三个N位的二进制数，来分别表示：由于列坐标的限制，不能选的位置；由于不能同对角线的限制，左下角不能选的位置；由于不能同对角线的限制，右下角不能选的位置。
+
+​	可以选的位置值为0，不能选的位置值为1。
+
+​	开始检查当前皇后时，先将三个二进制数进行或运算，就可以得到当前行N个位置上，那些能选哪些不能选。
+
+​	在当前皇后在可选位置上做出选择后，需要更新三个二进制数。标记不能选的位置。
+
+
+
+```java
+public int NQueens(int n) {
+	if (n < 1) return 0;
+    int col = 0, leftCorner = 0, rightCorner = 0;
+    return process(0, col, leftCorner, rightCorner, n);
+}
+
+private int process(int index, int col, int leftCorner, int rightCorner, int n) {
+    if (index == n) {
+        return 1;
+    }
+    int positions = col | leftCorner | rightCorner;
+    int ans = 0;
+    for (int i = 0; i < n; ++i) {
+       int isAvailable = (1 << i) ^ positions;
+       if (isAvailable != 0) {
+           // 更新三个标记数
+           ans += process(index + 1, col + isAvailable, leftCorner + (isAvailable << 1), rightCorner + (isAvailable >> 1, n));
+       }
+    }
+    return ans;
+}
+```
+
+
+
+> 想获取一个二进制数在从第0位到第n - 1位上位1，高位为0。则需要将1左移n位，再减去1即可。`(1 << n) - 1`
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 总结
+
+​	暴力递归和动态规划的关系为：
+
+- 部分暴力递归存在着解的重复调用，那么就可以将之优化为动态规划的版本。
+- 任何一个动态规划都对应着一个暴力递归的解。
+- 不是所有暴力递归都能优化为动态规划。
+
+
+
+### 如何找到某个问题的动态规划解
+
+- 首先，设计暴力递归。暴力递归的解法是优化为动态规划的关键。
+    - 遵循重要原则+四种模型。
+- 然后分析有无重复解。
+- 通过缓存数组的方式，将暴力递归优化为记忆化搜索的解法。
+- 然后，再尝试不进行递归，直接填表 -> 严格表依赖的解法。
+- 观察能否继续优化：套路解决。
+
+
+
+### 如何设计暴力递归
+
+- 每一个可变参数的类型，都不要比int类型更复杂，如int[]。
+- 原则一可以违反，但是可变参数突破到一维线性结构，其必须为单一可变参数。如贴纸问题。
+- 如果，违反了原则一，但是不违反原则二，优化到记忆化搜索即可。
+- 可变参数的个数，能少则少，优化空间复杂度。
 
 
 
