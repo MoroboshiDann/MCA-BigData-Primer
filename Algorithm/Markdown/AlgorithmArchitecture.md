@@ -5429,6 +5429,8 @@ private List<Integer> process(int N, List<List<Integer>> ans) {
 
 分析：
 
+​	对于第i个皇后，只考虑让其放置在第i行。
+
 ​	可以使用一个二维数组，存储每个皇后的位置坐标。第i个皇后就根据之前皇后的坐标，来检查自己在第i行能否找到合理的位置。
 
 ​	如何判断当前皇后的位置是否合理？
@@ -5502,7 +5504,7 @@ private int process(int index, int col, int leftCorner, int rightCorner, int n) 
        int isAvailable = (1 << i) ^ positions;
        if (isAvailable != 0) {
            // 更新三个标记数
-           ans += process(index + 1, col + isAvailable, leftCorner + (isAvailable << 1), rightCorner + (isAvailable >> 1, n));
+           ans += process(index + 1, col | isAvailable, leftCorner | (isAvailable << 1), rightCorner | (isAvailable >> 1), n);
        }
     }
     return ans;
