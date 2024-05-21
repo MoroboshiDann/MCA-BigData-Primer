@@ -5629,6 +5629,7 @@ public int[] maxSlidingWindow(int[] arr, int k) {
 
 
 
+
 ## 满足条件的子数组
 
 题目描述：
@@ -5645,7 +5646,41 @@ public int[] maxSlidingWindow(int[] arr, int k) {
 
 如果一个子数组达标，则其内部所有子数组也都达标。
 
-首先，子数组下标从0开始，即滑动窗口的left和right都为0。然后，在子数组达标的情况下，不断扩大窗口。直到当前窗口内的子数组不达标。此时就找到了
+如果一个子数组不达标，那么将其向两端延伸扩展，得到的子数组也是不达标的。
+
+首先，子数组下标从0开始，即滑动窗口的left和right都为0。然后，在子数组达标的情况下，不断扩大窗口。直到当前窗口内的子数组不达标。此时就找到了以0位置开头的所有的达标的子数组。
+
+然后，left右移，窗口缩小，此时窗口内的子数组是达标的，其以1位置开始。接着重复上述过程，直到窗口内的子数组再次不达标，于是便找到了以1位置开头的所有的达标子数组。
+
+```java
+public int numOfQualifiedSubArray(int[] arr, int num) {
+	if (arr == null || arr.length == 0) return 0;
+	int length = arr.length;
+	int left = 0;
+	int right = 0;
+	Deque<Integer> maxQueue = new LinkedList<>();
+	Deque<Integer> minQueue = new LinkedList<>();
+	maxQueue.offer(arr[right]);
+	minQueue.offer(arr[right]);
+	int ans = 0;
+	while (right < length) {
+		while (right < length && maxQueue.peek() - minQueue.peek() <= num) {
+			++right;
+			while (!maxQueue.isEmpty() && maxQueue.peekLast() < arr[right]) {
+				maxQueue.pollLast();
+			}
+			maxQueue.offer(arr[right]);
+			while (!minQueue.isEmpty() && minQueue.peekLast() > arr[right]) {
+				minQueue.pollLast();
+			}
+			minQueue.offer(arr[right]);
+		}
+		ans += right - left;
+		++left;
+	}
+	return ans;
+}
+```
 
 
 

@@ -5,5 +5,6 @@
   "textFontFamily": "Microsoft YaHei",
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSize": 18,
-  "cssTheme": "Atom"
+  "cssTheme": "Atom",
+  "enabledCssSnippets": []
 }
