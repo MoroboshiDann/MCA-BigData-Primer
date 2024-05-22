@@ -5730,6 +5730,10 @@ public boolean[] bestStart(int[] gas, int[] cost) {
 
 求从任意位置出发的前缀和数组，只需要从arr该位置出发，每个元素都减去出发为位置前一个元素即可。
 
+但是，如果每个位置出发的前缀和都要经过上述方法计算，时间复杂度和暴力解是一致的。下面，介绍优化方法：
+
+首先，设置一个长度为length的窗口，起始位置为0。然后，找到窗口内最小的元素，减去其左边的元素，如果得到的结果大于等于0，则表示，窗口起点出发能够走完全程。否则不行
+
 ```java
 public int bestStart(int[] gas, int[] cost) {
 	int length = gas.length << 1;
@@ -5742,17 +5746,21 @@ public int bestStart(int[] gas, int[] cost) {
 	for (int i = 1; i < length; ++i) {
 		arr[i] = arr[i - 1] + gas[i % arr.length];
 	}
-	int temp = 0;
+	Deque<Integer> min = new LinkedList<>();
+	for (int i = 0; i < gas.length; ++i) {
+	   while (min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
+	   min.offer(i);
+	}
 	boolean[] ans = new boolean[arr.length];
 	Arrays.fill(ans, true);
-	for (int i = 0; i < arr.length; ++i) {
-		for (int j = 0; j < length; ++j) {
-			if (arr[j] - temp < 0) {
-				ans[i] = false;
-				break;
-			}
-		}
-		temp = gas[i];
+	int temp = min.peek();
+	if (arr[temp] >= 0) ans[0] = true;
+	for (int i = gas.length; i < length; ++i) {
+		if (arr[i - gas.length] == min.peek()) min.poll();
+		while (min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
+	    min.offer(i);
+	    temp = min.peek();
+	    if (arr[temp] - arr[temp - 1]>= 0) ans[0] = true;
 	}
 	return ans;
 }
