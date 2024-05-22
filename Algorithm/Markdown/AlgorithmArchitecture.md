@@ -5724,9 +5724,39 @@ public boolean[] bestStart(int[] gas, int[] cost) {
 
 在本题中，前缀和数组就可以表示，从0位置出发，能否走完一圈。
 
-下面将前缀和数组变形，将其长度变为`2 * length`，在`[length, 2 * length]`上，就继续循环累加前面的元素。
+下面将前缀和数组arr变形，将其长度变为`2 * length`，在`[length, 2 * length]`上，就继续循环累加前面的元素。
 
-这样，求从ren'yi'wei'zhi
+这样，求从1位置开始计算的前缀和数组，就可以将从1位置开始的所有元素都减去arr[0]。
+
+求从任意位置出发的前缀和数组，只需要从arr该位置出发，每个元素都减去出发为位置前一个元素即可。
+
+```java
+public int bestStart(int[] gas, int[] cost) {
+	int length = gas.length << 1;
+	int[] arr = new int[length];
+	for (int i = 0; i < gas.length; ++i) {
+		gas[i] -= cost[i];
+	}
+	}
+	arr[0] = gas[0];
+	for (int i = 1; i < length; ++i) {
+		arr[i] = arr[i - 1] + gas[i % arr.length];
+	}
+	int temp = 0;
+	boolean[] ans = new boolean[arr.length];
+	Arrays.fill(ans, true);
+	for (int i = 0; i < arr.length; ++i) {
+		for (int j = 0; j < length; ++j) {
+			if (arr[j] - temp < 0) {
+				ans[i] = false;
+				break;
+			}
+		}
+		temp = gas[i];
+	}
+	return ans;
+}
+```
 
 
 
