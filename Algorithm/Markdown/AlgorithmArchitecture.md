@@ -5768,6 +5768,53 @@ public int bestStart(int[] gas, int[] cost) {
 
 
 
+## 凑钱数V
+
+题目描述：
+
+给定一个整数数组arr，里面的元素代表货币面值。元素可能重复。再给定一个整数aim，表示要凑到的钱数。
+
+求能够凑出aim的最小货币张数。
+
+
+### 动态规划+滑动窗口
+
+首先，因为货币面值可能重复，应该先统计每个面值的货币的张数。然后从左到右进行尝试。
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    Map<Integer, Integer> statistic = new HashMap<>();
+	for (int i = arr.length - 1; i >=0; --i) {
+		if (!map.containsKey(arr[i])) {
+		    map.put(arr[i], 1);
+		} else {
+			map.put(arr[i], map.get(arr[i]) + 1);
+		}
+	}
+	int[] cash = new int[map.size()];
+	int[] amount = new int[map.size()];
+	int index = 0;
+	for (int key : map.keySet()) {
+		cash[index] = key;
+		amount[index] = map.get(key);
+		++index;
+	}
+	return process(cash, amount, 0, aim);
+	int[] cache = new int[cash.length][]
+}
+
+private int process(int[] cash, int[] amount, int index, int res) {
+    if (res < 0) return Integer.MAX_VALUE;
+	if (index == cash.length) {
+		return 0;
+	}
+	int min = Integer.MAX_VALUE;
+	for (int i = 0; i < amount[res]; ++i) {
+	   min = Maht.min(process(cash, amount, index + 1, res - i * cash[index]));
+	}
+	return min == Integer.MAX_VALUE ? -1 : min;
+}
+```
 
 
 
