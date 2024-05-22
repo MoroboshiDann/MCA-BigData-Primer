@@ -5663,20 +5663,19 @@ public int numOfQualifiedSubArray(int[] arr, int num) {
 	maxQueue.offer(arr[right]);
 	minQueue.offer(arr[right]);
 	int ans = 0;
-	while (right < length) {
-		while (right < length && maxQueue.peek() - minQueue.peek() <= num) {
-			++right;
-			while (!maxQueue.isEmpty() && maxQueue.peekLast() < arr[right]) {
-				maxQueue.pollLast();
-			}
+	for (; left < length; ++left) {
+		while (right < length) { // 如果窗口内的子数组达标，就不断扩大窗口，直到初次不达标
+			while (!maxQueue.isEmpty() && maxQueue.peekLast() < arr[right]) maxQueue.pollLast();
 			maxQueue.offer(arr[right]);
-			while (!minQueue.isEmpty() && minQueue.peekLast() > arr[right]) {
-				minQueue.pollLast();
-			}
+			while (!minQueue.isEmpty() && minQueue.peekLast() > arr[right]) minQueue.pollLast();
 			minQueue.offer(arr[right]);
+			if (maxQueue.peek() - minQueue.peek() <= num) ++right;
+			else break;
 		}
-		ans += right - left;
-		++left;
+		ans += right - left; // 每次不达标，就统一一下当前以left开始的子数组中，达标的个数
+		// 窗口缩小，有元素移出窗口，需要判断是否修改队列
+		if (maxQueue.peek() == arr[left]) maxQueue.poll();
+		if (minQueue.peek() == arr[left]) minQueue.poll();
 	}
 	return ans;
 }
@@ -5684,6 +5683,50 @@ public int numOfQualifiedSubArray(int[] arr, int num) {
 
 
 
+## 加油站的良好出发点问题
+
+题目描述：
+
+给定两个整数数组gas和cost，分别代表当前位置的加油站剩余的汽油量，以及从当前加油站出发，走到下一个加油站需要花费的燃油量。
+
+假设汽车的油箱无穷大，且初始时油箱为空。求所有位置出发能否跑完一圈。不允许走回头路。
+
+
+### 暴力解
+
+首先，将两个数组相减，得到一个新的数组arr。其元素值代表了从当前加油站出发能否到达下一个加油站。同时，将问题转化为了，从某个位置出发，开始计算数组累加和，如果累加和为0，且没有走完一圈，表示不能完成。
+
+```java
+public boolean[] bestStart(int[] gas, int[] cost) {
+	int length = gas.length;
+	for (int i = 0; i < length; ++i) {
+		gas[i] -= cost[i];
+	}
+	boolean[] ans = new boolean[length];
+	for (int i = 0; i < length; ++i) {
+		int sum = 0;
+		for (int j = 0; j < length; ++j) {
+			sum += gas[(i + j) % length];
+			if (sum < 0) {
+				break;
+			}
+		}
+		if (sum >= 0) ans[i] = true;
+	}
+	return ans;
+}
+```
+
+
+### 前缀和数组变形
+
+前缀和数组代表了，从0位置出发，到当前节点所有元素的和。
+
+在本题中，前缀和数组就可以表示，从0位置出发，能否走完一圈。
+
+下面将前缀和数组变形，将其长度变为`2 * length`，在`[length, 2 * length]`上，就继续循环累加前面的元素。
+
+这样，求从ren'yi'wei'zhi
 
 
 
