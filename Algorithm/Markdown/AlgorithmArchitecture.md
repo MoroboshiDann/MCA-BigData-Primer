@@ -5800,7 +5800,8 @@ public int makeUpMoney(int[] arr, int aim) {
 		++index;
 	}
 	return process(cash, amount, 0, aim);
-	int[] cache = new int[cash.length][]
+	int[] cache = new int[cash.length][aim + 1];
+	for 
 }
 
 private int process(int[] cash, int[] amount, int index, int res) {
