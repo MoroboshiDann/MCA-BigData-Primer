@@ -5779,6 +5779,8 @@ public int bestStart(int[] gas, int[] cost) {
 
 ### 动态规划+滑动窗口
 
+#### 动态规划
+
 首先，因为货币面值可能重复，应该先统计每个面值的货币的张数。然后从左到右进行尝试。
 
 ```java
@@ -5800,8 +5802,17 @@ public int makeUpMoney(int[] arr, int aim) {
 		++index;
 	}
 	return process(cash, amount, 0, aim);
-	int[] cache = new int[cash.length][aim + 1];
-	for 
+	int[][] cache = new int[cash.length][aim + 1];
+	for (int i = cash.length - 2; i >= 0; --i) {
+	   for (int j = 0; j <= aim; ++j) {
+	       int min = Integer.MAX_VALUE;
+    	   for (int k = 0; k < amount[j]; ++k) {
+    	       if (j - k * cash[i] < 0) break;
+        	   min = Math.min(min, cache[i + 1][j - k * cash[i]] + k);
+    	   }
+    	   cache[i][j] = min;
+	   }
+	}
 }
 
 private int process(int[] cash, int[] amount, int index, int res) {
@@ -5811,13 +5822,56 @@ private int process(int[] cash, int[] amount, int index, int res) {
 	}
 	int min = Integer.MAX_VALUE;
 	for (int i = 0; i < amount[res]; ++i) {
-	   min = Maht.min(process(cash, amount, index + 1, res - i * cash[index]));
+	   int p = process(cash, amount, index + 1, res - i * cash[index]);
+	   if (p = Integer.MAX_VALUE) {
+    	   break;
+	   }
+	   min = Math.min(min, p + k);
 	}
 	return min == Integer.MAX_VALUE ? -1 : min;
 }
 ```
 
 
+#### 滑动窗口
+
+由于存在枚举行为，于是需要优化时间复杂度。但是，经过观察，缓存数组元素之间的依赖关系，并不是类似于之前的累加。而是，间隔一定距离的几个元素的最小值。且本行间隔相同的元素，其依赖的下一行的元素之间的间隔也相同，依赖的元素总量也相同。唯一不同的就是本行相邻元素有一个依赖的元素不同。
+
+于是，可以通过滑动窗口的方式，来比较窗口内最小值，从而避免每次都遍历比较。优化了时间复杂度。
+
+```java
+public int makeUpMoney(int[] arr, int aim) {
+    Map<Integer, Integer> statistic = new HashMap<>();
+	for (int i = arr.length - 1; i >=0; --i) {
+		if (!map.containsKey(arr[i])) {
+		    map.put(arr[i], 1);
+		} else {
+			map.put(arr[i], map.get(arr[i]) + 1);
+		}
+	}
+	int[] cash = new int[map.size()];
+	int[] amount = new int[map.size()];
+	int index = 0;
+	for (int key : map.keySet()) {
+		cash[index] = key;
+		amount[index] = map.get(key);
+		++index;
+	}
+	int[][] cache = new int[cash.length][aim + 1]; // 缓存数组
+	Deque<Integer> min = new LinkedList<>();
+	for (int index = cash.length - 2; index >= 0; --index) {
+	   for (int res = 0; res <= aim; ++res) {
+	       
+	       int min = Integer.MAX_VALUE;
+    	   for (int k = 0; k < amount[j]; ++k) {
+    	       if (j - k * cash[i] < 0) break;
+        	   min = Math.min(min, cache[i + 1][j - k * cash[i]] + k);
+    	   }
+    	   cache[i][j] = min;
+	   }
+	}
+}
+```
 
 
 
