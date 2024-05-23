@@ -6,7 +6,7 @@
       {
         "id": "ce2b7d8a663c1ef6",
         "type": "tabs",
-        "dimension": 18.53512705530643,
+        "dimension": 21.774193548387096,
         "children": [
           {
             "id": "a3cd1e3e30446889",
@@ -14,7 +14,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md"
+                "file": "Primer/Markdown/JVM.md"
               }
             }
           }
@@ -23,7 +23,7 @@
       {
         "id": "51306a7e6f3e2517",
         "type": "tabs",
-        "dimension": 81.46487294469357,
+        "dimension": 78.2258064516129,
         "children": [
           {
             "id": "edea54d33cfd4be0",
@@ -31,8 +31,8 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
-                "mode": "source",
+                "file": "Primer/Markdown/JVM.md",
+                "mode": "preview",
                 "source": true
               }
             }
@@ -104,7 +104,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "file": "Primer/Markdown/JVM.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -121,7 +121,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "file": "Primer/Markdown/JVM.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
