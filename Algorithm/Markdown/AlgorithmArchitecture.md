@@ -5858,22 +5858,95 @@ public int makeUpMoney(int[] arr, int aim) {
 		++index;
 	}
 	int[][] cache = new int[cash.length][aim + 1]; // 缓存数组
-	Deque<Integer> min = new LinkedList<>();
+    for (int[] c : cache) {
+        Arrays.fill(c, Integer.MAX_VALUE);
+    }
 	for (int index = cash.length - 2; index >= 0; --index) {
-	   for (int res = 0; res <= aim; ++res) {
-	       
-	       int min = Integer.MAX_VALUE;
-    	   for (int k = 0; k < amount[j]; ++k) {
-    	       if (j - k * cash[i] < 0) break;
-        	   min = Math.min(min, cache[i + 1][j - k * cash[i]] + k);
-    	   }
-    	   cache[i][j] = min;
-	   }
+        for (int mod = 0; mod < Math.min(aim + 1, cash[index]); ++mod) {
+            Deque<Integer> min = new LinkedList<>();
+            min.offer(mod);
+            cache[index][mod] = cache[index + 1][mod];
+            for (int r = mod + cash[index]; r <= aim; r += cash[index]) {
+            	while (!min.isEmpty() && (cache[index + 1][min.peekLast()] == Integer.MAX_VALUE || cache[index + 1][min.peekLast()] + compensate(min.peekLast(), r, cash[index]) > cache[i + 1][r])) {
+                    min.pollLast();
+                }
+                min.offer(r);
+                int overdue = r - cash[index] * (amount[index] + 1);
+                if (min.peekLast() == overdue) {
+                    min.poll();
+                }
+                cache[index][r] = cache[index + 1][min.peekLast()] + compensate(min.peek(), r, cash[i]);
+            }
+        }
+
 	}
+}
+
+private int compensate(int i, int r, int cash) {
+    
 }
 ```
 
 
+
+
+
+
+
+# 第十六节 单调栈
+
+## 找到数组每个位置左右距离最近，且小于自己的值
+
+### 找到数组元素左边，距离自己最近，且小于自己的元素
+
+单调栈通常用来解决，找到数组中每个位置的数，左边或右边，距离自己最近的，比自己小的元素的位置。
+
+具体做法如下：
+
+首先设置一个栈，该栈从栈底到栈顶元素单调递增。遍历数组，每个元素都要先检查栈顶元素是否比自己小，如果是，就直接将当前元素入栈；否则，就将持续出栈，直到栈顶元素比自己小，将当前元素入栈。
+
+每个元素入栈时，通过检查栈顶元素就可以知道自己左边距离自己最近的，比自己小的元素的值。
+
+```java
+public int[][] getNearestLessNoRepeat(int[] arr) {
+    int length = arr.length;
+    int[][] ans = new int[length][2];
+    for (int[] a : ans) {
+        Arrays.fill(a, -1);
+    }
+    Deque<Integer> stack = new LinkedList<>(); // 栈里面存储的是元素的下标，而不是元素本身
+    for (int i = 0; i < length; ++i) {
+        while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+            int popIndex = stack.pop();
+            ans[popIndex][1] = i;
+        }
+        if (!stack.isEmpty()) {
+            ans[i][0] = stack.peek();
+        }
+        stack.push(i);
+    }
+    return ans;
+}
+```
+
+
+### 找到数组元素右边，距离自己最近，且比自己小的元素
+
+在上述操作过程中，每次有元素出栈，就代表对于栈顶元素来说，其右侧出现了比自己小的数，而且是第一次出现。
+
+根据这个特点，每次元素出栈时，就将当前元素记作时出栈元素右侧，距离最近且比其小的数。
+
+当数组遍历完了之后，如果栈不空，就依次弹出栈顶元素。除了第一个元素为数组末尾的元素，其右侧没有元素外。其余的元素右侧都没有比自己小的元素，否则在遍历过程中就已经被弹出栈了，不会保留到最后。
+
+
+## 子数组累加和与最小值的乘积
+
+题目描述：
+
+给定一个整数数组arr，其中每个子数组都可以算出子数组的累加和，求出子数组的累加和与子数组中最小值的乘积，的最大值。
+
+
+##
 
 
 
