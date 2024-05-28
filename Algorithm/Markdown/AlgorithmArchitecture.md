@@ -5938,6 +5938,34 @@ public int[][] getNearestLessNoRepeat(int[] arr) {
 
 当数组遍历完了之后，如果栈不空，就依次弹出栈顶元素。除了第一个元素为数组末尾的元素，其右侧没有元素外。其余的元素右侧都没有比自己小的元素，否则在遍历过程中就已经被弹出栈了，不会保留到最后。
 
+也可以将所有元素的处理都放在该元素出栈的时候再做。
+
+```java
+public int[][] getNearestLessNoRepeat(int[] arr) {
+    int length = arr.length;
+    int[][] ans = new int[length][2];
+    for (int[] a : ans) {
+        Arrays.fill(a, -1);
+    }
+    Deque<Integer> stack = new LinkedList<>(); // 栈里面存储的是元素的下标，而不是元素本身
+    for (int i = 0; i < length; ++i) {
+        while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+            int popIndex = stack.pop();
+            int leftLess = stack.isEmpty() ? -1 : stack.peek();
+            ans[popIndex][1] = i;
+            ans[popIndex][0] = leftLess;
+        }
+        stack.push(i);
+    }
+    while (!stack.isEmpty()) {
+        int popIndex = stack.pop();
+        int leftLess = stack.isEmpty() ? -1 : stack.peek();
+        ans[popIndex][1] = -1;
+        ans[popIndex][0] = leftLess;
+    }
+    return ans;
+}
+```
 
 ## 子数组累加和与最小值的乘积
 
@@ -5945,8 +5973,125 @@ public int[][] getNearestLessNoRepeat(int[] arr) {
 
 给定一个整数数组arr，其中每个子数组都可以算出子数组的累加和，求出子数组的累加和与子数组中最小值的乘积，的最大值。
 
+### 单调栈
 
-##
+对于每个位置的元素x，都找到一个以x为最小值的子数组。那么这个子数组的起止位置就是x左右两侧距离自己最近，且比自己小的两个元素的左右。
+
+于是可以通过单调栈来解决。
+
+为了避免重复的加和，可以准备一个前缀和数组，从而获取区间内元素的累加和。
+
+```java
+public int maxValue(int[] arr) {
+    int length = arr.length;
+    int[][] ans = new int[length][2];
+    for (int[] a : ans) {
+        Arrays.fill(a, -1);
+    }
+    Deque<Integer> stack = new LinkedList<>(); // 栈里面存储的是元素的下标，而不是元素本身
+    int[] preSum = new int[length];
+    preSum[0] = arr[0];
+    for (int i = 1; i < length; ++i) {
+        preSum[i] = preSum[i - 1] + arr[i];
+    }
+    for (int i = 0; i < length; ++i) {
+        while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+            int popIndex = stack.pop();
+            ans[popIndex][1] = i;
+        }
+        if (!stack.isEmpty()) {
+            ans[i][0] = stack.peek();
+        }
+        stack.push(i);
+    } 
+    int max = Integer.MIN_VALUE;
+    for (int i = 0; i < length; ++i) {
+        int left = ans[i][0] + 1;
+        int right = ans[i][1] == -1 ? i : ans[i][1] - 1;
+        int sum = preSum[right] - preSum[left] + arr[left];
+        max = Math.max(sum * arr[i], max);
+    }
+    return max;
+}
+```
+
+
+为了能够节省空间，省掉ans二维数组，可以在每个元素出栈时在对其进行操作。
+
+```java
+public int maxValue(int[] arr) {
+    int length = arr.length;
+    int[][] ans = new int[length][2];
+    for (int[] a : ans) {
+        Arrays.fill(a, -1);
+    }
+    Deque<Integer> stack = new LinkedList<>(); // 栈里面存储的是元素的下标，而不是元素本身
+    int[] preSum = new int[length];
+    preSum[0] = arr[0];
+    for (int i = 1; i < length; ++i) {
+        preSum[i] = preSum[i - 1] + arr[i];
+    }
+    int max = Integer.MIN_VALUE;
+    for (int i = 0; i < length; ++i) {
+        while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+            int popIndex = stack.pop();
+            int left = stack.isEmpty() ? 0 : stack.peek();
+            int right = i; 
+            int sum = preSum[right] - preSum[left] + arr[left];
+            max = Math.max(sum * arr[i], max);
+        }
+        stack.push(i);
+    } 
+    while (!stack.isEmpty()) {
+        int popIndex = stack.pop();
+        int left = stack.isEmpty() ? 0 : stack.peek();
+        int right = length - 1; 
+        int sum = preSum[right] - preSum[left] + arr[left];
+        max = Math.max(sum * arr[i], max);
+    }
+    return max;
+}
+```
+
+
+## 直方图最大长方形面积
+
+题目描述：
+
+给定一个非负整数数组arr，代表直方图，返回直方图的最大长方形面积。
+
+
+### 单调栈
+
+对于每个位置的元素，都可以计算以其作为高的长方形最大面积。本质上就是求其左右两侧距离最近且小于自己的元素。于是可以利用单调栈
+
+```java
+public int maxArea(int[] arr) {
+    int max = Integer.MIN_VALUE;
+    Deque<Integer> stack = new LinkedList<>();
+    for (int i = 0; i < arr.length; ++i) {
+        while (!stack.isEmpty() && stack.peek() >= arr[i]) {
+            int popIndex = stack.pop();
+            int left = stack.isEmpty() ? 0 : stack.peek();
+            int right = i;
+            int length = Math.min(arr[left], arr[right]);
+            int area = length * arr[popIndex];
+            max = Math.max(max, area);
+        }
+        stack.push(i);
+    }
+    while (!stack.isEmpty()) {
+        int popIndex = stack.pop();
+        int left = stack.isEmpty() ? 0 : stack.peek();
+        int right = arr.length - 1;
+        int length = Math.min(arr[left], arr[right]);
+        int area = length * arr[popIndex];
+        max = Math.max(max, area);
+    }
+    return max;
+}
+```
+
 
 
 

@@ -1,10 +1,10 @@
 {
-  "accentColor": "",
+  "accentColor": "#83b7d2",
   "theme": "obsidian",
   "interfaceFontFamily": "Microsoft YaHei",
   "textFontFamily": "Microsoft YaHei",
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSize": 18,
-  "cssTheme": "Atom",
+  "cssTheme": "Things",
   "enabledCssSnippets": []
 }
