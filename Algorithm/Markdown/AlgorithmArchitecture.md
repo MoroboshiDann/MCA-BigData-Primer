@@ -6145,6 +6145,48 @@ public int maxAmountOfOne(int[][] matrix) {
 
 对于每一个位置，还要计算$[Math.max(leftLess, rigthLess) + 1, h]$区间内所有高度值对应的矩形数量。高度值不能低于左右两侧距离最近，且高度小于当前值的，最大值。否则就会出现重复计算。
 
+如果高度有重复值，且重复值连续，在最后一个高度从单调栈中出栈时再进行计算。如果重复值不连续，就不用特殊处理。
+
+```java
+public int numberOfSubMatrix(int[][] matrix) {
+    int length = matrix[0].length;
+    int[] height = new int[length];
+    int ans = 0;
+    for (int i = 0; i < matrix.length; ++i) {
+        for (int j = 0; j < length; ++j) {
+            height[j] = matrix[i][j] == 0 ? 0 : height[j] + matrix[i][j];
+            
+        }
+        ans += compute(height);
+    }
+}
+
+private int compute(int[] height) {
+    int ans = 0;
+    Deque<Integer> stack = new LinkedList<>();
+    for (int i = 0; i < height.length; ++i) {
+        while (!stack.isEmpty() && height[stack.peek()] >= height[i]) {
+            int popIndex = stack.pop();
+            if (height[stack.peek()] == height[i]) continue;
+            int leftIndex = stack.isEmpty() ? -1 : stack.peek();
+            int rightIndex = i;
+            int lowerBoundry = Math.max(leftIndex == -1 ? 0 : leftIndex, rightIndex);
+            ans += (height[popIndex] - lowerBoundry) * (((rightIndex - leftIndex - 1) * (rightIndex - leftIndex)) >> 1);
+        }
+        stack.push(i);
+    }
+    while (!stack.isEmpty() && height[stack.peek()] >= height[i]) {
+            int popIndex = stack.pop();
+            if (height[stack.peek()] == height[i]) continue;
+            int leftIndex = stack.isEmpty() ? -1 : stack.peek();
+            int rightIndex = height.length;
+            int lowerBoundry = Math.max(leftIndex == -1 ? 0 : leftIndex, rightIndex);
+            ans += (height[popIndex] - lowerBoundry) * (((rightIndex - leftIndex - 1) * (rightIndex - leftIndex)) >> 1);
+    }
+    return ans;
+}
+```
+
 
 
 
