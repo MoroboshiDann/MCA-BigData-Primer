@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "file": "Primer/Markdown/JVM.md",
                 "mode": "source",
                 "source": false
               }
@@ -71,7 +71,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md"
+                "file": "Primer/Markdown/JVM.md"
               }
             }
           }
@@ -96,7 +96,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "file": "Primer/Markdown/JVM.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,7 +113,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Algorithm/Markdown/AlgorithmArchitecture.md",
+                "file": "Primer/Markdown/JVM.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -150,7 +150,7 @@
   },
   "active": "6e5ad7b82f85bfaf",
   "lastOpenFiles": [
-    "Primer/Markdown/JVM.md",
-    "Algorithm/Markdown/AlgorithmArchitecture.md"
+    "Algorithm/Markdown/AlgorithmArchitecture.md",
+    "Primer/Markdown/JVM.md"
   ]
 }

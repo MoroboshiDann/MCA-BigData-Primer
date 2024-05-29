@@ -6188,6 +6188,47 @@ private int compute(int[] height) {
 ```
 
 
+## 子数组最小值的和
+
+题目描述：
+
+给定一个整数数组arr，求所有子数组最小值的和。
+
+### 单调栈
+
+对于每个元素，都找到以其为最小值的子数组的个数，就可以计算一部分累加和。
+
+找到所有元素的上述值，然后累加，即可得到最终结果。
+
+如果数组中没有重复值，上述做法就可以轻易通过单调栈来实现，如果有重复值，需要做出对应操作。
+
+对于重复值，每次计算子数组边界时，都不能越过重复值。
+
+即不能根据“距离当前位置最近，且小于当前值的值”来计算，而是小于等于。
+
+```java
+public int sumOfMinInAllSubArray(int[] arr) {
+    int ans = 0;
+    Deque<Integer> stack = new LinkedList<>();
+    for (int i = 0; i < height.length; ++i) {
+        while (!stack.isEmpty() && height[stack.peek()] >= height[i]) {
+            int popIndex = stack.pop();
+            int leftIndex = stack.isEmpty() ? -1 : stack.peek();
+            int rightIndex = i;
+            ans += (popIndex - leftIndex - 1) * (rightIndex - popIndex - 1) * arr[i];
+        }
+        stack.push(i);
+    }
+    while (!stack.isEmpty() && height[stack.peek()] >= height[i]) {
+        int popIndex = stack.pop();
+        int leftIndex = stack.isEmpty() ? -1 : stack.peek();
+        int rightIndex = i;
+        ans += (popIndex - leftIndex - 1) * (rightIndex - popIndex - 1) * arr[i];
+    }
+    return ans;
+}
+```
+
 
 
 
