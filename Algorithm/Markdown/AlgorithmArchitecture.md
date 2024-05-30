@@ -6200,22 +6200,26 @@ private int compute(int[] height) {
 
 找到所有元素的上述值，然后累加，即可得到最终结果。
 
+对于每个元素x，其下标为k，找到其左边最近的一个小于自己的值的下标i，以及右边的最近的小于自己的值的下标j。可以计算出以x为最小值的所有子数组的个数为((k - i) * (j - k + 1))。
+
 如果数组中没有重复值，上述做法就可以轻易通过单调栈来实现，如果有重复值，需要做出对应操作。
 
-对于重复值，每次计算子数组边界时，都不能越过重复值。
+对于重复值，为了避免重复计算，并且处于操作方便的考虑。当重复值出现在右侧时，计算子数组的数量不能跨过右侧相等值。
+
+等到右侧相等值计算时，直接无视掉做的的相等值。
 
 即不能根据“距离当前位置最近，且小于当前值的值”来计算，而是小于等于。
 
 ```java
 public int sumOfMinInAllSubArray(int[] arr) {
-    int ans = 0;
+    long ans = 0;
     Deque<Integer> stack = new LinkedList<>();
     for (int i = 0; i < height.length; ++i) {
         while (!stack.isEmpty() && height[stack.peek()] >= height[i]) {
             int popIndex = stack.pop();
             int leftIndex = stack.isEmpty() ? -1 : stack.peek();
             int rightIndex = i;
-            ans += (popIndex - leftIndex - 1) * (rightIndex - popIndex - 1) * arr[i];
+            ans += (popIndex - leftIndex) * (rightIndex - popIndex + 1) * arr[i];
         }
         stack.push(i);
     }
@@ -6223,11 +6227,159 @@ public int sumOfMinInAllSubArray(int[] arr) {
         int popIndex = stack.pop();
         int leftIndex = stack.isEmpty() ? -1 : stack.peek();
         int rightIndex = i;
-        ans += (popIndex - leftIndex - 1) * (rightIndex - popIndex - 1) * arr[i];
+        ans += (popIndex - leftIndex) * (rightIndex - popIndex + 1) * arr[i];
+    }
+    return ans % Integer.MAX_VALUE;
+}
+```
+
+# 第十七节 递推公式转为矩阵的幂
+
+## 求斐波那契数列矩阵乘法的方法
+
+斐波那契数列矩阵乘法为，存在一个二维矩阵，使得下式成立
+$$\left[ \begin{matrix}
+   F(N) & F(N - 1) \\
+  \end{matrix}
+  \right] = \left[
+ \begin{matrix}
+   F(N - 1) & F(N - 2) \\
+  \end{matrix}
+  \right] \left[
+ \begin{matrix}
+   a & b \\
+   c & d 
+  \end{matrix}
+  \right] \tag{1}$$
+
+于是存在如下的结论：
+$$\left[ \begin{matrix}
+   F(N) & F(N - 1) \\
+  \end{matrix}
+  \right] = \left[
+ \begin{matrix}
+   F(2) & F(1) \\
+  \end{matrix}
+  \right] {\left[
+ \begin{matrix}
+   a & b \\
+   c & d 
+  \end{matrix}
+  \right] }^{N - 2}\tag{1}$$
+
+于是，将斐波那契数列的计算转换为了矩阵的幂的计算。
+
+经过计算，该二阶矩阵为
+$$ {\left[\begin{matrix}
+   1 & 1 \\
+   1 & 0 
+  \end{matrix} \right]}
+$$
+
+想要计算矩阵的T次幂，需要先将T分解为二进制表达，则最多只需要进行$log(N)$次矩阵乘法就能够求出T次幂。
+
+假设要计算$A^75$，则相当于计算$A ^ {64} * A ^ 8 * A ^ 2 * A$。只需要不断计算A的$2^n$，然后将需要用到的中间结果累乘起来即可。
+
+具体方法如下：
+
+```java
+public int[][] matrixPower(int[][] matrix, int power) {
+    int[][] ans = new int[matrix.length][matrix[0].length];
+    for (int i = 0; i < matrix.length; ++i) {
+        ans[i][j] = 1; // 将res置为单位矩阵
+    }
+    int[][] temp = matrix; // 初始时，temp为matrix的一次幂
+    for (; power != 0; power >>= 1) {
+        if ((power & 1) != 0) { // 如果power当前位为1，证明结果中需要出现
+            ans = matrixMultiply(ans, temp);
+        }
+        temp = matrixMultiply(temp, temp); // temp不断累乘，每次都变成matrix的(2 ^ n)次幂
+    }
+    return ans;
+}
+
+private int[][] matrixMultiply(int[][] m1, int[][] m2) { // 矩阵乘法
+    int[][] ans = new int[m1.length][m2[0].length];
+    for (int i = 0; i < m1.length; ++i) {
+        for (int j = 0; j < m2[0].length; ++j) {
+            for (int k = 0; k < m2.length; ++k) {
+                ans[i][j] += m1[i][k] * m2[k][j];
+            }
+        }
     }
     return ans;
 }
 ```
+### 推广
+
+对于任意的$F(N) = a * F(N - 1) + b * F(N - 2) + ... + k * F(N - k)$都能够通过矩阵次幂的方式求解。
+
+一定可以找到一个k阶矩阵A，使得$[F(N), F(N - 1), ... , F(N - k + 1)] = [F(N - 1), ... , F(N - k)] * A$成立
+
+然后就可以通过上述算法来推算$[F(N), F(N - 1), ... , F(N - k + 1)] = [F(K), ... F(1)] * A ^ {N - K}$。
+
+
+## 牧牛的数量
+
+题目描述：
+
+第一年农场有1头成熟的母牛A，往后的每一年都有如下规律：
+- 每一头成熟的母牛会生一头母牛
+- 每一头新出生的母牛都会在出生的第三年成熟(出生那年为第0年)
+- 每头牛都不会死
+
+返回第N年农场中牛的数量。
+
+### 递推公式与矩阵求解
+
+在第N年，可以保证第N - 3年出生的小牛已经成熟，所以，今年成熟的牛的总数为第N - 3年的牛的数量，因此会出生这么多牛。而中间两年出生的牛不会生，所以得到如下规律：
+
+$F(N) = F(N - 1) + F(N - 3)$
+
+可以看出，需要计算一个3阶矩阵。然后根据初始值，推出三个等式，解出矩阵A。
+
+```java
+public int numberOfCow(int N) {
+    if (N < 1) return 0;
+    if (N == 1 || N == 2 || N == 3) return N;
+    int[][] base = new int[][] {
+        {1, 1, 0},
+        {0, 0, 1},
+        {1, 0, 0}
+    }
+    int[][] ans = martixPower(base, N - 3);
+    return 3 * ans[0][0] + 2 * ans[1][0] + ans[2][0];
+}
+```
+
+## 达标的字符串
+
+题目描述：
+
+给定一个整数N，想象只由0和1组成长度为N的字符串。如果某个字符串，任何0字符的左侧都有一个1紧挨着，就认为其是达标的。
+
+求，达标的字符串的数量。
+
+### 观察法求解
+
+通过观察$N = 1, N = 2, N = 3, N = 4, N = 5$的答案，发现是一个斐波那契数列。于是可以通过正向累加的方式求得解。
+
+### 暴力递归尝试
+
+设计一个递归函数`int process(int n)`，n表示还剩下n个位置需要填，返回在这n个位置的前一个位置已经为1的情况下，有多少种填法。
+
+则当前位置有两种选择，填1，则可以继续调用`process(n - 1)`；填0，则不能继续调用，因为不满足前一个位置为1，则要想满足条件，必须下一个位置为1，于是直接调用`process(n - 2)`。
+
+```java
+public int process(int n) {
+    if (n == 1) return 1;
+    if (n == 2) return 2;
+    return process(n - 1) + process(n - 2);
+}
+```
+
+
+
 
 
 
