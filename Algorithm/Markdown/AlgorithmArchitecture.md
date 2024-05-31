@@ -6379,6 +6379,103 @@ public int process(int n) {
 ```
 
 
+## 瓷砖的摆法
+
+题目描述：
+
+给定一个整数N，表示一个区域的长度为N。该区域的宽度为2。现在有数量无限的1 * 2的瓷砖，问将区域铺满有多少种摆法。
+
+### 暴力递归尝试
+
+首先，观察初始状态。$F(1) = 1, F(2) = 2, F(3) = 3$。
+
+可以设计一个递归方法`process(int n)`表示，还剩下长度为n的区域待填满，且左侧已经被填满了，返回剩余区域填满有多少种摆法。
+
+则在当前位置有两种选择，第一种：用一块砖竖着放，使得还剩下n - 1长度的区域；第二种：两块砖横着摆，剩下n - 2长度的区域。
+
+```java
+public int process(int n) {
+    if (n == 1) return 1;
+    if (n == 2) return 2;
+    return process(n - 1) + process(n - 2);
+}
+```
+
+# 第十八节 KMP
+
+KMP算法是字符串匹配的优化解法。
+
+字符串匹配的暴力解法，每次匹配失败时，主串和子串都需要回溯到最开始的位置重新开始匹配。相当于每一次的匹配过程都没有为下一次匹配提供任何信息。
+
+## 最大前后缀匹配长度
+
+给出字符串`aaaab`，对于字母`b`，其最大前后缀匹配长度为，计算前后缀长度从1到3，分别能否匹配。记录最大长度。前后缀都不能取到当前字符前缀字符串的整个长度。
+
+## next数组
+
+计算每个字符的最大前后缀匹配长度，第0个字符记为-1，第1个记为0。 
+
+如果通过暴力尝试的方式来计算next数组，时间复杂度也很高。
+
+于是，我们通过之前已经得到结果的位置来推出当前位置的next。
+
+首先观察上一位置i - 1，如果其最大前后缀匹配长度为n，如果其最大前缀后一个位置的字符，与i - 1位置的字符一致。那么第i位置的next就是n + 1。
+
+否则，就继续往前找，去观察不一致位置n + 1上的字符的next，假设其值为k。  
+
+判断，k + 1位置的字符是否与i - 1位置上的字符一致。如果是，第i位置的next就是k + 1。
+
+## KMP基础班
+
+当匹配失败时，主串指针不回溯，子串指针回溯到next数组对应位置的值所指向的位置。
+
+## next数组改进
+
+如果字串指针回溯的位置的字符，和匹配失败时的字符是一致的，那么必定会匹配失败，那么就多了一次无效匹配。
+
+所以，在得到next数组后，应当遍历数组，查看当next[i]所指的字符，是否与当前位置的字符i，是否一致。
+
+如果两个字符是一样的，那就将靠后面的next值改为靠前的一个。
+
+```java
+public int kmp(String pattern, String match) {
+    if (pattern == null || match == null || match.length() < 1 || match.length() > pattern.length()) {
+        return -1;
+    }
+    int[] next = getNextArray(match);
+    int i = 0;
+    int j = 0;
+    while (i < pattern.length() && j < match.length()) {
+        if (pattern.charAt(i) == match.charAt(j)) {
+            ++i;
+            ++j;
+        } else if (next[j] == -1) { // 此时j指向的子串的位置为第0个字符
+            ++i;
+        } else {
+            j = next[j];
+        }
+    }
+    return j == match.length() ? i - j : -1;
+}
+
+private int[] getNextArray(String str) {
+    if (str.length() == 1) return new [] {-1};
+    int[] next = new int[str.length()];
+    next[0] = -1;
+    next[1] = 0;
+    int temp = 0;
+    while (i < next.length) {
+        if (str.charAt(i - 1) == str.charAt(temp)) {
+            next[i++] = ++temp;
+        } else if (temp > 0) {
+            temp = next[temp];
+        } else {
+            next[i++] = 0;
+        }
+    }
+    return next;
+}
+```
 
 
 
