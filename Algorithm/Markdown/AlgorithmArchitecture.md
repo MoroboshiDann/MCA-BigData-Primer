@@ -6401,17 +6401,19 @@ public int process(int n) {
 }
 ```
 
-# 第十八节 KMP
+# 第十八节 KMP与manacher
+
+## KMP
 
 KMP算法是字符串匹配的优化解法。
 
 字符串匹配的暴力解法，每次匹配失败时，主串和子串都需要回溯到最开始的位置重新开始匹配。相当于每一次的匹配过程都没有为下一次匹配提供任何信息。
 
-## 最大前后缀匹配长度
+### 最大前后缀匹配长度
 
 给出字符串`aaaab`，对于字母`b`，其最大前后缀匹配长度为，计算前后缀长度从1到3，分别能否匹配。记录最大长度。前后缀都不能取到当前字符前缀字符串的整个长度。
 
-## next数组
+### next数组
 
 计算每个字符的最大前后缀匹配长度，第0个字符记为-1，第1个记为0。 
 
@@ -6425,11 +6427,11 @@ KMP算法是字符串匹配的优化解法。
 
 判断，k + 1位置的字符是否与i - 1位置上的字符一致。如果是，第i位置的next就是k + 1。
 
-## KMP基础班
+### KMP基础版
 
 当匹配失败时，主串指针不回溯，子串指针回溯到next数组对应位置的值所指向的位置。
 
-## next数组改进
+### next数组改进
 
 如果字串指针回溯的位置的字符，和匹配失败时的字符是一致的，那么必定会匹配失败，那么就多了一次无效匹配。
 
@@ -6477,13 +6479,7 @@ private int[] getNextArray(String str) {
 }
 ```
 
-
-
-# 第十九节
-
-
-
-## 最长回文子串
+## 最长回文子串manacher
 
 题目描述：
 
@@ -6501,12 +6497,233 @@ private int[] getNextArray(String str) {
 
 时间复杂度为$O(n^2)$
 
+### manacher解法
+
+基本概念：
+- 回文半径/直径：从中间位置开始数(从1计数)，统计半径有多少个字符。如`12321`回文半径就是3。
+- 回文半径数组：先将字符串处理(加入特殊字符)，然后统计每个位置的回文半径。
+- 最右回文边界：R，记录所有回文子串中，能到达的最右侧的位置。一个整型变量，初始值为-1。
+- 当前最右回文的中心：C，使得最右回文边界取到当前值的回文子串的中心坐标。
+
+首先，对字符串进行处理，给开头结尾和每两个字符之间插入特殊字符`#`。
+
+然后遍历字符串，计算每个位置的回文半径。在计算时，会有两种情况：
+- 当前位置i，被R囊括在了其中(`i <= R`)。此时，无法优化，只能开始向两侧扩展计算回文半径。
+- 当前位置i，没有被最右回文边界R囊括在其中(`i > R`)。则可以找到关于当前中心C的对称点j，有`str.charAt(i) == str.charAt(j)`。可以优化时间复杂度。可以继续分为两种情况：
+  - 以j为中心的最长回文子串，囊括在L和R之间。(L是指R关于C的对称点，即最右回文子串的左边界)。
+    - 则i处的回文半径，就是j处的回文半径。因为两侧对称。
+  - 以j为中心的最长回文子串，左边界正好在L。
+    - i处的回文半径，为`R - i + 1`。因为两侧对称，可以保证i两侧囊括在LR之间的子串是对称的，而超出R的部分必定不与j左侧超出L的部分对称，否则R就不会是当前值。
+  - 以j为中心的最长回文子串，部分在LR之间，部分在L左侧。
+    - i处的回文半径，从`R - i + 1`开始向外扩。
+
+如果当前位置的回文子串其右边界正好为R，则C不更新。要保证最右回文子串尽可能长。
+
+```java
+public int longestSubString(String str) {
+    if (str == null || str.length() == 0) return 0;
+    int length = str.length();
+    char[] codes = new char[(length << 1) + 1];
+    Arrays.fill(codes, '#');
+    for (int i = 0; i < length; ++i) {
+        codes[(i << 1) + 1] = str.charAt(i);
+    }
+    int[] radis = new int[(length << 1) + 1];
+    int right = -1;
+    int center = 0;
+    int ans = Integer.MIN_VALUE;
+    for (int i = 0; i < codes.length(); ++i) {
+        if (i > right) {
+            radis[i] = getRadis(codes, i, 0);
+        } else {
+            int left = center - (right - center);
+            int j = center - (i - center);
+            int leftOfJ = j - radis[j] + 1;
+            if (leftOfJ != left) {
+                radis[i] = radis[j];
+            } else {
+                radis[i] = getRadis(codes, i, radis[j] - 1);
+            }
+        }
+        ans = Math.max(ans, radis[i]);
+        // 更新right, center
+        if (i + radis[i] - 1, right) {
+            right = i + radis[i] - 1;
+            center = i;
+        }
+    }
+    return ans;
+}
+
+private int getRadis(char[] codes, int center, int curRadis) {
+    while (center - curRadis >= 0 && center + curRadis < codes.length && codes[center - curRadis] == codes[center + curRadis]) {
+        ++curRadis;
+    }
+    return curRadis;
+}
+```
+
+### 优化常数操作
+
+如果，i在right右侧，那么radis的最小值就是`Math.min(radis[j], right - i)`。
+
+```java
+public int manacher(String str) {
+    if (str == null || str.length() == 0) return 0;
+    int length = str.length();
+    char[] codes = new char[(length << 1) + 1];
+    Arrays.fill(codes, '#');
+    for (int i = 0; i < length; ++i) {
+        codes[(i << 1) + 1] = str.charAt(i);
+    }
+    int[] radis = new int[(length << 1) + 1];
+    int right = -1;
+    int center = -1;
+    int ans = Integer.MIN_VALUE;
+    for (int i = 0; i < radis.length; ++i) {
+        radis[i] = i < right ? Math.min(radis[(center << 1) - i], right - i) : 1; 
+        while (i + radis[i] < codes.length && i - radis[i] > -1 && codes[i + radis[i]] == codes[i - radis[i]]) {
+            ++radis[i];
+        }
+        if (i + radis[i] > right) {
+            right = i + radis[i];
+            center = i;    
+        }
+        ans = Math.max(ans, radis[i]);
+    }
+    return ans;
+}
+``` 
+
+## 判断是否为旋转串
+
+题目描述：
+
+给定一个字符串str，将字符串整体循环左移n位得到的字符串，就是str的一个旋转串。
+
+现给定两个字符串str1和str2，判断两个字符串是否为旋转串。
+
+### KMP解法
+
+将str1和自己拼接起来，变为一个长度为二倍的字符串。然后通过kmp算法，匹配str2是否为大字符串的子串即可。
+
+```java
+public boolean isSpined(String str1, String str2) {
+    if (str1 == null || str2 == null || str1.length() != str2.length()) return false;
+    String pattern = new StringBuilder(str1).append(str1).toString();
+    int index = kmp(pattern, str2);
+    return index == -1 ? false : true;
+}
+private int kmp(String pattern, String match) {
+    int[] next = getNextArray(match);
+    int i = 0;
+    int j = 0;
+    while (i < pattern.length() && j < match.length()) {
+        if (pattern.charAt(i) == match.charAt(j)) {
+            ++i;
+            ++j;
+        } else if (next[j] == -1) {
+            ++i;
+        } else {
+            j = next[j];
+        }
+    }
+    return j == match.length() ? i - j : -1;
+}
 
 
-### 
+private int[] getNextArray(String str) {
+    if (str.length() == 1) return new [] {-1};
+    int[] next = new int[str.length()];
+    next[0] = -1;
+    next[1] = 0;
+    int temp = 0;
+    while (i < next.length) {
+        if (str.charAt(i - 1) == str.charAt(temp)) {
+            next[i++] = ++temp;
+        } else if (temp > 0) {
+            temp = next[temp];
+        } else {
+            next[i++] = 0;
+        }
+    }
+    return next;
+}
+```
+
+## 判断是否为子树
+
+题目描述：
+
+给定两个二叉树的根节点t1和t2。如果t2的结构和t1某一子树的结构完全一致，则返回true，否则返回false。
+
+### KMP解法
+
+首先将t1和t2都序列化为字符串，然后使用kmp算法判断是否为子串即可。
+
+需要注意的是，转换为字符串时，需要将二叉树的空节点也加入字符串，即需要序列化为一个完全二叉树，否则会出现错误答案。
+
+而且，需要使用字符串数组来存储序列化后的树，每个节点对应一个字符串，空节点为Null。
 
 
+# 第十九节 
 
+## 无序数组中第k小的值
+
+### 快速排序改写版
+
+快速排序算法，每次选取一个枢轴，将小于枢轴的值放在其左侧，大于枢轴的值放在其右侧。这个操作的时间复杂度为$O(n)$。
+
+对于枢轴来说，其所在位置就是在有序数组中应该在的位置。我们不需要将所有的元素都排列有序，而是找到第k个数，将其放置在其该在的位置。
+
+于是，对于快速排序算法，每次分治完后，都检查枢轴位置和第k个元素的位置，然后只对包含目标第k个元素的部分进行分治。
+
+这样做，相当于将递归树所有的分支全部剪掉，只保留从根节点到叶节点的一条路径，因此空间复杂度也为$O(n)$。
+
+```java
+public int kthMin(int[] arr, int k) {
+    quickSort(arr, 0, arr.length, k);
+    return arr[k];
+}
+
+private void quickSort(int[] arr, int left, int right,int k) {
+    if (left >= right) return;
+    int pivot = partition(arr, left, right);
+    if (pivot == k) {
+        return;
+    } else if (pivot > k) {
+        quickSort(arr, left, pivot - 1);
+    } else {
+        quickSort(arr, pivot + 1, right);
+    }
+}
+
+private int partition(int[] arr, int left, int right) {
+    int temp = arr[left];
+    while (left < right) {
+        while (left < right && arr[right] > temp) --right;
+        arr[left] = arr[right];
+        while (left < right && arr[left] < temp) ++left;
+        arr[right] = arr[left];
+    }
+    arr[left] = temp;
+    return left;
+}
+```
+
+#### 改为迭代法
+
+上述算法中，`quickSort()`方法不需要返回值，因此可以不递归。
+
+```java
+public int kthMin(int[] arr, int k) {
+    if (arr.length < k) return -1;
+    int pivot = partition(arr, 0, arr.length - 1, k);
+    
+}
+```
+
+### bfprt算法
 
 
 
