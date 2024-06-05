@@ -6718,8 +6718,17 @@ private int partition(int[] arr, int left, int right) {
 ```java
 public int kthMin(int[] arr, int k) {
     if (arr.length < k) return -1;
-    int pivot = partition(arr, 0, arr.length - 1, k);
-    
+    int pivot = partition(arr, 0, arr.length - 1);
+    while (true) {
+        if (pivot == k) {
+            break;
+        } else if (pivot > k) {
+            pivot = partition(arr, left, pivot - 1);
+        } else {
+            pivot = partition(arr, pivot + 1, right);
+        }
+    }
+    return arr[k];
 }
 ```
 
