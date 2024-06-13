@@ -113,9 +113,9 @@ public int localMin(int[] nums) {
 
 ```java
 public void swap(int[] nums, int i, int j) {
-nums[i] = nums[i] ^ nums[j];
-nums[j] = nums[i] ^ nums[j];
-nums[i] = nums[i] ^ nums[j];
+    nums[i] = nums[i] ^ nums[j];
+    nums[j] = nums[i] ^ nums[j];
+    nums[i] = nums[i] ^ nums[j];
 }
 ```
 
@@ -141,21 +141,21 @@ nums[i] = nums[i] ^ nums[j];
 
 ```java
 public int[] findTwo(int[] nums) {
-int length = nums.length;
-int wholeEor = 0;
-for (int i = 0; i < length; ++i) {
-wholeEor ^= nums[i];
-}
-int flag = wholeEor & (-wholeEor);
-int aEor = 0, bEor = 0;
-for (int i = 0; i < length; ++i) {
-if ((flag & nums[i]) == 0) {
-aEor ^= nums[i];
-} else {
-bEor ^= nums[i];
-}
-}
-return new int[]{aEor, bEor};
+    int length = nums.length;
+    int wholeEor = 0;
+    for (int i = 0; i < length; ++i) {
+    	wholeEor ^= nums[i];
+    }
+    int flag = wholeEor & (-wholeEor);
+    int aEor = 0, bEor = 0;
+    for (int i = 0; i < length; ++i) {
+    	if ((flag & nums[i]) == 0) {
+    		aEor ^= nums[i];
+    	} else {
+    		bEor ^= nums[i];
+    	}
+    }
+    return new int[]{aEor, bEor};
 }
 ```
 
@@ -165,11 +165,11 @@ return new int[]{aEor, bEor};
 
 ```java
 public int findRightOne(int target) {
-int flag = 1;
-while ((flag & target) == 0) {
-flag <<= 1;
-}
-return flag;
+    int flag = 1;
+    while ((flag & target) == 0) {
+    	flag <<= 1;
+    }
+    return flag;
 }
 ```
 
@@ -179,7 +179,7 @@ return flag;
 
 ```java
 public int findRigthOne(int target) {
-return a & (~a + 1);
+	return a & (~a + 1);
 }
 ```
 
@@ -187,7 +187,7 @@ return a & (~a + 1);
 
 ```java
 public int findRightOne(int target) {
-return a & (-a)
+	return a & (-a)
 }
 ```
 
@@ -199,23 +199,23 @@ Java中int整型长度为32位。可以申请一个长度为32的int数组bits�
 
 ```java
 public int findK(int[] nums, int k, int m) {
-int[] bits = new int[32];
-for (int num : nums) {
-// 对于每个元素，将其看作一个32位二进制数，每一位如果为1，将bits数组对应位置元素加一
-for (int i = 0; i < 32; ++i) {
-if ((num & (1 << i)) != 0) {
-++bits[i];
-}
-}
-}
-int ans = 0;
-// 检查bits数组每一个元素，如果当前元素不能被m整除，表明target在这一位上不为0
-for (int i = 0; i < 32; ++i) {
-if (bits[i] % m != 0) {
-ans |= (1 << i);
-}
-}
-return ans;
+    int[] bits = new int[32];
+    for (int num : nums) {
+        // 对于每个元素，将其看作一个32位二进制数，每一位如果为1，将bits数组对应位置元素加一
+        for (int i = 0; i < 32; ++i) {
+            if ((num & (1 << i)) != 0) {
+            	++bits[i];
+            }
+        }
+    }
+    int ans = 0;
+    // 检查bits数组每一个元素，如果当前元素不能被m整除，表明target在这一位上不为0
+    for (int i = 0; i < 32; ++i) {
+        if (bits[i] % m != 0) {
+        ans |= (1 << i);
+        }
+    }
+    return ans;
 }
 ```
 
@@ -233,11 +233,11 @@ return ans;
 
 ```java
 public class Node {
-public int value;
-public Node next;
-public Node(int data) {
-value = data;
-}
+    public int value;
+    public Node next;
+    public Node(int data) {
+    	value = data;
+    }
 }
 ```
 
@@ -245,12 +245,12 @@ value = data;
 
 ```java
 public class DoubleNode {
-public int value;
-public DoubleNode pre;
-public DoubleNode post;
-public DoubleNode(int data) {
-value = data;
-}
+    public int value;
+    public DoubleNode pre;
+    public DoubleNode post;
+    public DoubleNode(int data) {
+    	value = data;
+    }
 }
 ```
 
@@ -261,15 +261,15 @@ value = data;
 
 ```java
 public Node reverseLinkedList(Node head) {
-Node pre = null;
-Node post = null;
-while (head != null) {
-post = head.next;
-head.next = pre;
-pre = head;
-head = post;
-}
-return pre;
+    Node pre = null;
+    Node post = null;
+    while (head != null) {
+        post = head.next;
+        head.next = pre;
+        pre = head;
+        head = post;
+    }
+    return pre;
 }
 ```
 
@@ -316,30 +316,30 @@ return pre;
 
 ```java
 public Node copyOfRandomLinkedList(Node head) {
-Node current = head;
-Node help = null;
-while (current != null) {
-Node newNode = new Node(current.data);
-help = current.next;
-current.next = newNode;
-newNode.next = help;
-current = help;
-}
-current = head;
-while (current != null) {
-current.next. rand = current.rand.next;
-current = current.next.next;
-}
-current = head;
-Node dummy = new Node(0);
-help = dummy;
-while (current != null) {
-help.next = current.next;
-current.next = help.next;
-help = help.next;
-current = current.next;
-}
-return dummy.next;
+    Node current = head;
+    Node help = null;
+    while (current != null) {
+        Node newNode = new Node(current.data);
+        help = current.next;
+        current.next = newNode;
+        newNode.next = help;
+        current = help;
+    }
+    current = head;
+    while (current != null) {
+        current.next. rand = current.rand.next;
+        current = current.next.next;
+    }
+    current = head;
+    Node dummy = new Node(0);
+    help = dummy;
+    while (current != null) {
+        help.next = current.next;
+        current.next = help.next;
+        help = help.next;
+        current = current.next;
+    }
+    return dummy.next;
 }
 ```
 
@@ -379,38 +379,38 @@ return dummy.next;
 
 ```java
 public class QueueWithRecurrentArray {
-private int[] arr;
-private int head;
-private int rear;
-private int size;
-private int capacity;
+    private int[] arr;
+    private int head;
+    private int rear;
+    private int size;
+    private int capacity;
 
-public QueueWithRecurrentArray() {
-this(8);
-}
+    public QueueWithRecurrentArray() {
+    	this(8);
+    }
 
-public QueueWithRecurrentArray(int capacity) {
-this.capacity = capacity;
-arr = new int[capacity];
-head = 0;
-rear = -1;
-size = 0;
-}
+    public QueueWithRecurrentArray(int capacity) {
+        this.capacity = capacity;
+        arr = new int[capacity];
+        head = 0;
+        rear = -1;
+        size = 0;
+    }
 
-public void offer(int value) {
-if (size == capacity) return;
-rear = (rear + 1) % capacity;
-arr[rear] = value;
-++size;
-}
+    public void offer(int value) {
+        if (size == capacity) return;
+        rear = (rear + 1) % capacity;
+        arr[rear] = value;
+        ++size;
+    }
 
-public int poll() {
-if (size == 0) return -1;
---size;
-int value = arr[head];
-head = (head + 1) % capacity;
-return value;
-}
+    public int poll() {
+        if (size == 0) return -1;
+        --size;
+        int value = arr[head];
+        head = (head + 1) % capacity;
+        return value;
+    }
 }
 ```
 
@@ -424,30 +424,30 @@ return value;
 
 ```java
 public class Stack {
-private Deque<Integer> stack = new LinkedList<>();
-private Deque<Integer> min = new LinkedList<>();
-private int capacity = 8;
-private int size = 0;
+    private Deque<Integer> stack = new LinkedList<>();
+    private Deque<Integer> min = new LinkedList<>();
+    private int capacity = 8;
+    private int size = 0;
 
-public void push(int value) {
-if (size == capacity) return;
-++size;
-stack.push(value);
-int top = stack.peek();
-min.push(Math.min(top, value));
-}
+    public void push(int value) {
+        if (size == capacity) return;
+        ++size;
+        stack.push(value);
+        int top = stack.peek();
+        min.push(Math.min(top, value));
+    }
 
-public int pop() {
-if (size == 0) return -1;
---size;
-min/pop();
-return stack.pop();
-}
+    public int pop() {
+        if (size == 0) return -1;
+        --size;
+        min/pop();
+        return stack.pop();
+    }
 
-public int getMin() {
-if (size == 0) return;
-return min.peek();
-}
+    public int getMin() {
+        if (size == 0) return;
+        return min.peek();
+    }
 }
 ```
 
@@ -461,27 +461,27 @@ return min.peek();
 
 ```java
 public class TwoStackImitateQueue {
-private Deque<Integer> pushStack = new LinkedList<>();
-private Deque<Integer> popStack = new LinkedList<>();
-private int size = 0;
+    private Deque<Integer> pushStack = new LinkedList<>();
+    private Deque<Integer> popStack = new LinkedList<>();
+    private int size = 0;
 
-public void offer(int value) {
-pushStack.push(value);
-++size;
-}
+    public void offer(int value) {
+        pushStack.push(value);
+        ++size;
+    }
 
-public int poll() {
-if (size == 0) return -1;
-if (popStack.isEmpty()) reverse();
---size;
-return popStack.pop();
-}
+    public int poll() {
+        if (size == 0) return -1;
+        if (popStack.isEmpty()) reverse();
+        --size;
+    	return popStack.pop();
+    }
 
-private void reverse() {
-while (!pushStack.isEmpty()) {
-popStack.push(pushStack.pop());
-}
-}
+    private void reverse() {
+    while (!pushStack.isEmpty()) {
+        popStack.push(pushStack.pop());
+    }
+    }
 }
 ```
 
@@ -529,37 +529,37 @@ popStack.push(pushStack.pop());
 
 ```java
 public void mergeSort(int[] arr, int left, int right) {
-if (left == right)
-return;
-int mid = left + ((right - left) >> 1);
-mergeSort(arr, left, mid);
-mergeSort(arr, mid + 1, right);
-merge(arr, left, mid, right);
+    if (left == right)
+    return;
+    int mid = left + ((right - left) >> 1);
+    mergeSort(arr, left, mid);
+    mergeSort(arr, mid + 1, right);
+    merge(arr, left, mid, right);
 }
 
 private void merge(int[] arr, int left, int mid, int right) {
-// 先申请额外空间，用来存储有序结果
-int[] sorted = new int[right - left + 1];
-// 开始比较，将较小的元素放入有序结果数组中
-int l = left, r = mid + 1;
-int index = 0;
-while (l <= mid && r <= right) {
-if (arr[l] < arr[r]) {
-sorted[index++] = arr[l++];
-} else {
-sorted[index++] = arr[r++];
-}
-}
-while (l <= mid) {
-sorted[index++] = arr[l++];
-}
-while (r <= right) {
-sorted[index++] = arr[r++];
-}
-// 然后将结果复制到原数组中
-for (int i = 0; i < sorted.length; ++i) {
-arr[left + i] = sorted[i];
-}
+    // 先申请额外空间，用来存储有序结果
+    int[] sorted = new int[right - left + 1];
+    // 开始比较，将较小的元素放入有序结果数组中
+    int l = left, r = mid + 1;
+    int index = 0;
+    while (l <= mid && r <= right) {
+        if (arr[l] < arr[r]) {
+        sorted[index++] = arr[l++];
+        } else {
+        sorted[index++] = arr[r++];
+        }
+    }
+    while (l <= mid) {
+    	sorted[index++] = arr[l++];
+    }
+    while (r <= right) {
+    	sorted[index++] = arr[r++];
+    }
+    // 然后将结果复制到原数组中
+    for (int i = 0; i < sorted.length; ++i) {
+    	arr[left + i] = sorted[i];
+    }
 }
 ```
 
@@ -1339,18 +1339,18 @@ A中只包含x的祖先节点和其左兄弟及其子节点，B中只包含x的�
 
 ```java
 List<Integer> ans = new ArrayList<>();
-public void preorder(TreeNode root) {
-Deque<TreeNode> stack = new LinkedList<>();
-while (!stack.isEmpty() || root != null) {
-if (root == null) {
-root = stack.pop();
-root = root.right;
-} else {
-ans.add(root.val);
-stack.push(root);
-root = root.left;
-}
-}
+    public void preorder(TreeNode root) {
+    Deque<TreeNode> stack = new LinkedList<>();
+    while (!stack.isEmpty() || root != null) {
+        if (root == null) {
+            root = stack.pop();
+            root = root.right;
+        } else {
+            ans.add(root.val);
+            stack.push(root);
+            root = root.left;
+    	}
+    }
 }
 ```
 
@@ -1358,18 +1358,18 @@ root = root.left;
 
 ```java
 List<Integer> ans = new ArrayList<>();
-public void inorder(TreeNode root) {
-Deque<TreeNode> stack = new LinkedList<>();
-while (!stack.isEmpty() || root != null) {
-if (root == null) {
-root = stack,pop();
-ans.add(root.val);
-root = root.right;
-} else {
-stack.push(root);
-root = root.left;
-}
-}
+    public void inorder(TreeNode root) {
+    Deque<TreeNode> stack = new LinkedList<>();
+    while (!stack.isEmpty() || root != null) {
+        if (root == null) {
+            root = stack,pop();
+            ans.add(root.val);
+            root = root.right;
+        } else {
+            stack.push(root);
+            root = root.left;
+		}
+    }
 }
 ```
 
@@ -1378,23 +1378,23 @@ root = root.left;
 ```java
 List<Integer> ans = new LinkedList<>();
 public void postorder(TreeNode root) {
-Deque<TreeNode> stack = new LinkedList<>();
-TreeNode last = null;
-while (!stack.isEmpty() || root != null) {
-if (root == null) {
-root = stack.peek();
-if (last == root.right) {
-stac.pop()
-ans.add(root.val);
-last = root;
-} else {
-root = root.right;
-}
-} else {
-stack.push(root);
-root = root.left;
-}
-}
+    Deque<TreeNode> stack = new LinkedList<>();
+    TreeNode last = null;
+    while (!stack.isEmpty() || root != null) {
+        if (root == null) {
+        	root = stack.peek();
+        if (last == root.right) {
+            stac.pop()
+            ans.add(root.val);
+            last = root;
+        } else {
+        	root = root.right;
+        }
+        } else {
+            stack.push(root);
+            root = root.left;
+        }
+    }
 }
 ```
 
@@ -1402,21 +1402,21 @@ root = root.left;
 
 ```java
 public List<Integer> levelorder(TreeNode root) {
-List<Integer> ans = new ArraysList<>();
-if (root == null) return ans;
-Deque<TreeNode> queue = new LinkedList<>();
-queue.offer(root);
-while (!queue.isEmpty()) {
-int size = queue.size();
-while (size > 0) {
-root = queue.poll();
-ans.add(root.val);
-if (root.left != null) queue.offer(root.left);
-if (root.right != null) queue.offer(root.right);
---size;
-}
-}
-return ans;
+    List<Integer> ans = new ArraysList<>();
+    if (root == null) return ans;
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+    	int size = queue.size();
+    while (size > 0) {
+        root = queue.poll();
+        ans.add(root.val);
+        if (root.left != null) queue.offer(root.left);
+        if (root.right != null) queue.offer(root.right);
+        	--size;
+    	}
+    }
+    return ans;
 }
 ```
 
@@ -1432,23 +1432,23 @@ return ans;
 
 ```java
 public Deque<String> serialize(TreeNode root, Deque<String> ans) {
-if (root == null) {
-ans.offer("#");
-return ans;
-}
-ans.offer(root.val + "");
-serialize(root.left, ans);
-serialize(root.right, ans);
-return ans;
+    if (root == null) {
+        ans.offer("#");
+        return ans;
+    }
+    ans.offer(root.val + "");
+    serialize(root.left, ans);
+    serialize(root.right, ans);
+    return ans;
 }
 
 public TreeNode deserialize(Deque<String> preorder) {
-if (preorder == null || preoder.isEmpty()) return null;
-String value = preorder.poll();
-if (value.equals("#")) return null;
-TreeNode root = new TreeNode(Integer.parseInt(value));
-root.left = deserialize(preorder);
-root.right = deserialize(preorder);
+    if (preorder == null || preoder.isEmpty()) return null;
+    String value = preorder.poll();
+    if (value.equals("#")) return null;
+    TreeNode root = new TreeNode(Integer.parseInt(value));
+    root.left = deserialize(preorder);
+    root.right = deserialize(preorder);
 }
 ```
 
@@ -1458,49 +1458,49 @@ root.right = deserialize(preorder);
 
 ```java
 public Deque<String> levelSerialize(TreeNode root) {
-Deque<String> ans = new LinkedList<String>();
-if (root == null) return ans;
-Deque<TreeNode> queue = new LinkedList<>();
-queue.offer(root);
-ans.offer(root.val + "");
-while (!queue.isEmpty()) {
-TreeNode node = queue.poll();
-if (node.left != null) {
-queue.offer(node.left);
-ans.offer(node.left.val + "");
-} else {
-ans.offer("#");
-}
-if (node.right != null) {
-queue.offer(node.right);
-ans.offer(node.right.val + "");
-} else {
-ans.offer("#");
-}
-}
-return ans;
+    Deque<String> ans = new LinkedList<String>();
+    if (root == null) return ans;
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    ans.offer(root.val + "");
+    while (!queue.isEmpty()) {
+   		TreeNode node = queue.poll();
+        if (node.left != null) {
+            queue.offer(node.left);
+            ans.offer(node.left.val + "");
+        } else {
+            ans.offer("#");
+        }
+        if (node.right != null) {
+            queue.offer(node.right);
+            ans.offer(node.right.val + "");
+        } else {
+            ans.offer("#");
+        }
+    }
+    return ans;
 }
 
 public TreeNode levelDeserialize(Deque<String> level) {
-if (level == null || level.isEmpty()) return null;
-String val = level.poll();
-TreeNode root = new TreeNode(Integer.parseInt(val));
-Deque<TreeNode> queue = new LinkedList<>();
-queue.offer(root);
-while (!queue.isEmpty()) {
-TreeNode node = queue.poll();
-String left = level.poll();
-if (!"#".equals(left)) {
-root.left = new TreeNode(Integer.parseInt(left));
-queue.offer(root.left);
-}
-String right = level.poll();
-if (!"#".equals(right)) {
-root.right = new TreeNode(Integer.parseInt(right));
-queue.offer(root.right);
-}
-}
-return root;
+    if (level == null || level.isEmpty()) return null;
+    String val = level.poll();
+    TreeNode root = new TreeNode(Integer.parseInt(val));
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+        TreeNode node = queue.poll();
+        String left = level.poll();
+        if (!"#".equals(left)) {
+            root.left = new TreeNode(Integer.parseInt(left));
+            queue.offer(root.left);
+        }
+        String right = level.poll();
+        if (!"#".equals(right)) {
+            root.right = new TreeNode(Integer.parseInt(right));
+            queue.offer(root.right);
+        }
+    }
+    return root;
 }
 ```
 
@@ -1512,26 +1512,26 @@ return root;
 
 ```java
 public TreeNode treeToBiTree(MultiTree root) {
-if (root == null) return null;
-TreeNode treeNode = new TreeNode(root.val);
-treeNode.left = generate(root.children);
-return treeNode;
+    if (root == null) return null;
+    TreeNode treeNode = new TreeNode(root.val);
+    treeNode.left = generate(root.children);
+    return treeNode;
 }
 
 private TreeNode generate(List<MultiTree> children) {
-TreeNode root = null;
-TreeNode cur = null;
-for (MultiTree child : children) {
-TreeNode childNode = new TreeNode(child.val);
-if (root == null) {
-root = childNode; // 第一个孩子节点为左子树的根节点
-} else {
-cur.right = childNode;
-}
-cur = childNode;
-cur.left = generate(child.children);
-}
-return root;
+    TreeNode root = null;
+    TreeNode cur = null;
+    for (MultiTree child : children) {
+    	TreeNode childNode = new TreeNode(child.val);
+        if (root == null) {
+            root = childNode; // 第一个孩子节点为左子树的根节点
+        } else {
+            cur.right = childNode;
+        }
+        cur = childNode;
+        cur.left = generate(child.children);
+    }
+    return root;
 }
 ```
 
@@ -1539,21 +1539,21 @@ return root;
 
 ```java
 public MultiTree biTreeToTree(TreeNode root) {
-if (root == null) return null;
-MultiTree multiTree = new MultiTree(root.val);
-multiTree.children = generate(root.left);
-return multiTree;
+    if (root == null) return null;
+    MultiTree multiTree = new MultiTree(root.val);
+    multiTree.children = generate(root.left);
+    return multiTree;
 }
 
 private List<MultiTree> generate(TreeNode root) {
-List<MultiTree> children = new ArrayList<>();
-while (root != null) { // 一直向右遍历，将左右的右子树根节点加入到children，他们都是兄弟节点
-MultiTree cur = new MultiTree(root.val);
-cur.children = generate(root.left); // 左子树才是当前节点的孩子节点的首结点。
-children.add(cur);
-root = root.right;
-}
-return children;
+    List<MultiTree> children = new ArrayList<>();
+    while (root != null) { // 一直向右遍历，将左右的右子树根节点加入到children，他们都是兄弟节点
+        MultiTree cur = new MultiTree(root.val);
+        cur.children = generate(root.left); // 左子树才是当前节点的孩子节点的首结点。
+        children.add(cur);
+        root = root.right;
+    }
+    return children;
 }
 ```
 
@@ -1567,43 +1567,43 @@ return children;
 
 ```java
 public int widest(TreeNode root) {
-if (root == null) return 0;
-Deque<TreeNOde> queue = new LinkedList<>();
-queue.offer(root);
-int ans = 0;
-while (!queue.isEmpty()) {
-int size = queue.size();
-ans = size > ans ? size : ans;
-while (size > 0) {
-TreeNode cur = queue.poll();
-if (cur.left != null) queue.offer(cur);
-if (cur.right != null) queue.offer(cur);
---size;
-}
-}
-return ans;
+    if (root == null) return 0;
+    Deque<TreeNOde> queue = new LinkedList<>();
+    queue.offer(root);
+    int ans = 0;
+    while (!queue.isEmpty()) {
+        int size = queue.size();
+        ans = size > ans ? size : ans;
+        while (size > 0) {
+            TreeNode cur = queue.poll();
+            if (cur.left != null) queue.offer(cur);
+            if (cur.right != null) queue.offer(cur);
+            --size;
+        }
+    }
+    return ans;
 }
 ```
 
 ```java
 public int widest(TreeNode root) {
-if (root == null) return 0;
-Deque<TreeNOde> queue = new LinkedList<>();
-queue.offer(root);
-int ans = 0;
-TreeNode last = root;
-while (!queue.isEmpty()) {
-int size = 0;
-do {
-TreeNode cur = queue.poll();
-if (cur.left != null) queue.offer(cur);
-if (cur.right != null) queue.offer(cur);
-++size;
-} while (cur != last);
-ans = size > ans ? size : ans;
-last = peekLast();
-}
-return ans;
+    if (root == null) return 0;
+    Deque<TreeNOde> queue = new LinkedList<>();
+    queue.offer(root);
+    int ans = 0;
+    TreeNode last = root;
+    while (!queue.isEmpty()) {
+        int size = 0;
+        do {
+            TreeNode cur = queue.poll();
+            if (cur.left != null) queue.offer(cur);
+            if (cur.right != null) queue.offer(cur);
+                ++size;
+        } while (cur != last);
+        ans = size > ans ? size : ans;
+        last = peekLast();
+    }
+    return ans;
 }
 ```
 
@@ -1615,10 +1615,10 @@ return ans;
 
 ```java
 class Node {
-int val;
-Node left;
-Node right;
-Node parent;
+    int val;
+    Node left;
+    Node right;
+    Node parent;
 }
 ```
 
@@ -1636,22 +1636,22 @@ Node parent;
 
 ```java
 public TreeNode postNode(TreeNode target) {
-TreeNode ans = null;
-if (target == null) {
-return ans;
-}
-if (target.right != null) {
-ans = target.right;
-while (ans.left != null) ans = ans.left;
-} else {
-TreeNode parent = target.parent;
-while (parent != null && parent.right == target) {
-target = parent;
-parent = target.parent;
-}
-ans = parent;
-}
-return ans;
+    TreeNode ans = null;
+    if (target == null) {
+    	return ans;
+    }
+    if (target.right != null) {
+    	ans = target.right;
+    while (ans.left != null) ans = ans.left;
+    } else {
+        TreeNode parent = target.parent;
+        while (parent != null && parent.right == target) {
+            target = parent;
+            parent = target.parent;
+        }
+        ans = parent;
+    }
+    return ans;
 }
 ```
 
@@ -1671,14 +1671,14 @@ return ans;
 
 ```java
 public void printFold(int times) {
-process(1, times, true);
+	process(1, times, true);
 }
 
 public void process(int index, int times, boolean down) {
-if (index > times) return;
-process(index + 1, times, true);
-sout(down ? "down" : "up");
-process(index + 1, times, false);
+	if (index > times) return;
+    process(index + 1, times, true);
+    sout(down ? "down" : "up");
+    process(index + 1, times, false);
 }
 ```
 
@@ -1692,18 +1692,18 @@ process(index + 1, times, false);
 
 ```java
 public boolean isComplete(TreeNode root) {
-if (root == null) return true;
-Deque<TreeNode> queue = new LinkedList<>();
-queue.offer(root);
-boolean flag = false;
-while (!queue.isEmpty()) {
-TreeNode cur = queue.poll();
-if (!(cur.left != null && cur.right != null)) flag = true;
-if (flag && (cur.left != null || cur.right != null)) return false;
-if (cur.left != null) queue.offer(cur.left);
-if (cur.right != null) queue.offer(cur.right);
-}
-return true;
+    if (root == null) return true;
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    boolean flag = false;
+    while (!queue.isEmpty()) {
+        TreeNode cur = queue.poll();
+        if (!(cur.left != null && cur.right != null)) flag = true;
+        if (flag && (cur.left != null || cur.right != null)) return false;
+        if (cur.left != null) queue.offer(cur.left);
+        if (cur.right != null) queue.offer(cur.right);
+    }
+    return true;
 }
 ```
 
@@ -1715,32 +1715,32 @@ return true;
 
 ```java
 public class IsBalance {
-static class Info {
-boolean isBalance;
-int height;
-public Info() {}
-public Info(boolean isBalance, int height) {
-this.isBalance = isBalance;
-this.height = height;
-}
-}
+    static class Info {
+        boolean isBalance;
+        int height;
+        public Info() {}
+        public Info(boolean isBalance, int height) {
+            this.isBalance = isBalance;
+            this.height = height;
+        }
+    }
 
-public boolean isBalance(TreeNode root) {
-preorder(root);
-return ans;
-}
+    public boolean isBalance(TreeNode root) {
+        preorder(root);
+        return ans;
+    }
 
-private Info preorder(TreeNode root) {
-if (root == null) return new Info(0, true);
-Info left = preorder(root.left);
-if (!left.isBalance) return new Info(-1, false);
-Info right = preorder(root.right);
-if (!right.isBalance) return new Info(-1, false);
-Info cur = new Info();
-if (Math.abs(left.height - right.height) > 1) cur.isBalance = false;
-cur.height = Math.max(left.height, right.height) + 1;
-return cur;
-}
+    private Info preorder(TreeNode root) {
+        if (root == null) return new Info(0, true);
+        Info left = preorder(root.left);
+        if (!left.isBalance) return new Info(-1, false);
+        Info right = preorder(root.right);
+        if (!right.isBalance) return new Info(-1, false);
+        Info cur = new Info();
+        if (Math.abs(left.height - right.height) > 1) cur.isBalance = false;
+        cur.height = Math.max(left.height, right.height) + 1;
+        return cur;
+    }
 }
 ```
 
@@ -1756,38 +1756,38 @@ return cur;
 
 ```java
 class Info {
-int max;
-int min;
-boolean isSearch;
-public Info() {}
-public Info(int max, int min, boolean isSearch) {
-this.max = max; this.min = min; this.isSearch = isSearch;
-}
+    int max;
+    int min;
+    boolean isSearch;
+    public Info() {}
+    public Info(int max, int min, boolean isSearch) {
+    this.max = max; this.min = min; this.isSearch = isSearch;
+    }
 }
 
 public boolean isSearch(TreeNode root) {
-return inorder(root).isSearch;
+	return inorder(root).isSearch;
 }
 
 private Info inorder(TreeNode root) {
-if (root == null) return null;
-Info left = inorder(root.left);
-Info right = inorder(root.right);
-int max = root.val;
-int min = root.val;
-if (left != null) {
-max = Math.max(max, left.max);
-min = Math.min(min, left.min);
-}
-if (right != null) {
-max = Math.max(max, right.max);
-min = Math.min(min, right.min);
-}
-boolean isSearch = true;
-if (!left.isSearch || !left.isSearch) isSearch = false;
-if (left != null && left.max >= root.val) isSearch = false;
-if (right != null && right.min <= root.val) isSearch = false;
-return new Info(max, min, isSearch);
+    if (root == null) return null;
+    Info left = inorder(root.left);
+    Info right = inorder(root.right);
+    int max = root.val;
+    int min = root.val;
+    if (left != null) {
+        max = Math.max(max, left.max);
+        min = Math.min(min, left.min);
+    }
+    if (right != null) {
+        max = Math.max(max, right.max);
+        min = Math.min(min, right.min);
+    }
+    boolean isSearch = true;
+    if (!left.isSearch || !left.isSearch) isSearch = false;
+    if (left != null && left.max >= root.val) isSearch = false;
+    if (right != null && right.min <= root.val) isSearch = false;
+    return new Info(max, min, isSearch);
 }
 ```
 
@@ -1808,16 +1808,16 @@ return new Info(max, min, isSearch);
 ```java
 int max = Integer.MIN_VALUE;
 public int maxDistance(TreeNode root) {
-preorder(root);
-return max;
+    preorder(root);
+    return max;
 }
 
 public int preorder(TreeNode root) {
-if (root == null) return 0;
-int left = preorder(root.left);
-int right = preorder(root.right);
-max = (left + right) > max ? (left + right) : max;
-return Math.max(left, right) + 1;
+    if (root == null) return 0;
+    int left = preorder(root.left);
+    int right = preorder(root.right);
+    max = (left + right) > max ? (left + right) : max;
+    return Math.max(left, right) + 1;
 }
 ```
 
@@ -1827,26 +1827,26 @@ return Math.max(left, right) + 1;
 
 ```java
 class Info {
-int height;
-int maxDistance;
-public Info() {}
-public Info(int height, int maxDistance) {
-this.height = height;
-this.height = maxDistance;
-}
+    int height;
+    int maxDistance;
+    public Info() {}
+    public Info(int height, int maxDistance) {
+        this.height = height;
+        this.height = maxDistance;
+    }
 }
 
 public int maxDistance(TreeNode root) {
-return process(root).maxDistance;
+	return process(root).maxDistance;
 }
 
 private Info process(TreeNode root) {
-if (root == null) return new Info(0, 0);
-Info left = process(root.left);
-Info right = process(root.right);
-int height = Math.max(left.height, right.height) + 1;
-int maxDistance = Math.max(Math.max((left.height + right.height), left.maxDistance), right.maxDistance);
-return new Info(height, maxDistance);
+    if (root == null) return new Info(0, 0);
+    Info left = process(root.left);
+    Info right = process(root.right);
+    int height = Math.max(left.height, right.height) + 1;
+    int maxDistance = Math.max(Math.max((left.height + right.height), left.maxDistance), right.maxDistance);
+    return new Info(height, maxDistance);
 }
 ```
 
@@ -1864,31 +1864,31 @@ return new Info(height, maxDistance);
 
 ```java
 class Info {
-int size;
-int height;
-int maxSize;
-boolean isAVL;
-public Info() {}
-public Info(int size, int height, int maxSize, boolean isAVL) {
-this.size = size; this.height = height; this.maxsize = maxSize; this.isAVL = isAVL;
-}
+    int size;
+    int height;
+    int maxSize;
+    boolean isAVL;
+    public Info() {}
+    public Info(int size, int height, int maxSize, boolean isAVL) {
+    	this.size = size; this.height = height; this.maxsize = maxSize; this.isAVL = isAVL;
+    }
 }
 
 public int maxSubAVL(TreeNode root) {
-return process(root).maxSize;
+	return process(root).maxSize;
 }
 
 private Info process(TreeNode root) {
-if (root == null) return new Info(0, 0, 0, true);
-Info left = process(root.left);
-Info right = process(root.right);
-int size = left.size + right.size + 1;
-int height = Math.max(left.height, right.height) + 1;
-boolean isAVL = true;
-if (Math.abs(left.height - right.height) > 1 || !left.isAVL || !right.isAVL) isAVL = false;
-int maxSize = size;
-if (!isBST) maxSize = Math.max(left.maxSize, right.maxSize);
-return new Info(size, height, maxSize, isAVL);
+    if (root == null) return new Info(0, 0, 0, true);
+    Info left = process(root.left);
+    Info right = process(root.right);
+    int size = left.size + right.size + 1;
+    int height = Math.max(left.height, right.height) + 1;
+    boolean isAVL = true;
+    if (Math.abs(left.height - right.height) > 1 || !left.isAVL || !right.isAVL) isAVL = false;
+    int maxSize = size;
+    if (!isBST) maxSize = Math.max(left.maxSize, right.maxSize);
+    return new Info(size, height, maxSize, isAVL);
 }
 ```
 
@@ -1906,34 +1906,34 @@ return new Info(size, height, maxSize, isAVL);
 
 ```java
 class Info {
-int size;
-int max;
-int min;
-int maxSize;
-boolean isBST;
-public Info() {}
-public Info(int size, int max, int min, int maxSize, boolean isBST) {
-this.size = size; this.max = max; this.min = min; this.maxsize = maxSize; this.isBST = isBST;
-}
+    int size;
+    int max;
+    int min;
+    int maxSize;
+    boolean isBST;
+    public Info() {}
+    public Info(int size, int max, int min, int maxSize, boolean isBST) {
+    	this.size = size; this.max = max; this.min = min; this.maxsize = maxSize; this.isBST = isBST;
+    }
 }
 
 public int maxSubBST(TreeNode root) {
-return process(root).maxSize;
+	return process(root).maxSize;
 }
 
 private Info process(TreeNode root) {
-if (root == null) return new Info(0, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-Info left = process(root.left);
-Info right = process(root.right);
-int size = left.size + right.size + 1;
-int max = Math.max(Math.max(left.max, root.val), right.max);
-int min = Math.min(Math.min(left.min, root.val), right.min);
-boolean isBST = true;
-if (Math.abs(left.height - right.height) > 1 || !left.isBST || !right.isBST) isBST = false;
-if (root.val < left.max || root.val > right.min) isBST = false;
-int maxSize = size;
-if (!isBST) maxSize = Math.max(left.maxSize, right.maxSize);
-return new Info(size, height, maxSize, isBST);
+    if (root == null) return new Info(0, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+    Info left = process(root.left);
+    Info right = process(root.right);
+    int size = left.size + right.size + 1;
+    int max = Math.max(Math.max(left.max, root.val), right.max);
+    int min = Math.min(Math.min(left.min, root.val), right.min);
+    boolean isBST = true;
+    if (Math.abs(left.height - right.height) > 1 || !left.isBST || !right.isBST) isBST = false;
+    if (root.val < left.max || root.val > right.min) isBST = false;
+    int maxSize = size;
+    if (!isBST) maxSize = Math.max(left.maxSize, right.maxSize);
+    return new Info(size, height, maxSize, isBST);
 }
 ```
 
@@ -1954,13 +1954,13 @@ return new Info(size, height, maxSize, isBST);
 
 ```java
 class Info {
-int height;
-boolean isFull;
-boolean isComplete;
-public Info() {}
-public Info(int height, boolean isFull, booelan isComplete) {
-this.height = height; this.isFull = isFull; this.isComplete = isComplete;
-}
+    int height;
+    boolean isFull;
+    boolean isComplete;
+    public Info() {}
+    public Info(int height, boolean isFull, booelan isComplete) {
+   		this.height = height; this.isFull = isFull; this.isComplete = isComplete;
+    }
 }
 
 public boolean isComplete(TreeNode root) {
@@ -1968,23 +1968,23 @@ return process(root).isComplete;
 }
 
 private Info process(TreeNode root) {
-if (root == null) return new Info(0, true, true);
-Info leftInfo = process(root.left);
-Info rightInfo = process(root.right);
-int height = Math.max(leftInfo.height, rightInfo.height) + 1;
-boolean isFull = false;
-boolean isComplete = false;
-if (leftInfo.isFull && rightInfo.isFull) {
-if (leftInfo.height == rightInfo.height) {
-isFull = true;
-isComplete = true;
-} else if (leftInfo.height == rightInfo.height + 1) isComplete = true;
-} else if (leftInfo.isComplete && rightInfo.isFull && leftInfo.height == rightInfo.height + 1) {
- isComplete = true;
-} else if (leftInfo.isFull && rightInfo.isComplete && eftInfo.height == rightInfo.height) {
-isComplete = true;
-}
-return new Info(height, isFull, isComplete);
+    if (root == null) return new Info(0, true, true);
+    Info leftInfo = process(root.left);
+    Info rightInfo = process(root.right);
+    int height = Math.max(leftInfo.height, rightInfo.height) + 1;
+    boolean isFull = false;
+    boolean isComplete = false;
+    if (leftInfo.isFull && rightInfo.isFull) {
+    if (leftInfo.height == rightInfo.height) {
+        isFull = true;
+        isComplete = true;
+    } else if (leftInfo.height == rightInfo.height + 1) isComplete = true;
+    } else if (leftInfo.isComplete && rightInfo.isFull && leftInfo.height == rightInfo.height + 1) {
+    	isComplete = true;
+    } else if (leftInfo.isFull && rightInfo.isComplete && eftInfo.height == rightInfo.height) {
+    	isComplete = true;
+    }
+    return new Info(height, isFull, isComplete);
 }
 ```
 
@@ -2006,28 +2006,28 @@ return new Info(height, isFull, isComplete);
 
 ```java
 class Info {
-boolean containsA;
-boolean containsB;
-TreeNode target;
+    boolean containsA;
+    boolean containsB;
+    TreeNode target;
 }
 
 public TreeNode nearestAncestor(TreeNode root，TreeNode A, TreeNode B) {
-return process(root, A, B).target;
+	return process(root, A, B).target;
 }
 
 private Info process(TreeNode root, TreeNode A, TreeNode B) {
-if (root == null) return new Info(false, false, null);
-Info left = process(left, A, B);
-Info right = process(right, A, B);
-boolean containsA = left.containsA || right.containsA || root == A;
-boolean containsB = left.containsB || right.containsB || root == B;
-TreeNode target = null;
-if (containsA && containsB) {
-if (left.target == null && right.target == null) target = root;
-else if (left.target != null) target = left.target;
-else if (right.target != null) target = right.target;
-} 
-return new Info(containsA, containsB, target);
+    if (root == null) return new Info(false, false, null);
+    Info left = process(left, A, B);
+    Info right = process(right, A, B);
+    boolean containsA = left.containsA || right.containsA || root == A;
+    boolean containsB = left.containsB || right.containsB || root == B;
+    TreeNode target = null;
+    if (containsA && containsB) {
+        if (left.target == null && right.target == null) target = root;
+        else if (left.target != null) target = left.target;
+        else if (right.target != null) target = right.target;
+    } 
+    return new Info(containsA, containsB, target);
 }
 ```
 
@@ -2054,26 +2054,26 @@ return new Info(containsA, containsB, target);
 
 ```java
 public int maxHappiness(MultiTree root) {
-return process(root, true);
+	return process(root, true);
 }
 
 private int process(MultiTree root, boolean isParentAbsent) {
-if (root == null) return 0;
-int max = 0;
-if (isParentAbsent) { // 父节点不来，当前节点可以选择来或不来
-int sum1= root.val;
-int sum2 = 0;
-for (MultiTree child : root.children) {
-sum1 += process(child, false); // 当前节点来
-sum2 += process(child, true); // 当前节点不来
-}
-max = Math.max(sum1, sum2);
-} else { // 父节点要来，则当前节点只能选择不来
-for (MultiTree child : root.children) {
-max += process(child, true);
-}
-}
-return max;
+    if (root == null) return 0;
+    int max = 0;
+    if (isParentAbsent) { // 父节点不来，当前节点可以选择来或不来
+    int sum1= root.val;
+    int sum2 = 0;
+    for (MultiTree child : root.children) {
+        sum1 += process(child, false); // 当前节点来
+        sum2 += process(child, true); // 当前节点不来
+    }
+    	max = Math.max(sum1, sum2);
+    } else { // 父节点要来，则当前节点只能选择不来
+        for (MultiTree child : root.children) {
+        	max += process(child, true);
+        }
+    }
+    return max;
 }
 ```
 
@@ -2110,21 +2110,21 @@ return max;
 
 ```java
 public int bestArrangement(int[][] programs) {
-Arrays.sort(programs, new Comparator<int[]>() {
-@Override
-public int compare(int[] o1, int[] o2) {
-return o1[1] == o2[1] ? o1[0] - o2[0] : o1[1] - o2[1];
-}
-}); // 将会议按照结束时间排序，如果结束时间一致，则选择开始时早的(其实无所谓，因为结束时间一致，只会有一个被选中)
-int time = 0;
-int ans = 0;
-for (int i = 0; i < programs.length; ++i) {
-if (time < programs[0]) {
-time = programs[1];
-++ans;
-}
-}
-return ans;
+    Arrays.sort(programs, new Comparator<int[]>() {
+        @Override
+        public int compare(int[] o1, int[] o2) {
+        	return o1[1] == o2[1] ? o1[0] - o2[0] : o1[1] - o2[1];
+        }
+    }); // 将会议按照结束时间排序，如果结束时间一致，则选择开始时早的(其实无所谓，因为结束时间一致，只会有一个被选中)
+    int time = 0;
+    int ans = 0;
+    for (int i = 0; i < programs.length; ++i) {
+        if (time < programs[0]) {
+            time = programs[1];
+            ++ans;
+        }
+    }
+    return ans;
 }
 ```
 
@@ -2152,20 +2152,20 @@ return ans;
 
 ```java
 public int bestSegment(int[] bars) {
-if (bars == null || bars.length == 0) return 0;
-if (bars.length == 1) return bars[0];
-PriorityQueue<Integer> heap = new PriorityQueue<>();
-for (int bar : bars) {
-heap.offer(bar);
-}
-int ans = 0;
-while (heap.size() > 1) {
-int sum = heap.poll();
-sum += heap.poll();
-ans += sum;
-heap.offer(sum);
-}
-return ans;
+    if (bars == null || bars.length == 0) return 0;
+    if (bars.length == 1) return bars[0];
+    PriorityQueue<Integer> heap = new PriorityQueue<>();
+    for (int bar : bars) {
+    	heap.offer(bar);
+    }
+    int ans = 0;
+    while (heap.size() > 1) {
+        int sum = heap.poll();
+        sum += heap.poll();
+        ans += sum;
+        heap.offer(sum);
+    }
+    return ans;
 }
 ```
 
@@ -2190,27 +2190,27 @@ costs[i]表示i号项目的花费
 
 ```java
 class Project {
-int cost;
-int profit;
-public Project() {}
-public Project(int cost, int profit) {
-this.cost = cost; this.profit = profit;
-}
+    int cost;
+    int profit;
+    public Project() {}
+    public Project(int cost, int profit) {
+    	this.cost = cost; this.profit = profit;
+    }
 }
 public int maxProfit(int[] costs, int[] profits, int K, int M) {
-PriorityQueue<Project> smaller = new PriorityQueue<>((o1, o2) -> o1.cost - o2.cost);
-PriorityQueue<Project> greater = new PriorityQueue<>((o1, o2) -> o2.profit - o1.profit);
-for (int i = 0; i < costs.length; ++i) {
-smaller.offer(new Project(costs[i], profits[i]));
-}
-while (!smaller.isEmpty && K > 0) {
-while (smaller.peek().cost <= M) {
-greater.offer(smaller.poll());
-}
-M += greater.poll();
---K;
-}
-return M;
+    PriorityQueue<Project> smaller = new PriorityQueue<>((o1, o2) -> o1.cost - o2.cost);
+    PriorityQueue<Project> greater = new PriorityQueue<>((o1, o2) -> o2.profit - o1.profit);
+    for (int i = 0; i < costs.length; ++i) {
+    	smaller.offer(new Project(costs[i], profits[i]));
+    }
+    while (!smaller.isEmpty && K > 0) {
+        while (smaller.peek().cost <= M) {
+            greater.offer(smaller.poll());
+        }
+        M += greater.poll();
+        --K;
+        }
+    return M;
 }
 ```
 
@@ -2230,23 +2230,23 @@ return M;
 
 ```java
 public int minLights(String str) {
-int length = str.length();
-int lights = 0;
-for (int i = 0; i < length; ++i) {
-char ch = str.charAt(i);
-if (ch == 'X') {
-continue;
-} else {
-if (i + 1 >= length) break;
-++lights;
-if (str.charAt(i + 1) == 'X') {
-++i;
-} else {
-i += 2;
-}
-}
-}
-return lights;
+    int length = str.length();
+    int lights = 0;
+    for (int i = 0; i < length; ++i) {
+        char ch = str.charAt(i);
+        if (ch == 'X') {
+        continue;
+        } else {
+            if (i + 1 >= length) break;
+                ++lights;
+            if (str.charAt(i + 1) == 'X') {
+                ++i;
+            } else {
+                i += 2;
+            }
+        }
+    }
+    return lights;
 }
 ```
 
@@ -2272,64 +2272,64 @@ return lights;
 
 ```java
 public class UnionFind {
-private static class Node<T> {
-T val;
-public Node(T val) {
-this.val = val;
-}
-public Node() {}
+    private static class Node<T> {
+    	T val;
+    public Node(T val) {
+    	this.val = val;
+    }
+    public Node() {}
 }
 
 private static class UnionSet<T> {
-Map<T, Node<T>> nodes;
-Map<Node<T>, Node<T>> parents;
-Map<Node<T>, Integer> sizes;
+    Map<T, Node<T>> nodes;
+    Map<Node<T>, Node<T>> parents;
+    Map<Node<T>, Integer> sizes;
 
-public UnionSet(List<T> values) {
-nodes = new HashMap<>();
-parents = new HashMap<>();
-sizes = new HashMap<>();
-for (T val : values) {
-Node<T> node = new Node<>(val);
-nodes.put(val, node);
-parents.put(node, node);
-sizes.put(node, 1);
-}
+    public UnionSet(List<T> values) {
+        nodes = new HashMap<>();
+        parents = new HashMap<>();
+        sizes = new HashMap<>();
+        for (T val : values) {
+            Node<T> node = new Node<>(val);
+            nodes.put(val, node);
+            parents.put(node, node);
+            sizes.put(node, 1);
+        }
+    }
+
+    public boolean find(T val1, T val2) {
+        Node<T> parent1 = findParent(nodes.get(val1));
+        Node<T> parent2 = findParent(nodes.get(val2));
+        return parent1 == parent2;
+    }
+
+    public void union(T val1, T val2) {
+        Node<T> parent1 = findParent(nodes.get(val1));
+        Node<T> parent2 = findParent(nodes.get(val2));
+        if (parent1 != parent2) {
+        int size1 = sizes.get(parent1);
+        int size2 = sizes.get(parent2);
+        Node<T> greater = size1 > size2 ? parent1 : parent2;
+        Node<T> lesser = size1 > size2 ? parent2 : parent1;
+        parents.put(lesser, greater);
+        sizes.put(greater, size1 + size2);
+        sizes.remove(lesser);
+    }
+
 }
 
-public boolean find(T val1, T val2) {
-Node<T> parent1 = findParent(nodes.get(val1));
-Node<T> parent2 = findParent(nodes.get(val2));
-return parent1 == parent2;
-}
-
-public void union(T val1, T val2) {
-Node<T> parent1 = findParent(nodes.get(val1));
-Node<T> parent2 = findParent(nodes.get(val2));
-if (parent1 != parent2) {
-int size1 = sizes.get(parent1);
-int size2 = sizes.get(parent2);
-Node<T> greater = size1 > size2 ? parent1 : parent2;
-Node<T> lesser = size1 > size2 ? parent2 : parent1;
-parents.put(lesser, greater);
-sizes.put(greater, size1 + size2);
-sizes.remove(lesser);
-}
-
-}
-
-private Node<T> findParent(Node<T> node) {
-Deque<Node<T>> stack = new ArrayDeque<>();
-while (parents.get(node) != node) {
-stack.push(node);
-node = parents.get(node);
-}
-while (!stack.isEmpty()) {
-parents.put(stack.pop(), node);
-}
-returnnode;
-}
-}
+    private Node<T> findParent(Node<T> node) {
+        Deque<Node<T>> stack = new ArrayDeque<>();
+        while (parents.get(node) != node) {
+            stack.push(node);
+            node = parents.get(node);
+        }
+        while (!stack.isEmpty()) {
+            parents.put(stack.pop(), node);
+        }
+        returnnode;
+        }
+    }
 }
 ```
 
@@ -2351,67 +2351,67 @@ returnnode;
 
 ```java
 class Solution {
-private static class UnionFind {
-private int[] parents;
-private int[] sizes;
-private int[] help;
-private int sets;
+    private static class UnionFind {
+    private int[] parents;
+    private int[] sizes;
+    private int[] help;
+    private int sets;
 
-public UnionFind(int N) {
-parents = new int[N];
-sizes = new int[N];
-help = new int[N];
-sets = N;
-for (int i = 0; i < N; ++i) {
-parents[i] = i;
-sizes[i] = 1;
-}
-}
+    public UnionFind(int N) {
+        parents = new int[N];
+        sizes = new int[N];
+        help = new int[N];
+        sets = N;
+        for (int i = 0; i < N; ++i) {
+            parents[i] = i;
+            sizes[i] = 1;
+        }
+    }
 
-public void union(int i, int j) {
-int parentI = findParent(i);
-int parentJ = findParent(j);
-if (parentI != parentJ) {
-int sizeI = sizes[parentI];
-int sizeJ = sizes[parentJ];
-int greater = sizeI > sizeJ ? parentI : parentJ;
-int lesser = greater == parentI ? parentJ : parentI;
-parents[lesser] = greater;
-sizes[greater] = sizeI + sizeJ;
-sizes[lesser] = -1;
---sets;
-}
-}
+    public void union(int i, int j) {
+        int parentI = findParent(i);
+        int parentJ = findParent(j);
+        if (parentI != parentJ) {
+            int sizeI = sizes[parentI];
+            int sizeJ = sizes[parentJ];
+            int greater = sizeI > sizeJ ? parentI : parentJ;
+            int lesser = greater == parentI ? parentJ : parentI;
+            parents[lesser] = greater;
+            sizes[greater] = sizeI + sizeJ;
+            sizes[lesser] = -1;
+            --sets;
+        }
+    }
 
-public int unionNums() {
-return sets;
-}
+    public int unionNums() {
+    	return sets;
+    }
 
-private int findParent(int i) {
-int index = 0;
-while (i != parents[i]) {
-help[index] = i;
-i = parents[i];
-++index;
-}
-while (index > 0) {
---index;
-parents[help[index]] = i;
-}
-return i;
-}
+    private int findParent(int i) {
+        int index = 0;
+        while (i != parents[i]) {
+            help[index] = i;
+            i = parents[i];
+            ++index;
+        }
+        while (index > 0) {
+            --index;
+            parents[help[index]] = i;
+        }
+    	return i;
+    }
 }
 
 public int findCircleNum(int[][] isConnected) {
-UnionFind union = new UnionFind(isConnected.length);
-for (int i = 0; i < isConnected.length; ++i) {
-for (int j = i + 1; j < isConnected.length; ++j) {
-if (isConnected[i][j] == 1) {
-union.union(i, j);
-}
-}
-}
-return union.unionNums();
+    UnionFind union = new UnionFind(isConnected.length);
+    for (int i = 0; i < isConnected.length; ++i) {
+        for (int j = i + 1; j < isConnected.length; ++j) {
+            if (isConnected[i][j] == 1) {
+                union.union(i, j);
+            }
+        }
+    }
+    return union.unionNums();
 }
 }
 ```
@@ -2434,26 +2434,26 @@ return union.unionNums();
 
 ```java
 public int numOfIslands(int[][] matrix) {
-int M = matrix.length, N = matrix[0].length;
-int ans = 0;
-for (int i = 0; i < M; ++i) {
-for (int j = 0; j < N; ++j) {
-if (matrix[i][j] == 1) {
-dfs(matrix, i, j);
-}
-}
-}
-return ans;
+    int M = matrix.length, N = matrix[0].length;
+    int ans = 0;
+    for (int i = 0; i < M; ++i) {
+        for (int j = 0; j < N; ++j) {
+            if (matrix[i][j] == 1) {
+            	dfs(matrix, i, j);
+            }
+        }
+    }
+    return ans;
 }
 
 private void dfs(int[][] matrix, int i, int j) {
-if (i < matrix.length && j < matrix[0].length && matrix[i][j] == 1) {
-matrix[i][j] = 0;
-dfs(matrix, i - 1, j);
-dfs(matrix, i + 1, j);
-dfs(matrix, i, j - 1);
-dfs(matrix, i, j + 1);
-}
+    if (i < matrix.length && j < matrix[0].length && matrix[i][j] == 1) {
+    matrix[i][j] = 0;
+    dfs(matrix, i - 1, j);
+    dfs(matrix, i + 1, j);
+    dfs(matrix, i, j - 1);
+    dfs(matrix, i, j + 1);
+	}
 }
 ```
 
@@ -2463,59 +2463,60 @@ dfs(matrix, i, j + 1);
 
 ```java
 private class static UnionFind {
-private int[] parents;
-private int[] sizes;
-private int[] help;
-private int sets;
-private Set<Integer> islands;
+    private int[] parents;
+    private int[] sizes;
+    private int[] help;
+    private int sets;
+    private Set<Integer> islands;
 
-public void union(int i, int j) {
-int parentI = findParent(i);
-int parentJ = findParent(j);
-if (parentI != parentJ) {
-int sizeI = sizes[parentI];
-int sizeJ = sizes[parentJ];
-int greater = sizeI > sizeJ ? parentI : parentJ;
-int lesser = greater == parentI ? parentJ : parentI;
-parents[lesser] = greater;
-sizes[greater] = sizeI + sizeJ;
-sizes[lesser] = -1;
---sets;
-islands.add(greater);
-islands.remove(lesser);
-}
+    public void union(int i, int j) {
+        int parentI = findParent(i);
+        int parentJ = findParent(j);
+        if (parentI != parentJ) {
+            int sizeI = sizes[parentI];
+            int sizeJ = sizes[parentJ];
+            int greater = sizeI > sizeJ ? parentI : parentJ;
+            int lesser = greater == parentI ? parentJ : parentI;
+            parents[lesser] = greater;
+            sizes[greater] = sizeI + sizeJ;
+            sizes[lesser] = -1;
+            --sets;
+            islands.add(greater);
+            islands.remove(lesser);
+        }
+    }
+
+    public int islands() {
+        return islands.size();
+    }
 }
 
-public int islands() {
-return islands.size();
-}
-}
 public int numOfIslands(int[][] matrix) {
-int M = matrix.legnth, N = matrix[0].length;
-UnionFind union = new UnionFind(M * N);
-for (int i = 1; i < N; ++i){
-if (matrix[0][i] == 1 && matrix[0][i - 1] == 1) {
-union.union(i - 1, i);
-}
-} 
-for (int i = 1; i < M; ++i) {
-if (matrix[i][0] == 1 && matrix[i - 1][0] == 1) {
-union.union(i * M, (i - 1) * M);
-}
-}
-for (int i = 1; i < M; ++i) {
-for (int j = 1; j < N; ++j) {
-if (matrix[i][j] == 1) {
-if (matrix[i - 1][j] == 1) {
-union.union(i * M + j, (i - 1) * M + j);
-}
-if (matrix[i][j - 1] == 1) {
-union.union(i * M + j, i * M + j - 1);
-}
-}
-}
-}
-return union.islands(); // 在并查集中记录元素为1的集合。
+    int M = matrix.legnth, N = matrix[0].length;
+    UnionFind union = new UnionFind(M * N);
+    for (int i = 1; i < N; ++i){
+        if (matrix[0][i] == 1 && matrix[0][i - 1] == 1) {
+        	union.union(i - 1, i);
+        }
+    } 
+    for (int i = 1; i < M; ++i) {
+        if (matrix[i][0] == 1 && matrix[i - 1][0] == 1) {
+        	union.union(i * M, (i - 1) * M);
+        }
+    }
+    for (int i = 1; i < M; ++i) {
+        for (int j = 1; j < N; ++j) {
+            if (matrix[i][j] == 1) {
+                if (matrix[i - 1][j] == 1) {
+                	union.union(i * M + j, (i - 1) * M + j);
+                }
+                if (matrix[i][j - 1] == 1) {
+                	union.union(i * M + j, i * M + j - 1);
+                }
+            }
+        }
+    }
+    return union.islands(); // 在并查集中记录元素为1的集合。
 }
 ```
 
@@ -2535,80 +2536,80 @@ return union.islands(); // 在并查集中记录元素为1的集合。
 
 ```java
 public class NumberOfIslandsII {
-private static class UnionFind {
-private int[] parents;
-private int[] sizes;
-private final int row;
-private final int col;
-private int sets;
+    private static class UnionFind {
+        private int[] parents;
+        private int[] sizes;
+        private final int row;
+        private final int col;
+        private int sets;
 
-public UnionFind(int m, int n) {
-this.row = m;
-this.col = n;
-parents = new int[row * col];
-sizes = new int[row * col];
-for (int i = 0; i < row * col; ++i) {
-parents[i] = i;
-sizes[i] = 0;
-}
-}
+        public UnionFind(int m, int n) {
+            this.row = m;
+            this.col = n;
+            parents = new int[row * col];
+            sizes = new int[row * col];
+            for (int i = 0; i < row * col; ++i) {
+                parents[i] = i;
+                sizes[i] = 0;
+            }
+    	}
 
-private int findParent(int i, int j) {
-int parent = i * row + j;
-while (parents[parent] != parent) {
-parent = parents[parent];
-}
-return parent;
-}
+        private int findParent(int i, int j) {
+            int parent = i * row + j;
+            while (parents[parent] != parent) {
+            	parent = parents[parent];
+            }
+            return parent;
+        }
 
-public void connect(int i, int j) {
-sizes[i * row + j] = 1;
-++sets;
-if (i - 1 >= 0) union(i, j, i - 1, j);
-if (i + 1 < row) union(i, j, i + 1, j);
-if (j - 1 >= 0) union(i, j, i, j - 1);
-if (j + 1 < col) union(i, j, i, j + 1);
-}
+        public void connect(int i, int j) {
+            sizes[i * row + j] = 1;
+            ++sets;
+            if (i - 1 >= 0) union(i, j, i - 1, j);
+            if (i + 1 < row) union(i, j, i + 1, j);
+            if (j - 1 >= 0) union(i, j, i, j - 1);
+        	if (j + 1 < col) union(i, j, i, j + 1);
+        }
 
-public void union(int i, int j, int x, int y) {
-if (sizes[x * row + y] == 0) return;
-int index1 = i * row + j;
-int index2 = x * row + y;
-int parent1 = findParent(i, j);
-int parent2 = findParent(x, y);
-if (parent1 == parent2) return;
-int greater = sizes[index1] > sizes[index2] ? parent1 : parent2;
-int lesser = parent1 == greater ? parent2 : parent1;
-parents[lesser] = greater;
-sizes[greater] = sizes[parent2] + sizes[parent1];
-sizes[lesser] = 0;
---sets;
-}
+        public void union(int i, int j, int x, int y) {
+            if (sizes[x * row + y] == 0) return;
+            int index1 = i * row + j;
+            int index2 = x * row + y;
+            int parent1 = findParent(i, j);
+            int parent2 = findParent(x, y);
+            if (parent1 == parent2) return;
+            int greater = sizes[index1] > sizes[index2] ? parent1 : parent2;
+            int lesser = parent1 == greater ? parent2 : parent1;
+            parents[lesser] = greater;
+            sizes[greater] = sizes[parent2] + sizes[parent1];
+            sizes[lesser] = 0;
+            --sets;
+        }
 
-public void firstTime(int i, int j) {
-sizes[i * row + j] = 1;
-++sets;
-}
+        public void firstTime(int i, int j) {
+            sizes[i * row + j] = 1;
+            ++sets;
+        }
 
-public int nums() {
-return sets;
-}
-}
+        public int nums() {
+        	return sets;
+        }
+    }
 
-public List<Integer> numOfIslands(int m, int n, int[][] positions) {
-List<Integer> ans = new ArrayList<>();
-if (positions == null || positions.length == 0) return ans;
-UnionFind union = new UnionFind(m, n);
-union.firstTime(positions[0][0], positions[0][1]);
-ans.add(union.nums());
-for (int i = 1; i < positions.length; ++i) {
-int x = positions[i][0];
-int y = positions[i][1];
-union.connect(x, y);
-ans.add(union.nums());
-}
-return ans;
-}
+    public List<Integer> numOfIslands(int m, int n, int[][] positions) {
+        List<Integer> ans = new ArrayList<>();
+        if (positions == null || positions.length == 0) return ans;
+        UnionFind union = new UnionFind(m, n);
+        union.firstTime(positions[0][0], positions[0][1]);
+        ans.add(union.nums());
+        for (int i = 1; i < positions.length; ++i) {
+            int x = positions[i][0];
+            int y = positions[i][1];
+            union.connect(x, y);
+            ans.add(union.nums());
+        }
+        return ans;
+    }
 }
 ```
 
@@ -2639,22 +2640,22 @@ return ans;
 
 ```java
 public class Node {
-public int val;
-public int in; // 入度
-public int out; // 出度
-public List<Node> nexts; // 相邻节点
-public List<Edge> edges; // 和邻居之间的边
+    public int val;
+    public int in; // 入度
+    public int out; // 出度
+    public List<Node> nexts; // 相邻节点
+    public List<Edge> edges; // 和邻居之间的边
 }
 
 public class Edge {
-public int weight;
-public Node from;
-public Node to;
+    public int weight;
+    public Node from;
+    public Node to;
 }
 
 public class Graph {
-public Map<Integer, Node> nodes;
-public Set<Edge> edges;
+    public Map<Integer, Node> nodes;
+    public Set<Edge> edges;
 }
 ```
 
@@ -2671,26 +2672,26 @@ public Set<Edge> edges;
 
 ```java
 public Graph createGraph(int[][] matrix) { // matrix就是边的数组，[权重，头，尾]
-Graph graph = new Graph();
-for (int i = 0; i < matrix.length; ++i) {
-int weight = matrix[i][0];
-int from = matrix[i][1];
-int to = matrix[i][2];
-if (!graph.nodes.containsKey(from)) {
-graph.nodes.put(from, new Node(from));
-}
-if (!graph.nodes.containsKey(to)) {
-graph.nodes.put(to, new Node(to));
-}
-Node fromNode = graph.nodes.get(from);
-Node toNode = graph.nodes.get(to);
-Edge edge = new Edge(weight, fromNode, toNode);
-++fromNode.to;
-++toNode.in;
-fromNode.edges.add(edge);
-graph.edges.add(edge);
-}
-return graph;
+    Graph graph = new Graph();
+    for (int i = 0; i < matrix.length; ++i) {
+        int weight = matrix[i][0];
+        int from = matrix[i][1];
+        int to = matrix[i][2];
+        if (!graph.nodes.containsKey(from)) {
+       		graph.nodes.put(from, new Node(from));
+        }
+        if (!graph.nodes.containsKey(to)) {
+        	graph.nodes.put(to, new Node(to));
+        }
+        Node fromNode = graph.nodes.get(from);
+        Node toNode = graph.nodes.get(to);
+        Edge edge = new Edge(weight, fromNode, toNode);
+        ++fromNode.to;
+        ++toNode.in;
+        fromNode.edges.add(edge);
+        graph.edges.add(edge);
+    }
+    return graph;
 }
 ```
 
@@ -2708,20 +2709,20 @@ return graph;
 
 ```java
 public void BFS(Node node) {
-Set<Node> set = new HashSet<>();
-Deque<Node> queue = new ArrayQueue<>();
-queue.offer(node);
-set.add(node);
-while (!queue.isEmpty()) {
-node = queue.poll();
-sout(node.val);
-for (Node next : node.nexts) {
-if (!set.contains(next)) {
-queue.offer(next);
-set.add(next);
-}
-}
-}
+    Set<Node> set = new HashSet<>();
+    Deque<Node> queue = new ArrayQueue<>();
+    queue.offer(node);
+    set.add(node);
+    while (!queue.isEmpty()) {
+        node = queue.poll();
+        sout(node.val);
+        for (Node next : node.nexts) {
+            if (!set.contains(next)) {
+                queue.offer(next);
+                set.add(next);
+            }
+        }
+    }
 }
 ```
 
@@ -2735,24 +2736,24 @@ set.add(next);
 
 ```java
 public void DFS(Node node) {
-if (node == null) return;
-Deque<Node> stack = new ArrayQueue<>();
-Set<Node> set = new HashSet<>();
-stack.push(node);
-set.add(node);
-sout(node.val);
-while (!stack.isEmpty()) {
-node = stack.pop();
-for (Node next : node.nexts) {
-if (!set.contains(next)) {
-stack.push(node);
-stack.push(next);
-set.add(next);
-sout(next.val);
-break;
-}
-}
-}
+    if (node == null) return;
+    Deque<Node> stack = new ArrayQueue<>();
+    Set<Node> set = new HashSet<>();
+    stack.push(node);
+    set.add(node);
+    sout(node.val);
+    while (!stack.isEmpty()) {
+        node = stack.pop();
+        for (Node next : node.nexts) {
+            if (!set.contains(next)) {
+                stack.push(node);
+                stack.push(next);
+                set.add(next);
+                sout(next.val);
+                break;
+            }
+        }
+    }
 }
 ```
 
@@ -2760,14 +2761,14 @@ break;
 
 ```java
 public void DFS(Node node, Set<Node> set) {
-if (node == null) return;
-sout(node.val);
-for (Node next : node.nexts) {
-if (!set.contains(next)) {
-set.add(next);
-DFS(next, set);
-}
-}
+    if (node == null) return;
+    	sout(node.val);
+    for (Node next : node.nexts) {
+        if (!set.contains(next)) {
+            set.add(next);
+            DFS(next, set);
+        }
+    }
 }
 ```
 
@@ -2787,25 +2788,25 @@ DFS(next, set);
 
 ```java
 public void topology(Graph graph) {
- Map<Node, Integer> inMap = new HashMap<>();
-Deque<Node> queue = new LinkedList<>();
-List<Node> ans = new ArrayList<>();
-for (Node node : graph.nodes.values()) {
-inMap.put(node, node.in);
-if (node.in == 0) {
-queue.offer(node);
-}
-}
-while (!queue.isEmpty()) {
-Node node = queue.poll();
-ans.add(node);
-for (Node next : node.nexts) {
-inMap.put(next, next.in - 1);
-if (inMap.get(next) == 0) {
-queue.offer(next);
-}
-}
-}
+    Map<Node, Integer> inMap = new HashMap<>();
+    Deque<Node> queue = new LinkedList<>();
+    List<Node> ans = new ArrayList<>();
+    for (Node node : graph.nodes.values()) {
+        inMap.put(node, node.in);
+        if (node.in == 0) {
+        	queue.offer(node);
+        }
+    }
+    while (!queue.isEmpty()) {
+        Node node = queue.poll();
+        ans.add(node);
+        for (Node next : node.nexts) {
+        	inMap.put(next, next.in - 1);
+            if (inMap.get(next) == 0) {
+            	queue.offer(next);
+            }
+        }
+    }
 }
 ```
 
@@ -2815,47 +2816,47 @@ queue.offer(next);
 
 ```java
 public class Solution {
-private static class DirectedGraphNode {
-public int label;
-public ArrayList<DirectedGraphNode> neighbors;
+    private static class DirectedGraphNode {
+        public int label;
+        public ArrayList<DirectedGraphNode> neighbors;
 
-public DirectedGraphNode(int x) {
-label = x;
-neighbors = new ArrayList<>();
-}
-}
+        public DirectedGraphNode(int x) {
+            label = x;
+            neighbors = new ArrayList<>();
+        }
+    }
 
-public ArrayList<DirectedGraphNode> topSort(ArrayList<DirectedGraphNode> graph) {
-Deque<DirectedGraphNode> queue = new LinkedList<>(); // 记录入度为0的节点
-Map<DirectedGraphNode, Integer> inMap = new HashMap<>(); // 记录所有节点的入度
-ArrayList<DirectedGraphNode> ans = new ArrayList<>(); // 记录拓扑排序
-for (DirectedGraphNode node : graph) {
-inMap.put(node, 0);
-for (DirectedGraphNode neighbor : node.neighbors) {
-if (!inMap.containsKey(neighbor)) {
-inMap.put(neighbor, 1);
-} else {
-inMap.put(neighbor, inMap.get(neighbor) + 1);
-}
-}
-} // 统计入度
-for (DirectedGraphNode node : graph) {
-if (inMap.get(node) == 0) {
-queue.offer(node);
-}
-}
-while (!queue.isEmpty()) {
-DirectedGraphNode node = queue.poll();
-ans.add(node);
-for (DirectedGraphNode neighbor : node.neighbors) {
-inMap.put(neighbor, inMap.get(neighbor) - 1); // 减小邻居节点的入度
-if (inMap.get(neighbor) == 0) {
-queue.offer(neighbor);
-}
-}
-}
-return ans;
-}
+    public ArrayList<DirectedGraphNode> topSort(ArrayList<DirectedGraphNode> graph) {
+        Deque<DirectedGraphNode> queue = new LinkedList<>(); // 记录入度为0的节点
+        Map<DirectedGraphNode, Integer> inMap = new HashMap<>(); // 记录所有节点的入度
+        ArrayList<DirectedGraphNode> ans = new ArrayList<>(); // 记录拓扑排序
+        for (DirectedGraphNode node : graph) {
+            inMap.put(node, 0);
+            for (DirectedGraphNode neighbor : node.neighbors) {
+                if (!inMap.containsKey(neighbor)) {
+                	inMap.put(neighbor, 1);
+                } else {
+                	inMap.put(neighbor, inMap.get(neighbor) + 1);
+                }
+            }
+        } // 统计入度
+        for (DirectedGraphNode node : graph) {
+            if (inMap.get(node) == 0) {
+            queue.offer(node);
+            }
+        }
+        while (!queue.isEmpty()) {
+            DirectedGraphNode node = queue.poll();
+            ans.add(node);
+            for (DirectedGraphNode neighbor : node.neighbors) {
+                inMap.put(neighbor, inMap.get(neighbor) - 1); // 减小邻居节点的入度
+                if (inMap.get(neighbor) == 0) {
+                	queue.offer(neighbor);
+                }
+            }
+        }
+        return ans;
+    }
 }
 ```
 
@@ -6593,7 +6594,7 @@ public int manacher(String str) {
     }
     return ans;
 }
-``` 
+```
 
 ## 判断是否为旋转串
 

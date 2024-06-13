@@ -158,7 +158,7 @@ Spring MVC一般将代码分为：Service层、Dao层、Entity层和Controller�
 
 ## 3. Spring MVC工作流程
 
-!img[](../img/sprinmvc-process.png)
+!img[](../img/springmvc-process.png)
 
 1. DispatcherServlet接收到Web服务器传入的请求URL，调用HandlerMapping来匹配对应的Handler。
 2. HandlerMapping将找到的Handler返回，DispatcherServlet传递给HandlerAdapter来适配调用。
