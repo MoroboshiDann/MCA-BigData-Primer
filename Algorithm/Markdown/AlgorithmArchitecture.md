@@ -6667,7 +6667,7 @@ private int[] getNextArray(String str) {
 而且，需要使用字符串数组来存储序列化后的树，每个节点对应一个字符串，空节点为Null。
 
 
-# 第十九节 
+# 第十九节 无序数组中的第K小的数 bfprt 蓄水池算法
 
 ## 无序数组中第k小的值
 
@@ -6689,18 +6689,21 @@ public int kthMin(int[] arr, int k) {
 
 private void quickSort(int[] arr, int left, int right,int k) {
     if (left >= right) return;
-    int pivot = partition(arr, left, right);
-    if (pivot == k) {
+    int pivot = left + (int)(Math.random() * (right - left + 1));
+    int pos = partition(arr, left, right, pivot);
+    if (pos == k) {
         return;
-    } else if (pivot > k) {
-        quickSort(arr, left, pivot - 1);
+    } else if (pos > k) {
+        quickSort(arr, left, pos - 1);
     } else {
-        quickSort(arr, pivot + 1, right);
+        quickSort(arr, pos + 1, right);
     }
 }
 
-private int partition(int[] arr, int left, int right) {
-    int temp = arr[left];
+private int partition(int[] arr, int left, int right, int pivot) {
+    int temp = arr[pivot];
+    arr[pivot] = arr[left];
+    arr[left] = temp;
     while (left < right) {
         while (left < right && arr[right] > temp) --right;
         arr[left] = arr[right];
@@ -6734,6 +6737,124 @@ public int kthMin(int[] arr, int k) {
 ```
 
 ### bfprt算法
+
+时间复杂度O(N)，空间复杂度O(1)。
+
+对于数组arr，找到第k小的数，于是调用`bfprt(arr, k)`
+1. 第一步：将数组arr划分为五个一组的若干个小组。最后一组可能不足五个。
+2. 第二步：每个小组内部进行排序。
+3. 第三步：将每个小组中间的数拿出来，组成新的数组m。新数组长度为N/5。
+4. 第四步：对于m，调用`bfprt(m, k / 10)`
+
+
+### 无序数组中topK个数(O(N * logN))
+
+直接快速排序，然后返回topK个数即可。
+
+### 无序数组中topK个数(O(N + K * logN))
+
+将数组看作一个没有调整的大根堆，然后对其进行调整。调整过程时间复杂度为$O(N)$。然后，每次将堆顶弹出再调整，共进行K次。时间复杂度为$O(K * logN)$。
+
+### 无序数组中topK个数(O(N + K * logK))
+
+通过改写快排的方法，先求出第K大的数M。然后，遍历数组，将所有比M大的数都找出来。将这K个数存放在一个数组中，然后对它排序。
+
+## 蓄水池算法
+
+题目描述：
+
+假设有一台源源不断吐出球的机器，以及一个只能装下十个球的袋子。机器吐出的球要么装进袋子，要么被直接丢弃。袋子中的球也可以随时拿出丢弃。
+
+如何能做到机器每次吐出球时，从1号球到当前球，所有球仍被被留在袋子中的概率都是相等的。
+
+### 基本策略
+
+对于1-10号球，它们进入袋子的概率都是1。对于10号球以后的i号球，要进行以下操作：
+- 以$10/i$的概率进入袋子。即，设计一个函数，等概率返回$[1, i]$上的一个数，如果这个数在$[1, 10]$上，就将其加入袋子，否则直接丢弃。
+- 由于，此时袋子一定是满的，所以要决定几号球被拿出丢弃。因此，在袋子中的球等概率的选取一个球丢弃。
+
+根据以上原则，每次吐出的球其留在袋子中的概率为$1/i$。
+
+
+### 用户抽奖
+
+题目描述：
+
+一个游戏系统，规定从某一个时刻start起，登录的用户可以参与抽奖，当结束时刻end时公布抽奖名单。要求，在这期间登录过的所有用户得奖的概率是相同的，得奖人数为K个。如何设计算法。用户只有第一次登录才有资格参与抽奖，后续登录都按照第一次登录的时刻计算。
+
+#### 普通算法
+
+拿到所有登录过的用户的名单，然后等概率抽取K个人。这样的话就无法在结束时间end到达的那一刻将得奖名单公布。
+
+#### 蓄水池算法
+
+从第K + 1个用户开始，档期登录时，需要进行如下操作：
+- 以`K/i`的概率加入得奖名单。
+- 以`1/K`的概率将得奖名单中的一个用户移除。
+
+
+### 生成UUID
+
+题目描述：
+
+要求设计一个算法，能够生成固定长度的UUID，且每次生成的UUID都不相同。系统吞吐量要求极大，且UUID碰撞概率为0%。
+
+做法：
+
+全球维护一个总的服务器，在总的服务器上直接将所有的UUID都生成出来，即假设UUID长度为N位，总服务器只需要维护一个长度为N的变量，用于记录当前的UUID发放到哪里了。(从全0开始发放)。当前服务器可以维护一个备用集群来防止宕机，但是总服务器并不是总被高并发访问，甚至很少访问。
+
+然后，在世界各地设置国家级服务器。国家级服务器在启动时，会向总服务器查询两个变量，start为当前UUID发放到哪里了，range当前国家及服务器能够从start开始发放的范围。当range范围内的UUID都发放完才会重新申请。
+
+这样就能够保证总服务器很少被访问。
+
+国家级服务器下面还可以继续设下级服务器。每个服务器都是只维护两个变量。
+
+
+# 第二十节 Morris遍历
+
+## Morris遍历 
+
+先前接触到的二叉树的先中后遍历方式，其空间复杂度都是$O(h)$，无论是递归方式还是非递归方式。Morris遍历空间复杂度可以做到$O(1)$。
+
+其原理就是利用二叉树结点中空闲的右指针。就是线索二叉树的结果，让空闲的右指针指向中序遍历序列中的后置节点。遍历时，根据右指针即可回到子树中序遍历的根节点，从而节省了额外辅助空间。
+
+如果当前节点没有左孩子，那就直接查阅节点；如果当前节点有左孩子，那就等从左子树上回来的时候再遍历。这样，遍历序列就是中序遍历了。
+
+遍历原理：设置一个当前结点指针cur，初始时cur指向root。
+1. 如果cur没有左孩子，则`cur = cur.right`，cur向右移动。
+2. 如果cur有左孩子，找到左子树上最右节点`mostRight`：
+   1. 如果mostRight的右指针指向空，让其指向cur，`mostRight.right = cur`，然后cur左移，`cur = cur.left`。
+   2. 如果mostRight的右指针指向cur，让其指向空，`mostRight.right = null`，然后cur右移，`cur = cur.right`。
+3. cur为空时，遍历停止。
+
+```java
+public void morrisTraverse(TreeNode root) {
+    TreeNode cur = root;
+    while (cur != null) {
+        if (cur.left == null) {
+            cur = cur.right;
+            sout(cur.val);
+        } else {
+            TreeNode mostRight = findMostRight(cur.left);
+            if (mostRight.right == null) {
+                mostRight.right = cur;
+                cur = cur.left;
+            } else if (mostRigth.right == cur) {
+                mostRigth.right = null;
+                cur = cur.right;
+                sout(cur.val);
+            }
+        }
+    }
+}
+
+private TreeNode findMostRight(TreeNode root) {
+    while (root.right != null) {
+        root = root.right;
+    }
+    return root;
+}
+```
 
 
 
