@@ -6831,30 +6831,125 @@ public int kthMin(int[] arr, int k) {
 public void morrisTraverse(TreeNode root) {
     TreeNode cur = root;
     while (cur != null) {
-        if (cur.left == null) {
-            cur = cur.right;
-            sout(cur.val);
-        } else {
+        if (cur.left != null) {
             TreeNode mostRight = findMostRight(cur.left);
             if (mostRight.right == null) {
                 mostRight.right = cur;
                 cur = cur.left;
             } else if (mostRigth.right == cur) {
                 mostRigth.right = null;
-                cur = cur.right;
-                sout(cur.val);
+                continue;
             }
         }
+        cur = cur.right;
+        sout(cur.val);
     }
 }
 
 private TreeNode findMostRight(TreeNode root) {
-    while (root.right != null) {
-        root = root.right;
+    if (root.right == null) return root;
+    TreeNode cur = root.right;
+    while (cur.right != null && cur.right != root) {
+        cur = cur.right;
     }
-    return root;
+    return cur;
 }
 ```
+
+时间复杂度$O(N)$，空间复杂度$O(1)$。
+
+morris遍历，也可以改成先序遍历，在第一次遇到节点时就访问即可。但是，修改为后序遍历是比较困难的，因为一个节点最多只能经过两次，而后序遍历需要第三次经过该节点时访问，所以无法比较便捷地改为后序遍历。
+
+但是，也不是没有方法。morris遍历中，第二次经过节点时，将左子树最右节点输出。遍历完成之后，再依次输出整棵树的右边界。整个输出的序列就是后序遍历序列。
+
+```java
+public void morrisPost(TreeNode root) {
+    TreeNode cur = head;
+    TreeNode mostRight = null;
+    while (cur != null) {
+        mostRight = cur.left;
+        if (mostRight != null) {
+            while (mostRight.right != null && mostRight.right != cur) {
+                mostRight = mostRight.right;
+            }
+            if (mostRight == cur) {
+                mostRight.right = null;
+                printEdge(cur);
+            } else {
+                mostRight.right = cur;
+                cur = cur.left;
+                continue;
+            }
+        }
+        cur = cur.right;
+    }
+    printEdge(root);
+}
+
+private void printEdge(TreeNode root) {
+    TreeNode tail = reverseEdge(root);
+    TreeNode cur = tail;
+    while (cur != null) {
+        sout(cur.val);
+        cur = cur.right;
+    }
+    reverseEdge(tail);
+}
+
+private void reverseEdge(TreeNode root) {
+    TreeNode pre = null;
+    TreeNode post = null;
+    while (root != null) {
+        post = root.right;
+        root.right = pre;
+        pre = root;
+        root = post;
+    }
+    return pre;
+}
+```
+
+
+
+### 能解决的问题
+
+需要用到二叉树遍历的问题，如判断是否为二叉搜索树，就可以用Morris遍历来节约空间。
+
+
+
+### 求二叉树最小深度
+
+题目描述：
+
+给定一棵二叉树的头节点root，求以root为根节点的二叉树中，最小深度为多少。
+
+
+
+#### 普通解法
+
+以root为根节点的树的最小深度，那就找到每一个叶节点，计算从root到当前叶节点的深度，然后取最小值。
+
+```java
+public int minDepth(TreeNode root) {
+    return process(root);
+}
+
+private int process(root) {
+    if (root == null) return 0;
+    if (root.left == null && root.right == null) return 1;
+    int leftDepth = process(root.left);
+    int rightDepth = process(root.right);
+    return Math.min(leftDepth, rightDepth) + 1;
+}
+```
+
+
+
+
+
+
+
+
 
 
 

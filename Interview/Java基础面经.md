@@ -203,4 +203,134 @@ Java中即使一个类没有显示地定义构造方法，在编译时也会自�
 
 
 
+# 四、String
 
+## 1. String、StringBuilder、StringBuffer
+
+StringBuilder和StringBuffer都继承自`AbstractStringBuilder`抽象类，内部也是使用`char[]`来存储字符串，但是`char[]`没有被`final`修饰，所以是可以改变的。都提供`append()`等方法来修改字符串。
+
+StringBuilder线程不安全，StringBuffer是线程安全的。StringBuffer对方法加了同步锁或者对调用的方法加了同步锁，所以是线程安全的。
+
+
+
+## 2. String为什么是不可变的
+
+首先，String内部使用的是`private final char[]`字符数组来保存字符串，所以数组的引用一旦赋值就不能修改。
+
+另外，String类也被`final`修饰，所以不能被继承，因而防止了被子类继承而修改。
+
+
+
+## 3.  字符串拼接
+
+在Java程序中使用字符串拼接有以下几种情况：
+
+- 参与拼接的字符串都是字面量：`String str = "123" + "456";`，会直接优化为拼接的结果。
+- 参与拼接的字符串中有变量：`String str1 = "123"; String str2 = "345" + str2;`。
+
+对于第二种情况，JVM会隐式创建一个StringBuilder，然后调用两次`append()`方法来进行字符串拼接。拼接完成后会调用`toString()`方法返回字符串，然后这个StringBuilder就没丢弃。
+
+在循环中拼接字符串，就会重复创建StringBuilder对象，因此要避免在循环中采用`+`来拼接字符串，而是自己创建一个StringBuilder。
+
+
+
+## 4. String#equals
+
+`String#equals`方法重写过，可以判断字符串的内容是否相等。
+
+
+
+## 5. 字符串常量池
+
+字符串常量池逻辑上属于元空间，但是实际上存放在堆空间上。
+
+常量池中不会存在重复对象，如果要创建的字符串已经存在，就会直接返回地址而不是创建新的。
+
+如果通过字面量来创建字符串`String str = "123";`会直接在常量池中创建对象。
+
+如果通过`new`关键字来创建对象，则分为两种情况：
+
+- 传入的是一个字面量：`String str = new String("123");`，则等同于两条代码`String s = "123"; String str = new String(s);`。会先尝试在常量池中创建字符串，然后再去堆空间中创建一个字符串对象。
+- 传入的是一个字符串变量：直接在堆空间中创建字符串对象。
+
+
+
+`intern()`，会尝试在常量池中创建一个当前字符串的对象。如果，创建字符串时直接传入的是字面量，那么常量池中就已经存在该字符串对象，`intern()`方法就不会创建新的对象，而是返回地址。
+
+
+
+## 6. String会创建几个对象
+
+### 举例
+
+```java
+public static void main(String[] args) {
+    String s1 = new String("1");
+    s1.intern();
+    String s2 = "1";
+    sout(s1 == s2); // false
+    
+    String s3 = new String("1") + new String("1");
+    s3.intern();
+    String s4 = "11";
+    sout(s3 == s4); // true
+}
+```
+
+首先，`s1 == s2`为false，因为s1对象本身是存储在堆空间中的，即便调用了intern，其本身不会发生变化(况且即便不调用intern，也会在常量池创建“1”)。s2直接指向的是常量池中的字符串对象。
+
+然后，s3首先会创建两个`"1"`对象，然后通过StringBuilder来拼接对象，最后返回的是存储在堆中的s3，且此时字符串常量池中没有"11"字符串。接着执行intern，才将“11”在堆中的地址记录在常量池中。s4直接引用的是常量池中的对象，所以其地址就是s3的地址。
+
+如果交换代码顺序就会出现不同结果。
+
+```java
+public static void main(String[] args) {
+    String s3 = new String("1") + new String("1");
+    String s4 = "11";
+    s3.intern();
+    sout(s3 == s4); // false
+}
+```
+
+s3在堆上创建后，此时字符串常量池中只有"1"。然后在常量池中创建“11”。s3执行intern时，直接返回的是s4的地址，因此两个字符串变量地址不相同。
+
+```java
+public static void main(String[] args) {
+    String s = new String("a") + new String("b");
+    String s2 = s.intern(); // 创建了对象
+    String s3 = "ab";
+    sout(s2 == s3); // true
+    sout(s == s3); // false
+}
+```
+
+```java
+public static void main(String[] args) {
+    String s = new String("a") + new String("b");
+    s.intern(); // 发生了对象创建，地址不一致
+    String s2 = "ab";
+    sout(s == s2); // false
+}
+```
+
+
+
+### 面试题`new String("abc");`会创建几个对象
+
+1个或2个。使用`new`关键字创建String对象，相当于两个语句`String s = "abc"; String str = new String(s);`。
+
+如果常量池中没有存在该字符串，会先在常量池中创建，然后再在堆中创建。
+
+如果常量池种已经存在该字符串，只会在堆中创建。
+
+
+
+### `new String("a") + new String("b")`会创建几个对象
+
+5个或几个。
+
+对于a和b，其创建过程都和上一题一致。然后因为涉及到字符串拼接，会使用StringBuilder对象，然后调用toString()方法。因此，最多创建5个。
+
+> toString只会在对中创建字符串对象，而new会先在常量池中创建，再去堆中创建。
+>
+> 虽然StringBuilder#toString也是调用的`new`关键字，但是构造器不是同一个。只会在对中创建对象。
