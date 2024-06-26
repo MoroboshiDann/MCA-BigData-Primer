@@ -17,6 +17,8 @@
 
 缺点：
 - SQL语句编程量大，需要开发人员对SQL语句有一定功底。
+  - Mybatis是半自动的ORM，需要通过SQL语句来查询数据库，Hibernate是全自动的，可以通过对象关系模型来自动获取。
+
 - SQL语句依赖数据库，导致数据库移植性差，不能随意更换数据库。
 
 # 2. Mybatis这类ORM框架有什么优点
@@ -42,6 +44,7 @@ ORM(Object Relational Mapping)对象关系映射框架，是一种为了解决�
 
 - #将传入的数据都当成一个字符串，会对自动传入的数据加一个双引号。
   - 如：`where username=#{username}`，如果传入的值是`111`，那么解析成sql时的值为`where username="111"`，如果传入的值是id，则解析成的sql为where `username="id"`。
+  - 在mybatis处理时，会将SQL语句中使用#的参数转换为？占位，并记录其类型。在执行SQL时，就按照类型，通过反射从参数对象中取值并传入到SQL中。
 - $将传入的数据直接显示生成在sql中。
   - 如：`where username=${username}`，如果传入的值是`111`，那么解析成sql时的值为`where username=111`；如果传入的值是`;drop table user;`，则解析成的sql为：`select id, username, password, role from user where username=;drop table user;`。
 
@@ -68,6 +71,12 @@ Mybatis中池化数据源在池化数据源的基础上进行的扩展。首先�
 通过Java提供的动态代理方式，我们可以实现一个MapperProxy类，实现InvocationHandler接口，重写invoke方法，在其中实现Dao接口方法的执行逻辑。然后，再通过Proxy#newInstance方法，为Dao接口创建代理类对象。这样，在调用Dao接口方法时，实际上是执行的invoke方法中的逻辑，然后在其中我们听过反射的方式来判断方法对应的SQL类型，执行对应的方法。
 
 其次，还有返回结果。比如通过查询语句会将数据库对应记录返回给Java程序，此时我们就需要进行类型映射，创建对应的Java对象，并通过反射的方式将记录中的字段填充到对象对应的属性中去。
+
+## 反射
+
+Mybatis中提供了反射工具，可以将类型解析获取其中所有的可读写属性，及其getter/setter方法，并提供统一的调用方式。如，在解析配置XML文件时获取了数据源的配置，在创建数据源时，就直接解析数据源的类，然后通过反射的方式，调用配置类中给出的属性的set方法，来实现动态传值。这样避免了代码中硬编码配置属性。
+
+
 
 # 多边服务如何设计
 

@@ -440,7 +440,7 @@ public class Stack {
     public int pop() {
         if (size == 0) return -1;
         --size;
-        min/pop();
+        min.pop();
         return stack.pop();
     }
 
@@ -478,9 +478,9 @@ public class TwoStackImitateQueue {
     }
 
     private void reverse() {
-    while (!pushStack.isEmpty()) {
-        popStack.push(pushStack.pop());
-    }
+        while (!pushStack.isEmpty()) {
+            popStack.push(pushStack.pop());
+        }
     }
 }
 ```
@@ -569,19 +569,19 @@ private void merge(int[] arr, int left, int mid, int right) {
 
 ```java
 public void mergeSort(int[] arr) {
-int mergeSize = 0;
-int length = arr.length;
-while (mergeSize < length) { // 如果归并段大小已经大于数组长度了，证明上一次归并段已经超过了1/2数组，数组已经有序
-int left = 0; // 对于每个阶段，归并总是从数组起始开始的
-while (left < length) {
-int mid = left + mergeSize - 1; // 两两归并时，左边归并段的结束位置
-if (mid > length) break; // 如果数组末尾位置，长度不足一个归并段，不应该进行归并操作
-int right = Math.min(mid + 1, length - 1); // 同样是为了处理末尾位置
-merge(arr, left, mid, right);
-left = right + 1;
-}
-mergeSize <<= 1;
-}
+    int mergeSize = 0;
+    int length = arr.length;
+    while (mergeSize < length) { // 如果归并段大小已经大于数组长度了，证明上一次归并段已经超过了1/2数组，数组已经有序
+        int left = 0; // 对于每个阶段，归并总是从数组起始开始的
+        while (left < length) {
+            int mid = left + mergeSize - 1; // 两两归并时，左边归并段的结束位置
+            if (mid > length) break; // 如果数组末尾位置，长度不足一个归并段，不应该进行归并操作
+            int right = Math.min(mid + 1, length - 1); // 同样是为了处理末尾位置
+            merge(arr, left, mid, right);
+            left = right + 1;
+        }
+   		mergeSize <<= 1;
+    }
 }
 ```
 
@@ -601,38 +601,38 @@ mergeSize <<= 1;
 
 ```java
 public int mergeSort(int[] arr, int left, int right) {
-if (left >= right) return 0;
-int mid = left + ((right - left) >> 1);
-int count = 0;
-count += mergeSort(arr, left, mid);
-count += mergeSort(arr, mid + 1, right);
-count += merge(arr, left, mid, right);
-return count;
+    if (left >= right) return 0;
+    int mid = left + ((right - left) >> 1);
+    int count = 0;
+    count += mergeSort(arr, left, mid);
+    count += mergeSort(arr, mid + 1, right);
+    count += merge(arr, left, mid, right);
+    return count;
 }
 
 private count merge(int[] arr, int left, int mid, int right) {
-int[] temp = new int[right - left + 1]; // 申请额外数组
-int l = left, r = mid + 1;
-int index = 0;
-int count = 0;
-while (l <= mid && r <= right) {
-if (arr[l] < arr[r]) { // 此时需要计算小和数量
-count += (r - right + 1);
-temp[index] = arr[l];
-++l;
-} else {
-temp[index] = arr[r];
-++r;
-}
-++index;
-}
-while (l <= mid) {
-arr[index++] = arr[l++];
-}
-while (r <= right) {
-arr[index++] = arr[r++];
-}
-return count;
+    int[] temp = new int[right - left + 1]; // 申请额外数组
+    int l = left, r = mid + 1;
+    int index = 0;
+    int count = 0;
+    while (l <= mid && r <= right) {
+        if (arr[l] < arr[r]) { // 此时需要计算小和数量
+            count += (r - right + 1);
+            temp[index] = arr[l];
+            ++l;
+        } else {
+            temp[index] = arr[r];
+            ++r;
+        }
+        ++index;
+    }
+    while (l <= mid) {
+    	arr[index++] = arr[l++];
+    }
+    while (r <= right) {
+    	arr[index++] = arr[r++];
+    }
+    return count;
 }
 ```
 
@@ -652,51 +652,51 @@ return count;
 
 ```java
 class Solution {
-public int reversePairs(int[] nums) {
-return mergeSort(nums, 0, nums.length - 1);
-}
+    public int reversePairs(int[] nums) {
+        return mergeSort(nums, 0, nums.length - 1);
+    }
 
-private int mergeSort(int[] nums, int left, int right) {
-if (left >= right) return 0;
-int mid = left + ((right - left) >> 1);
-return mergeSort(nums, left, mid) +
-mergeSort(nums, mid + 1, right) +
-merge(nums, left, mid, right);
-}
+    private int mergeSort(int[] nums, int left, int right) {
+        if (left >= right) return 0;
+        int mid = left + ((right - left) >> 1);
+        return mergeSort(nums, left, mid) +
+            mergeSort(nums, mid + 1, right) +
+            merge(nums, left, mid, right);
+    }
 
-private int merge(int[] nums, int left, int mid, int right) {
-int count = 0;
-int window = mid + 1;
-for (int i = left; i <= mid; ++i) {
-long pre = nums[i] + 0L;
-while (window <= right) { // 为了防止乘2溢出，改为long判断
-long post = (nums[window] + 0L) << 1;
-if (pre > post) ++window;
-else break;
-}
-count += (window - mid - 1);
-}
-int[] temp = new int[right - left + 1];
-int l = left, r = mid + 1, index = 0;
-while (l <= mid && r <= right) {
-if (nums[l] < nums[r]) {
-temp[index] = nums[l++];
-} else {
-temp[index] = nums[r++];
-}
-++index;
-}
-while (l <= mid) {
-temp[index++] = nums[l++];
-}
-while (r <= right) {
-temp[index++] = nums[r++];
-}
-for (int i = 0; i < index; ++i){
-nums[left + i] = temp[i];
-}
-return count;
-}
+    private int merge(int[] nums, int left, int mid, int right) {
+        int count = 0;
+        int window = mid + 1;
+        for (int i = left; i <= mid; ++i) {
+            long pre = nums[i] + 0L;
+            while (window <= right) { // 为了防止乘2溢出，改为long判断
+                long post = (nums[window] + 0L) << 1;
+                if (pre > post) ++window;
+                else break;
+        	}
+        	count += (window - mid - 1);
+        }
+        int[] temp = new int[right - left + 1];
+        int l = left, r = mid + 1, index = 0;
+        while (l <= mid && r <= right) {
+            if (nums[l] < nums[r]) {
+                temp[index] = nums[l++];
+            } else {
+                temp[index] = nums[r++];
+            }
+        	++index;
+        }
+        while (l <= mid) {
+        	temp[index++] = nums[l++];
+        }
+        while (r <= right) {
+        	temp[index++] = nums[r++];
+        }
+        for (int i = 0; i < index; ++i){
+        	nums[left + i] = temp[i];
+        }
+        return count;
+    }
 }
 ```
 
@@ -723,76 +723,77 @@ return count;
 ```java
 int lower;
 int upper;
+
 public int countOfRangeSum(int[] arr, int lower, int upper) {
-long[] sum = new long[arr.length]; // 前缀和数组
-this.lower = lower;
-this.upper = upper;
-long temp = 0;
-int count = 0;
-for (int i = 0; i < sum.length; ++i) {
-temp += arr[i];
-sum[i] = temp;
-if (sum[i] >= lower && sum[i] <= upper) ++count;
-}
-// 通过归并排序的思路，将问题转换为小和问题
-return count + mergeSort(sum, 0, sum.length - 1);
+    long[] sum = new long[arr.length]; // 前缀和数组
+    this.lower = lower;
+    this.upper = upper;
+    long temp = 0;
+    int count = 0;
+    for (int i = 0; i < sum.length; ++i) {
+        temp += arr[i];
+        sum[i] = temp;
+        if (sum[i] >= lower && sum[i] <= upper) ++count;
+    }
+    // 通过归并排序的思路，将问题转换为小和问题
+    return count + mergeSort(sum, 0, sum.length - 1);
 }
 
 private int mergeSort(long[] sum, int left, int right) {
-if (left >= right) return 0;
-int mid = left + ((right - left) >> 1);
-return mergeSort(sum, left, mid) +
-mergeSort(sum, mid + 1, right) +
-merge(sum, left, mid, right);
+    if (left >= right) return 0;
+    int mid = left + ((right - left) >> 1);
+    return mergeSort(sum, left, mid) +
+    mergeSort(sum, mid + 1, right) +
+    merge(sum, left, mid, right);
 }
 
 private int merge(long[] sum, int left, int mid, int right) {
-// 先统计数量，然后再进行归并排序
-int count = 0;
-// 直接计算，指针一直在回溯，时间复杂度还是N^2，会超时
-// for (int i = mid + 1; i <= right; ++i) {
-// long rangeL = sum[i] - upper;
-// long rangeR = sum[i] - lower;
-// for (int j = left; j <= mid; ++j) {
-// if (sum[j] >= rangeL && sum[j] <= rangeR) ++count;
-// }
-// }
-int windowL = left;
-int windowR = left;
-for (int i = mid + 1; i <= right; ++i) {
-long rangeL = sum[i] - upper;
-long rangeR = sum[i] - lower;
-while (windowR <= mid && sum[windowR] <= rangeR) ++windowR;
-while (windowL <= mid && sum[windowL] < rangeL) ++windowL;
-count += windowR - windowL; 
-}
-long[] temp = new long[right - left + 1];
-int l = left, r = mid + 1;
-int index = 0;
-while (l <= mid && r <= right) {
-if (sum[l] < sum[r]) {
-temp[index] = sum[l];
-++l;
-} else {
-temp[index] = sum[r];
-++r;
-}
-++index;
-}
-while (l <= mid) {
-temp[index] = sum[l];
-++index;
-++l;
-}
-while (r <= right) {
-temp[index] = sum[r];
-++index;
-++r;
-}
-for (int i = 0; i < index; ++i) {
-sum[left + i] = temp[i];
-}
-return count;
+    // 先统计数量，然后再进行归并排序
+    int count = 0;
+    // 直接计算，指针一直在回溯，时间复杂度还是N^2，会超时
+    // for (int i = mid + 1; i <= right; ++i) {
+    // long rangeL = sum[i] - upper;
+    // long rangeR = sum[i] - lower;
+    // for (int j = left; j <= mid; ++j) {
+    // if (sum[j] >= rangeL && sum[j] <= rangeR) ++count;
+    // }
+    // }
+    int windowL = left;
+    int windowR = left;
+    for (int i = mid + 1; i <= right; ++i) {
+        long rangeL = sum[i] - upper;
+        long rangeR = sum[i] - lower;
+        while (windowR <= mid && sum[windowR] <= rangeR) ++windowR;
+        while (windowL <= mid && sum[windowL] < rangeL) ++windowL;
+        count += windowR - windowL; 
+    }
+    long[] temp = new long[right - left + 1];
+    int l = left, r = mid + 1;
+    int index = 0;
+    while (l <= mid && r <= right) {
+        if (sum[l] < sum[r]) {
+        temp[index] = sum[l];
+        ++l;
+    } else {
+    	temp[index] = sum[r];
+    	++r;
+    }
+    	++index;
+    }
+    while (l <= mid) {
+        temp[index] = sum[l];
+        ++index;
+        ++l;
+    }
+    while (r <= right) {
+        temp[index] = sum[r];
+        ++index;
+        ++r;
+    }
+    for (int i = 0; i < index; ++i) {
+    	sum[left + i] = temp[i];
+    }
+    return count;
 }
 ```
 
@@ -808,24 +809,24 @@ return count;
 
 ```java
 public class QuickSort {
-public void quickSort(int[] arr, int left, int right) {
-if (left >= right) return;
-int pivot = partition(arr, left, right);
-quickSort(arr, left, pivot - 1);
-quickSort(arr, pivot + 1, right);
-}
+    public void quickSort(int[] arr, int left, int right) {
+        if (left >= right) return;
+        int pivot = partition(arr, left, right);
+        quickSort(arr, left, pivot - 1);
+        quickSort(arr, pivot + 1, right);
+    }
 
-private int partition(int[] arr, int left, int right) {
-int pivot = arr[left];
-while (left < right) {
-while (left < right && arr[right] > pivot) --right;
-arr[left] = arr[right];
-while (left < right && arr[left] < pivot) ++left;
-arr[right] = arr[left];
-}
-arr[left] = pivot;
-return left;
-}
+    private int partition(int[] arr, int left, int right) {
+        int pivot = arr[left];
+        while (left < right) {
+            while (left < right && arr[right] > pivot) --right;
+            arr[left] = arr[right];
+            while (left < right && arr[left] < pivot) ++left;
+            arr[right] = arr[left];
+        }
+        arr[left] = pivot;
+        return left;
+    }
 }
 ```
 
@@ -845,17 +846,17 @@ Java提供的工具类和方法，对于自定义的对象，通常需要实现�
 
 ```java
 public class Student {
-private int id;
-private String name;
+    private int id;
+    private String name;
 
-public static void main(String[] args) {
-TreeMap<Student> map = new TreeMap<>(new Comparator<Student>() {
-@Override
-public int compare(Student o1, Student o2) {
-return o1.id - o2.id;
-}
-})
-}
+    public static void main(String[] args) {
+        TreeMap<Student> map = new TreeMap<>(new Comparator<Student>() {
+        @Override
+        public int compare(Student o1, Student o2) {
+        return o1.id - o2.id;
+        }
+        });
+    }
 }
 ```
 
@@ -871,22 +872,21 @@ return o1.id - o2.id;
 
 ```java
 public int poll(int[] arr) {
-int ans = arr[0]；
-arr[0] = arr[heapSize - 1];
---heapSize;
-
+    int ans = arr[0]；
+    arr[0] = arr[heapSize - 1];
+    --heapSize;
 }
 
 private void heapMaintain(int[] arr, int start) {
-int left = start * 2 + 1; // 根节点的左孩子
-while (left < heapSize) {
-int smaller = left + 1 < heapSize && arr[left] < arr[left + 1] ? left && left + 1; // 获取较小孩子的下标
-smaller = arr[start] < arr[smaller] ? start : smaller; // 再跟父节点比较，看谁更小
-if (smaller == start) break; // 如果父节点更小，表明不需要调整了
-swap(arr, smaller, start);
-start = smaller;
-left = 2 * index + 1;
-}
+    int left = start * 2 + 1; // 根节点的左孩子
+    while (left < heapSize) {
+        int smaller = left + 1 < heapSize && arr[left] < arr[left + 1] ? left && left + 1; // 获取较小孩子的下标
+        smaller = arr[start] < arr[smaller] ? start : smaller; // 再跟父节点比较，看谁更小
+        if (smaller == start) break; // 如果父节点更小，表明不需要调整了
+        swap(arr, smaller, start);
+        start = smaller;
+        left = 2 * index + 1;
+    }
 }
 ```
 
@@ -896,10 +896,10 @@ left = 2 * index + 1;
 
 ```java
 public void add(int[]arr, int index) {
-while (arr[index] < arr[(index - 1) >> 1]) {
-swap(arr, index, (index - 1) >> 1);
-index = (index - 1) >> 1;
-}
+    while (arr[index] < arr[(index - 1) >> 1]) {
+        swap(arr, index, (index - 1) >> 1);
+        index = (index - 1) >> 1;
+    }
 }
 ```
 
@@ -948,22 +948,22 @@ index = (index - 1) >> 1;
 
 ```java
 public int numberOfOverlap(int[][] segments) {
-// add segments to a list, so that we can sort it by the start index
-List<int[]> lines = new ArrayList<>();
-for (int[] segment : segments) {
-lines.add(segment);
-}
-lines.sort((o1, o2) -> o1[0] - o2[0]); // sort segments
-PriorityQueue<Integer> pq = new PriorityQueue<>();
-int ans = 0;
-for (int[] line : lines) {
-while (!pq.isEmpty() && pq.peek() < line[1]) { // while the top of the heap is smaller than the start of the current line
-pq.poll(); // get rid of the top
-}
-pq.add(line[1]);
-ans = pq.size() > ans ? pq.peek() : ans;
-}
-return ans;
+    // add segments to a list, so that we can sort it by the start index
+    List<int[]> lines = new ArrayList<>();
+    for (int[] segment : segments) {
+    	lines.add(segment);
+    }
+    lines.sort((o1, o2) -> o1[0] - o2[0]); // sort segments
+    PriorityQueue<Integer> pq = new PriorityQueue<>();
+    int ans = 0;
+    for (int[] line : lines) {
+        while (!pq.isEmpty() && pq.peek() < line[1]) { // while the top of the heap is smaller than the start of the current line
+            pq.poll(); // get rid of the top
+        }
+        pq.add(line[1]);
+        ans = pq.size() > ans ? pq.peek() : ans;
+    }
+    return ans;
 }
 ```
 
@@ -971,7 +971,7 @@ return ans;
 
 ### 改写堆练习题
 
-题目描述：
+**题目描述：**
 
 给定两个数组，`int[] arr` 和 `boolean[] op`，arr中的元素i表示顾客i，op中的元素`T/F`表示购买或退货。需要统计购买数量最多的K个顾客。
 
@@ -989,7 +989,7 @@ return ans;
 
 如果购买数量一致，则将备选区中最早进入的顾客加入到得奖区。
 
-思路：
+**思路：**
 
 构建一个大根堆，对内元素为用户索引，排序标准为商品的购买数量。需要实现在购买数量发生变化时，可以及时调整堆。
 
@@ -1010,77 +1010,77 @@ Java内部提供的堆存在如下缺点：
 
 ```java
 public class HeapSmaller<T> {
-private List<T> heap;
-private Map<T, Integer> map;
-private Comparator<T> comparator;
-private int heapSize;
+    private List<T> heap;
+    private Map<T, Integer> map;
+    private Comparator<T> comparator;
+    private int heapSize;
 
-public HeapSmaller(Comparator<T> comparator) {
-this.comparator = comparator;
-heap = new ArrayList<T>();
-map = new HashMap<>();
-heapSize = 0;
-}
+    public HeapSmaller(Comparator<T> comparator) {
+        this.comparator = comparator;
+        heap = new ArrayList<T>();
+        map = new HashMap<>();
+        heapSize = 0;
+    }
 
-public void add(T item) {
-heap.add(item);
-map.put(item, heap.size() - 1);
-upMaintain(heap.size() - 1);
-}
+    public void add(T item) {
+        heap.add(item);
+        map.put(item, heap.size() - 1);
+        upMaintain(heap.size() - 1);
+    }
 
-private void upMaintain(int index) {
-while (comparator.compare(heap.get(index), heap.get((index - 1) >> 1)) < 0) { // compare to the parent node
-swap(index, (index - 1) >> 1);
-index = (index - 1) >> 1;
-}
-}
+    private void upMaintain(int index) {
+        while (comparator.compare(heap.get(index), heap.get((index - 1) >> 1)) < 0) { // compare to the parent node
+            swap(index, (index - 1) >> 1);
+            index = (index - 1) >> 1;
+   		}
+    }
 
-private void swap(int i, int j) {
-T o1 = heap.get(i);
-T o2 = heap.get(j);
-heap.set(i, o2);
-heap.set(j, o1);
-map.put(o1, j);
-map.put(o2, i);
-}
+    private void swap(int i, int j) {
+        T o1 = heap.get(i);
+        T o2 = heap.get(j);
+        heap.set(i, o2);
+        heap.set(j, o1);
+        map.put(o1, j);
+        map.put(o2, i);
+    }
 
-public T poll() {
-swap(0, heap.size() - 1);
-T ans = heap.get(heap.size() - 1);
-map.remove(ans);
-heap.remove(heap.size() - 1);
-downMaintain(0);
-return ans;
-}
+    public T poll() {
+        swap(0, heap.size() - 1);
+        T ans = heap.get(heap.size() - 1);
+        map.remove(ans);
+        heap.remove(heap.size() - 1);
+        downMaintain(0);
+        return ans;
+    }
 
-private void downMaintain(int index) {
-int left = (index << 1) + 1;
-while (left < heap.size()) {
-// get the smaller child's index
-int smaller = left + 1 < heap.size() && comparator.compare(heap.get(left), heap.get(left + 1)) < 0 ? left : left + 1;
-smaller = comparator.compare(heap.get(index), heap.get(smaller)) < 0 ? index : smaller;
-if (smaller == index) {
-return;
-}
-swap(index, smaller);
-index = smaller;
-left = (index << 1) + 1;
-}
-}
+    private void downMaintain(int index) {
+        int left = (index << 1) + 1;
+        while (left < heap.size()) {
+            // get the smaller child's index
+            int smaller = left + 1 < heap.size() && comparator.compare(heap.get(left), heap.get(left + 1)) < 0 ? left : left + 1;
+            smaller = comparator.compare(heap.get(index), heap.get(smaller)) < 0 ? index : smaller;
+            if (smaller == index) {
+            return;
+            }
+            swap(index, smaller);
+            index = smaller;
+            left = (index << 1) + 1;
+    	}
+    }
 
-public void resign(T item) {
-int index = map.get(item);
-upMaintain(index);// 修改某个对象的值之后，不知道要上升还是下降，所以先看能不能上升，在看能否下降
-downMaintain(index);
-}
+    public void resign(T item) {
+        int index = map.get(item);
+        upMaintain(index);// 修改某个对象的值之后，不知道要上升还是下降，所以先看能不能上升，在看能否下降
+        downMaintain(index);
+    }
 
-private void remove(int index) {
-swap(index, heap.size() - 1);
-T ans = heap.get(heap.size() - 1);
-map.remove(ans);
-heap.remove(heap.size() - 1);
-resign(heap.get(index));
-}
+    private void remove(int index) {
+        swap(index, heap.size() - 1);
+        T ans = heap.get(heap.size() - 1);
+        map.remove(ans);
+        heap.remove(heap.size() - 1);
+        resign(heap.get(index));
+    }
 }
 ```
 
@@ -1108,25 +1108,25 @@ resign(heap.get(index));
 
 ```java
 public class TrieTree {
-public static class Node {
-public int pass;
-public int end;
-public Node[] nexts;
+    public static class Node {
+        public int pass;
+        public int end;
+        public Node[] nexts;
 
-public Node() {
-pass = 0;
-end = 0;
-nexts = new Node[26]; // 0...25 分别表示指向a...z的路径
-}
-}
+        public Node() {
+        pass = 0;
+        end = 0;
+        nexts = new Node[26]; // 0...25 分别表示指向a...z的路径
+        }
+    }
 
-public static class Trie {
-private Node root;
+    public static class Trie {
+        private Node root;
 
-public Trie() {
-root = new Node();
-}
-}
+        public Trie() {
+        	root = new Node();
+        }
+    }
 }
 ```
 
@@ -1136,19 +1136,19 @@ root = new Node();
 
 ```java
 public void insert(String word) {
-if (word == null || word.isEmpty()) return;
-char[] str = word.toCharArray();
-Node node = root;
-node.pass++;
-for (char c : str) {
-int index = c - 'a';
-if (node.nexts[index] == null) {
-node.nexts[index] = new Node();
-}
-node = node.nexts[index];
-node.pass++;
-}
-node.end++;
+    if (word == null || word.isEmpty()) return;
+    char[] str = word.toCharArray();
+    Node node = root;
+    node.pass++;
+    for (char c : str) {
+        int index = c - 'a';
+        if (node.nexts[index] == null) {
+            node.nexts[index] = new Node();
+        }
+        node = node.nexts[index];
+        node.pass++;
+    }
+    node.end++;
 }
 ```
 
@@ -1156,17 +1156,17 @@ node.end++;
 
 ```java
 public int search(String word) {
-if (word == null || word.isEmpty()) return 0;
-char[] str = word.toCharArray();
-Node node = root;
-for (char c : str) {
-int index = c - 'a';
-if (node.nexts[index] == null) {
-return 0;
-}
-node = node.nexts[index];
-}
-return node.end;
+    if (word == null || word.isEmpty()) return 0;
+    char[] str = word.toCharArray();
+    Node node = root;
+    for (char c : str) {
+        int index = c - 'a';
+        if (node.nexts[index] == null) {
+        	return 0;
+        }
+        node = node.nexts[index];
+    }
+    return node.end;
 }
 ```
 
@@ -1174,17 +1174,17 @@ return node.end;
 
 ```java
 public int startsWith(String prefix) {
-if (prefix == null || prefix.isEmpty()) return 0;
-char[] str = prefix.toCharArray();
-Node node = root;
-for (char c : str) {
-int index = c - 'a';
-if (node.nexts[index] == null) {
-return 0;
-}
-node = node.nexts[index];
-}
-return node.pass;
+    if (prefix == null || prefix.isEmpty()) return 0;
+    char[] str = prefix.toCharArray();
+    Node node = root;
+    for (char c : str) {
+        int index = c - 'a';
+        if (node.nexts[index] == null) {
+        	return 0;
+        }
+        node = node.nexts[index];
+    }
+    return node.pass;
 }
 ```
 
@@ -1192,18 +1192,18 @@ return node.pass;
 
 ```java
 public void delete(String word) {
-if (word == null || word.isEmpty() || search(word) == 0) return;
-char[] str = word.toCharArray();
-Node node = root;
-for (char c : str) {
-int index = c - 'a';
-if (--node.nexts[index].pass == 0) { // 如果路径上某个节点只有一个字符串经过，后续就不用查看了
-node.nexts[index] = null;
-return;
-}
-node = node.nexts[index];
-}
-node.end--;
+    if (word == null || word.isEmpty() || search(word) == 0) return;
+    char[] str = word.toCharArray();
+    Node node = root;
+    for (char c : str) {
+        int index = c - 'a';
+        if (--node.nexts[index].pass == 0) { // 如果路径上某个节点只有一个字符串经过，后续就不用查看了
+            node.nexts[index] = null;
+            return;
+        }
+        node = node.nexts[index];
+    }
+    node.end--;
 }
 ```
 
@@ -1237,43 +1237,43 @@ node.end--;
 
 ```java
 public class RadixSort {
-final static int radix = 10;
-public void radixSort(int[] arr, int left, int right) {
-int max = arr[0];
-for (int i = 1; i < arr.length; i++) {
-max = max < arr[i] ? arr[i] : max;
-}
-int digit = 0;
-while (max > 0) {
-max = max / radix;
-++digit;
-}
-++digit;
-sort(arr, 0, arr.length - 1, digit);
-}
+    final static int radix = 10;
+    public void radixSort(int[] arr, int left, int right) {
+        int max = arr[0];
+        for (int i = 1; i < arr.length; i++) {
+        	max = max < arr[i] ? arr[i] : max;
+        }
+        int digit = 0;
+        while (max > 0) {
+            max = max / radix;
+            ++digit;
+        }
+        ++digit;
+        sort(arr, 0, arr.length - 1, digit);
+    }
 
-private void sort(int[] arr, int left, int right, int digit) {
-int[] count = new int[radix];
-int[] help = new int[arr.length];
-for (int d = 0; d < digit; d++) {
-int r = radix << d;
-for (int i = left; i <= right; i++) {
-count[arr[i] % r]++;
-}
-int sum = 0;
-for (int i = 0; i < radix; i++) {
-sum += count[i];
-count[i] = sum;
-}
-for (int i = right; i >= left; i--) {
-help[count[arr[i] % r]] = arr[i];
-count[arr[i] % r]--;
-}
-for (int i = left; i <= right; i++) {
-arr[i] = help[i];
-}
-}
-}
+    private void sort(int[] arr, int left, int right, int digit) {
+        int[] count = new int[radix];
+        int[] help = new int[arr.length];
+        for (int d = 0; d < digit; d++) {
+            int r = radix << d;
+            for (int i = left; i <= right; i++) {
+            	count[arr[i] % r]++;
+            }
+            int sum = 0;
+            for (int i = 0; i < radix; i++) {
+            	sum += count[i];
+            	count[i] = sum;
+            }
+            for (int i = right; i >= left; i--) {
+                help[count[arr[i] % r]] = arr[i];
+                count[arr[i] % r]--;
+            }
+            for (int i = left; i <= right; i++) {
+            	arr[i] = help[i];
+            }
+        }
+    }
 }
 ```
 
@@ -5633,7 +5633,7 @@ public int[] maxSlidingWindow(int[] arr, int k) {
 
 ## 满足条件的子数组
 
-题目描述：
+**题目描述：**
 
 给定一个整型数组arr，和一个整数num。对于arr中的一个子数组sub，如果满足sub中的最大值 - sub中的最小值 <= num，则其达标。
 

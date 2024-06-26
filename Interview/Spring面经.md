@@ -113,7 +113,7 @@ singleton模式下，一个Bean只会有一个实例化对象，线程之间需�
 
 该模式下线程安全问题的解决方式：
 - 尽量避免定义可变的成员变量。
-- 在类中定义一个`ThreadLocal`成员变量，将可编成员都放在其中。
+- 在类中定义一个`ThreadLocal`成员变量，将可变成员都放在其中。
 
 
 ## 8. Bean的生命周期
@@ -170,7 +170,7 @@ Spring MVC一般将代码分为：Service层、Dao层、Entity层和Controller�
 
 ## 3. Spring MVC工作流程
 
-!img[](../img/springmvc-process.png)
+![](../img/springmvc-process.png)
 
 1. DispatcherServlet接收到Web服务器传入的请求URL，调用HandlerMapping来匹配对应的Handler。
 2. HandlerMapping将找到的Handler返回，DispatcherServlet传递给HandlerAdapter来适配调用。
