@@ -5742,14 +5742,13 @@ public int bestStart(int[] gas, int[] cost) {
 	for (int i = 0; i < gas.length; ++i) {
 		gas[i] -= cost[i];
 	}
-	}
 	arr[0] = gas[0];
 	for (int i = 1; i < length; ++i) {
-		arr[i] = arr[i - 1] + gas[i % arr.length];
+		arr[i] = arr[i - 1] + gas[i % gas.length];
 	}
 	Deque<Integer> min = new LinkedList<>();
 	for (int i = 0; i < gas.length; ++i) {
-	   while (min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
+	   while (!min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
 	   min.offer(i);
 	}
 	boolean[] ans = new boolean[arr.length];
@@ -5758,10 +5757,10 @@ public int bestStart(int[] gas, int[] cost) {
 	if (arr[temp] >= 0) ans[0] = true;
 	for (int i = gas.length; i < length; ++i) {
 		if (arr[i - gas.length] == min.peek()) min.poll();
-		while (min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
+		while (!min.isEmpty() && arr[min.peekLast()] > arr[i]) min.poll();
 	    min.offer(i);
 	    temp = min.peek();
-	    if (arr[temp] - arr[temp - 1]>= 0) ans[0] = true;
+	    if (arr[temp] - arr[temp - 1]>= 0) ans[i] = true;
 	}
 	return ans;
 }
@@ -6462,11 +6461,12 @@ public int kmp(String pattern, String match) {
 }
 
 private int[] getNextArray(String str) {
-    if (str.length() == 1) return new [] {-1};
+    if (str.length() == 1) return new int[] {-1};
     int[] next = new int[str.length()];
     next[0] = -1;
     next[1] = 0;
     int temp = 0;
+    int i = 2;
     while (i < next.length) {
         if (str.charAt(i - 1) == str.charAt(temp)) {
             next[i++] = ++temp;
@@ -6577,20 +6577,20 @@ public int manacher(String str) {
     for (int i = 0; i < length; ++i) {
         codes[(i << 1) + 1] = str.charAt(i);
     }
-    int[] radis = new int[(length << 1) + 1];
+    int[] radius = new int[(length << 1) + 1];
     int right = -1;
     int center = -1;
     int ans = Integer.MIN_VALUE;
     for (int i = 0; i < radis.length; ++i) {
-        radis[i] = i < right ? Math.min(radis[(center << 1) - i], right - i) : 1; 
-        while (i + radis[i] < codes.length && i - radis[i] > -1 && codes[i + radis[i]] == codes[i - radis[i]]) {
-            ++radis[i];
+        radis[i] = i < right ? Math.min(radius[(center << 1) - i], right - i) : 1; 
+        while (i + radius[i] < codes.length && i - radius[i] > -1 && codes[i + radius[i]] == codes[i - radius[i]]) {
+            ++radius[i];
         }
-        if (i + radis[i] > right) {
-            right = i + radis[i];
+        if (i + radius[i] > right) {
+            right = i + radius[i];
             center = i;    
         }
-        ans = Math.max(ans, radis[i]);
+        ans = Math.max(ans, radius[i]);
     }
     return ans;
 }
@@ -6810,7 +6810,7 @@ public int kthMin(int[] arr, int k) {
 国家级服务器下面还可以继续设下级服务器。每个服务器都是只维护两个变量。
 
 
-# 第二十节 Morris遍历
+# 第二十节 Morris遍历，线段树
 
 ## Morris遍历 
 
@@ -6915,6 +6915,8 @@ private void reverseEdge(TreeNode root) {
 
 需要用到二叉树遍历的问题，如判断是否为二叉搜索树，就可以用Morris遍历来节约空间。
 
+如果，子问题中，每个节点都需要收集到自己左右节点的所有信息，才能够完成计算，此时Morris就不适用了，因为不是每个节点都能够访问到两次。
+
 
 
 ### 求二叉树最小深度
@@ -6944,6 +6946,235 @@ private int process(root) {
 ```
 
 
+
+#### Morris解法
+
+思路：
+
+总体思路为Morris遍历，在遍历过程中，维护一个level变量，记录当前节点的深度。如果当前节点为叶节点，更新最小深度。
+
+在遍历过程中，level会一直变化，难点在于如何根据Morris遍历来更新level，因为节点的右指针不一定真的指向的是右孩子。
+
+
+
+## 线段树
+
+问题描述：
+
+设计一种数据结构，给定一个整数数组，要求能够实现以下功能：
+
+- `add(int start, int end, int value)`，将数组`[start, end]`下标区间内的数，都加上value。
+- `update(int start, int end, int value)`，将数组`[start, end]`下标区间内的数都变为value。
+- `average(int start, int end)`，求数组该区间内的平均值。
+
+### 线段树实现
+
+假设数组长度为4，下标从1开始。设计一个树形结构，根节点记录的是$[1,4]$范围的累加和，根节点的左孩子记录的是$[1,2]$范围上的累加和，右孩子记录的是$[3,4]$范围上的累加和。
+
+然后，按照满二叉树的方式，存储在数组中。根节点在下标为1的位置。对于任意一个节点i，其父节点为`i/2`，左孩子为`2 * i`，右孩子为`2 * i + 1`。
+
+线段树数组长度为4N，则无论什么情况，线段树都能够由数组存储起来。
+
+对于一个数组arr，其线段树的构建过程为：首先申请一个长度为4*N的数组tree；然后将arr中所有元素分别填充到tree的对应位置；接着对于每一个节点都可以根据左右孩子`2*i;2*i + 1`来计算得来。
+
+#### 懒更新
+
+如果当前的任务，如给某个范围内的元素都加上value，这个范围等于自己表示的累加和的范围，就暂时不执行该操作，而是记录下来，等到下一次有该范围上的任务时，才去向下一层分配任务。
+
+
+
+```java
+public class SegmentTree {
+    private int length;
+    private int[] arr;
+    private int[] sum; // 用来存储线段树结构，即不同范围上的累加和
+    private int[] lazy; // 用来记录每个节点上没有往下传递的累加任务
+    private int[] change; // 用来记录每个节点上没有更新操作的任务
+    private boolean[] update; // 
+    
+    public SegementTree(int[] origin) {
+        length = origin.length + 1;
+        arr = new int[length];
+        for (int i = 1; i < length; ++i) {
+            arr[i] = origin[i - 1];
+        }
+        sum = new int[length << 2];
+        lazy = new int[length << 2];
+        change = new int[length << 2];
+        update = new int[length << 2];
+    }
+    
+    public void pushUp(int root) { // 计算sum[i]，左右孩子累加	
+        sum[root] = sum[root << 1] + sum[root << 1 | 1];
+    }
+    
+    // leftNumber表示左子树节点个数，rightNumber表示右子树节点个数
+    private void pushDown(int root, int leftNumber, int rightNumber) { // 当节点有被拦截下来，没有向下发送的任务
+        if (update[root]) { // update表示修改节点的值，而不是加上一个值
+            update[root << 1] = true; // root有修改任务，则root范围内所有的节点都要变成change[root]
+            update[root << 1 | 1] = true; // 给root的左右孩子分配修改任务
+            change[root << 1] = change[root];
+            change[root << 1 | 1] =change[root];
+            lazy[root << 1] = 0; // 如果节点有修改任务，那么之前的累加任务就失效了，直接置零
+            lazy[root << 1 | 1] = 0;
+            sum[root << 1] = change[root] * leftNumber; // 计算左右孩子的值，root位置的值已经在接到任务时计算过了
+            sum[root << 1 | 1] = change[root] * rightNumber;
+            upate[root] = false;
+        }
+        if (lazy[root] != 0) {
+            lazy[root << 1] += lazy[root]; // 给左孩子分配任务，将自己之前没有下发的累加值传递给左孩子
+            sum[root << 1] += lazy[root] * leftNumber; // 更新自己节点的累加和，从当前节点的视角来看，左子树上应该被修改值的节点都已经传递到了，所以自己的累加和应该加上 变化的节点数*变化的值
+            lazy[root << 1 | 1] += lazy[root]; // 右侧同理
+            sum[root << 1 | 1] += lazy[root] * rightNumber;
+            lazy[root] = 0;
+        }
+    }
+    
+    private void build(int left, int right, int root) { // 这里的left和right代表待求和区间的左右边界
+        if (left == right) {
+            sum[root] = arr[left];
+            return;
+        }
+        int mid = left + ((right - left) >> 1);
+        build(left, mid, root << 1);
+        build(mid + 1, right, roo << 1 | 1);
+        pushUp(root);
+    }
+    
+    public void update(int start, int end, int value, int left, int right, int root) {
+        if (start <= left && end >= right) {
+            update[root] = true;
+            change[root] = value;
+            sum[root] = (right - left + 1) * value;
+            lazy[root] = 0; // 之前的累加任务作废，不用执行了
+            return;
+        }
+        int mid = left + ((right - left) >> 1);
+        pushDown(root, mid - left + 1, right - mid);
+        if (start <= left) {
+            update(start, end, value, left, mid, root << 1);
+        }
+        if (end > mid) {
+            update(start, end, value, mid + 1, right, root << 1 | 1);
+        }
+        pushUp(root);
+    }
+    
+    public void add(int start, int end, int value, int left, int right, int root) {
+        // start, end表示区间，value表示要给区间上的数加上的值
+        // left, right表示当前root节点表示的累加和的范围
+        if (start <= left && end >= right) { // 任务范围能够完全包含当前root表示的范围
+            sum[root] += value * (right - left + 1);
+            lazy[root] += value; // 懒更新，等待下一次任务到来再去给下面的分配
+            return;
+        }
+        int mid = left + ((right - left) >> 1);
+        pushDown(root, mid - left + 1, right - mid);
+        if (start <= mid) { // 如果任务区间有部分在左侧区间，就给左侧子区间分配任务
+            add(start, end, left, mid, root << 1);
+        }
+        if (end > mid) { // 如果任务区间有部分在右侧子区间，就给右侧子区间分配任务
+            add(start, end, mid + 1, right, root << 1 | 1);
+        }
+        pushUp(root); // 当前任务已经执行完成，更新当前结点的值(也有可能没有变化，即任务都被拦截了，没有传到叶节点)
+    }
+    
+    public int query(int start, int end, int left, int right, int root) {
+        if (start <= left && end >= right) {
+            return sum[root];
+        }
+        int mid = left + ((right - left) >> 1);
+        pushDown(root, mid - left + 1, right - mid);
+        long ans = 0;
+        if (start <= mid) {
+            ans += query(start, end, left, mid, root << 1);
+        }
+        if (end > mid) {
+            ans += query(start, end, mid + 1, right, root << 1 | 1);
+        }
+        return (int) ans;
+    }
+}
+```
+
+
+
+### 落方块
+
+题目描述：
+
+依次给出多个长度为2的数组`[left, value]`，表示有一个方块长度为value，左边界沿着$x=left$这个轴向下落。求所有方块落下后，堆起来的最高值。
+
+#### 线段树
+
+每次方块落下时，都计算$[left, right]$这个区间内的最大值，然后将这个区间上的数都修改为$max+value$，最后遍历数组求得最大值。
+
+```java
+public class Solution {
+    public static class SegmentTree {
+        private int[] max;
+        private int[] change;
+        private boolean[] update;
+        
+        public SegmentTree(int size) {
+            int length = size + 1;
+            max = new int[length << 2];
+            change = new int[length << 2];
+            update = new boolean[length << 2];
+        }
+        
+        private void pushUp(int root) {
+            max[root] = Math.max(max[root << 1], max[root << 1 | 1)];
+        }
+                                 
+        private void pushDown(int root, int leftNumber, int rightNumber) {
+            if (update[root]) {
+                update[root << 1] = true;
+                update[root << 1 | 1] = true;
+                change[root << 1] = change[root];
+                change[root << 1 | 1] = change[root];
+                max[root << 1] = change[root];
+                max[root << 1 | 1] = change[root];
+                update[root] = false;
+            }
+        }
+		
+        public void update(int start, int end, int value, int left, int right, int root) {
+            if (start <= left && end >= right) {
+                update[root] = true;
+                change[root] = value;
+                max[root] = value;
+                return;
+            }
+            int mid = left + ((right - left) >> 1);
+            pushDown(root, mid - left + 1, right - mid);
+            if (start <= left) {
+                update(start, end, value, left, mid, root << 1);
+            }
+            if (end > mid) {
+                update(start, end, value, mid + 1, right, root << 1 | 1);
+            }
+            pushUp(root);
+        }
+                                 
+         public int query(int start, int end, int left, int right, int root) {
+            if (start <= left && end >= right) {
+                return max[root];
+            }
+            int mid = left + ((right - left) >> 1);
+            pushDown(root, mid - left + 1, right - mid);
+            long ans = 0;
+            if (start <= mid) {
+                ans += query(start, end, left, mid, root << 1);
+            }
+            if (end > mid) {
+                ans += query(start, end, mid + 1, right, root << 1 | 1);
+            }
+            return (int) ans;
+         }
+    }
+}
+```
 
 
 
