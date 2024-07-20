@@ -1,8 +1,8 @@
 {
   "accentColor": "#83b7d2",
   "theme": "obsidian",
-  "interfaceFontFamily": "Microsoft YaHei",
-  "textFontFamily": "Microsoft YaHei",
+  "interfaceFontFamily": "Microsoft YaHei,JetBrains Mono",
+  "textFontFamily": "Microsoft YaHei,JetBrains Mono",
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSize": 18,
   "cssTheme": "Things",

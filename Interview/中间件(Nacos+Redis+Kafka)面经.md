@@ -1083,11 +1083,7 @@ SETlock_keyunique_valueNXPX10000
 
 
 
-# ThreadLocal
 
-ThreadLocal本质上一个本地变量，是为了满足线程隔离功能而设计的。每个Thread线程内部有一个ThreadLocalMap类型的变量，其结构类似于HashMap。key为ThreadLocal实例变量，value则为通过ThreadLocal#set方法设置进去的对象。
-
-这个Map的key是弱引用，也就是说每次GC都会将ThreadLocal实例变量清除。这样会导致一问题，即内存泄漏。value是强引用，而key是弱引用，当key被清除之后，就会导致外部无法通过key来访问value，而ThreadLocalMap中却一直保留着value的强引用，从而导致value不会被清除。
 
 
 
