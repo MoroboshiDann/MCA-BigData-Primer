@@ -11,12 +11,8 @@
             "id": "6e5ad7b82f85bfaf",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Interview/Nacos+Redis+Kafka面经.md",
-                "mode": "preview",
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -70,9 +66,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Interview/Nacos+Redis+Kafka面经.md"
-              }
+              "state": {}
             }
           }
         ],
@@ -80,7 +74,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "b77a72d4697a5c10",
@@ -96,7 +91,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Interview/Nacos+Redis+Kafka面经.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,7 +107,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Interview/Nacos+Redis+Kafka面经.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
