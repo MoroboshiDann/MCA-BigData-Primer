@@ -1256,7 +1256,7 @@ Partion存在多副本机制。多个副本中有一个leader和多个follower�
 
 ​	RabbitMQ集群的结构如图所示：
 
-![](../../../../Desktop/rabbitmq-cluster.png)
+![](../img/rabbitmq-cluster.png)
 
 ​	集群中所有节点上的交换器Exchange是一致的，即交换器在每个节点上都有副本。而消息队列只会存在于创建时所在的节点上，其他节点上只知道该队列的元数据和指向该队列所在节点的指针。
 

@@ -204,12 +204,12 @@ Spring MVC一般将代码分为：Service层、Dao层、Entity层和Controller�
 三级缓存其实就是三个Map集合。
 - 一级缓存(singletonObjects)：存放最终形态的Bean(已经被实例化、属性填充、初始化)，是单例池。一帮情况下获取的Bean对象就是从这里获取的。但是也不是所有的Bean都储存在这里，prototype模式下的Bean就不在其中。
 - 二级缓存(earlySingletonObjects)：用来存储半成品Bean，也就是从三级缓存中的Factory生产出来的对象。与三级缓存配合使用。
-- 三级缓存(singletonFactories)：存放`ObjectFactory`，可以生成原始Bean对象或代理对象。三级缓存只对单例模式生效。
+- 三级缓存(singletonFactories)：存放`ObjectFactory`，即Bean的工厂对象，可以生成原始Bean对象或代理对象。三级缓存只对单例模式生效。
 
 Spring创建对象的流程：
 - 先去一级缓存获取，存在就返回。
 - 如果不存在或者正在创建中，就去二级缓存中获取。
-- 如果二级缓存中还是没有，就去三级缓存中获取，通过执行Factory的`getObject()`方法就可以获取该对象。获取成功后，会将三级缓存中的工厂对象移除，并将该对象加入到二级缓存。
+- 如果二级缓存中还是没有，就去三级缓存中获取工厂对象，通过执行Factory的`getObject()`方法就可以获取该对象。获取成功后，会将三级缓存中的工厂对象移除，并将该对象加入到二级缓存。
 
 如何解决循环依赖：
 
