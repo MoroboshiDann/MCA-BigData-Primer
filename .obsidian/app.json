@@ -4,5 +4,6 @@
   "smartIndentList": true,
   "tabSize": 4,
   "showIndentGuide": false,
-  "useTab": false
+  "useTab": false,
+  "alwaysUpdateLinks": true
 }

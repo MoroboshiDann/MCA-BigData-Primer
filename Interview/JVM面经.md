@@ -270,7 +270,9 @@ Reference子类中只有中继器引用是包内可见的，其他三种引用�
 
 **G1 收集器在后台维护了一个优先列表，每次根据允许的收集时间，优先选择回收价值最大的 Region(这也就是它的名字 Garbage-First 的由来)** 。这种使用 Region 划分内存空间以及有优先级的区域回收方式，保证了 G1 收集器在有限时间内可以尽可能高的收集效率（把内存化整为零）。
 
+## 7. 安全点与安全区
 
+​	
 
 # 四、类加载过程详解
 
@@ -365,7 +367,7 @@ ClassLoader主要有两个方法`loadClass()`和`findClass()`，前者用来加�
 
 ![](../img/tomcat-classloader.jpg)
 
-Tomcat自己实现了物种类加载器：
+Tomcat自己实现了五种类加载器：
 
 - CommonClassLoader：Tomcat的基本类加载器，加载路径中的Class对象可以被Tomcat容器本身和各个Webapp访问。会加载`/common/*`路径下的文件。
 - CatalinaClassLoader：Tomcat容器私有的类加载器，加载路径中的Class对Webapp不可见。会加载`/server/*`路径下的文件。
@@ -418,3 +420,46 @@ JVM 启动参数配置添加以下参数：
 - -XX:HeapDumpPath=./（参数为 Dump 文件生成路径）
 
 然后通过JvisualVM、JProfiler等工具来分析Dump文件
+
+
+
+# 七、JVM相关参数与调优
+
+## 1. 堆内存相关
+
+- 显式指定堆内存：
+  - `-Xms`：堆内存起始大小。
+  - `-Xmx`：堆内存最大大小。
+- 显式指定新生代大小：
+  - `-XX:NewSize=`：指定新生代最小大小。
+  - `-XX:MaxNewSize`：指定新生代最大大小。
+  - `-Xmn`：新生代固定大小。
+  - `-XX:NewRatio=`：新生代老年代的比例。
+- 显示指定元空间大小：
+  - `-XX:PermSize=/-XX:MetaspaceSize=`：永久代/元空间初始大小。
+  - `-XX:MaxPermSize=/-XX:MaxMetaspaceSize=`：永久代/元空间最大大小。
+
+
+
+## 2. 垃圾回收相关
+
+- 指定垃圾回收器：
+  - `-XX:+UseSerialGC`
+  - `-XX:+UseParallelGC`
+  - `-XX:+UseConcMarkSweepGC`
+  - `-XX:+UseG1GC`
+- GC日志记录
+
+
+
+## 3. 处理OOM
+
+```java
+-XX:+HeapDumpOnOutOfMemoryError // 出现OOM将堆内存转储到物理文件中
+-XX:HeapDumpPath=./java_pid<pid>.hprof // 表明要写入的文件路径
+-XX:OnOutOfMemoryError="< cmd args >;< cmd args >" // OOM出现时，执行命令
+-XX:+UseGCOverheadLimit // 在抛出OOM之前，在GC中花费的时间限制
+```
+
+
+

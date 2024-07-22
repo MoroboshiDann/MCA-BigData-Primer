@@ -627,6 +627,12 @@ HashMap底层使用的是数组+链表的方式来存储数据。发生哈希碰
 
 Java程序中有多种方式：继承`Thread`类、实现`Runnable`接口、实现`Callable`接口、使用线程池等。但是，都离不开`new Thread().start()`。只有这条代码才是创建线程并开始运行。
 
+## 3. Runnable和Callable的区别
+
+​	Runnable中的`run()`方法没有返回值，且方法签名中没有抛出异常。
+
+​	Callable的`call()`方法有返回值，且需要抛出异常。如果需要线程执行的返回结果，就需要用到Callable接口。
+
 
 
 # 十二、volatile关键字
@@ -930,3 +936,35 @@ synchronized关键字可以修饰方法、静态方法、代码块，以及类�
 ## 9. 线程间通信
 
 通过`wait()`和`notify()`方法来通信，实现线程同步。
+
+
+
+# 十八 Future&CompletableFuture
+
+## 1. Future
+
+​	Future类是异步思想的体现，在执行某些比较耗时的任务时，我们可以启动一个线程去完成，这样主线程可以继续执行其他任务。
+
+​	Future类对象可以用来接收`Callable#call`的返回结果，同时监视目标线程执行的情况。提供了以下方法：
+
+- `canncel`：取消Callable的执行，即使还没有完成。
+- `get`：获取Callable的返回值。
+- `isCannceld`：判断是否被取消了。
+- `isDone`：判断是否完成了。
+
+​	当使用`get()`方法来获取Callable的返回值时，调用该方法的线程就会被阻塞，直到Callable执行结束得到返回值。
+
+## 2. CompletableFuture
+
+​	实现了Future的功能，同时做了额外增强：
+
+- 可以直接对多个任务进行链式、组合等处理，而不需要借助并发工具类。
+- 实现了对任务编排的能力，可以轻松地组织不同任务的运行顺序、规则以及方式。
+
+​	CompletableFuture和Future的区别主要体现在以下几个方面：
+
+- 功能区别 ：Future只能用于获取异步计算的结果，而CompletableFuture除了能获取异步计算的结果外，还可以用于组合多个异步任务，处理异常情况，以及在任务完成时执行回调函数等。
+- 阻塞区别 ：Future的get方法是阻塞的，如果异步计算没有完成，它会一直等待直到计算完成。而CompletableFuture的get方法也是阻塞的，但是它可以设置超时时间，如果在指定的时间内计算没有完成，它会抛出TimeoutException异常。
+- 异常处理区别 ：Future的异常处理比较麻烦，需要在任务执行时捕获异常，然后将异常封装到Future对象中返回。而CompletableFuture的异常处理比较简单，可以使用exceptionally方法或handle方法来处理异常情况。
+- 组合任务区别 ：Future不支持组合多个异步任务，需要使用ExecutorService的submit方法来提交多个任务，并使用Future对象来获取每个任务的结果。而CompletableFuture支持组合多个异步任务，可以使用thenCompose、thenCombine、thenAcceptBoth等方法来组合多个任务。
+  
